@@ -117,7 +117,7 @@ You need to have `docker` installed on your machine.
 
 ### The docker compose way
 
-Run `docker compose up`, wait for it to initialize completely, and visit `https://localhost:8080`.
+Run `docker compose up -d`, wait for it to initialize completely, and visit `https://localhost:8080`.
 Your data is persistent (in ./dodoc-data directory).
 
 ### Or the docker manual way
