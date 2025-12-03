@@ -184,17 +184,14 @@ hr {
   }
 }
 
-.book .gallery,
-.book .grid {
-  height: var(--pagedjs-height);
-}
 .book .gallery-content,
 .book .grid-content {
   position: absolute;
   top: calc(var(--pagedjs-margin-top) * -1);
   left: calc(var(--pagedjs-margin-left) * -1);
   width: var(--pagedjs-width);
-  height: var(--pagedjs-height);
+  height: calc(var(--pagedjs-height) - 1px); /* -1px permet de régler le petit bug de pagedjs */
+  padding: calc(var(--spacing) * 1) !important;
   overflow: hidden;
 
   &:after {
@@ -212,8 +209,8 @@ hr {
 /* GRID LAYOUT */
 .edition .grid {
   position: relative;
+  break-before: page;
   break-after: page;
-  
 }
 
 .edition .grid-content {
@@ -221,8 +218,6 @@ hr {
   grid-template-columns: repeat(var(--col-count, 12), 1fr);
   grid-template-rows: repeat(var(--row-count, 1), 1fr);
   gap: var(--spacing);
-  padding: calc(var(--spacing) * 1) !important;
-  height: 100%;
 }
 
 .edition .grid-cell {
