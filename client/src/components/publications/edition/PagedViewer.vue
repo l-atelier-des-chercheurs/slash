@@ -8,6 +8,11 @@
   >
     <component :is="'style'" v-html="highlight_opened_pages" />
     <div
+      class=""
+      ref="bookrender"
+      style="opacity: 0; visibility: hidden; pointer-events: none"
+    />
+    <div
       v-if="viewer_type === 'infinite-viewer'"
       ref="infiniteviewer"
       class="_infiniteViewer"
@@ -209,7 +214,6 @@ export default {
           console.log("no bookpreview div");
           return;
         }
-        bookpreview.innerHTML = "";
 
         let paged = new Previewer();
 
@@ -229,8 +233,11 @@ export default {
           },
         ];
 
-        paged.preview(pagedjs_html, theme_styles, bookpreview).then((flow) => {
+        const bookrender = this.$refs.bookrender;
+        paged.preview(pagedjs_html, theme_styles, bookrender).then((flow) => {
+          bookpreview.innerHTML = "";
           bookpreview.appendChild(flow.pagesArea);
+          bookrender.innerHTML = "";
 
           this.$nextTick(() => {
             this.showOnlyPages();
