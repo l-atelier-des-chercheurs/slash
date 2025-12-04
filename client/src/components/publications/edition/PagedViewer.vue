@@ -467,15 +467,12 @@ export default {
         /* Show grid lines on the grid container */
         /* Add visible border to each grid cell */
         .grid-cell {
-          outline: 2px solid var(--color-pageBox);
-          outline-offset: -1px;
-          background-color: rgba(
-            238,
-            130,
-            238,
-            0.05
-          ); /* light violet background */
-          min-height: 30px; /* ensure even empty cells are visible */
+          outline: 1px solid var(--color-pageBox);
+          // outline-offset: -1px;
+        }
+        .pagedjs_area {
+          outline: 1px solid var(--color-pageBox);
+          // outline-offset: -1px;
         }
       }
     }

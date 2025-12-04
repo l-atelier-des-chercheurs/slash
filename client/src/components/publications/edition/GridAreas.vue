@@ -69,7 +69,7 @@
             class="_resizeHandle"
             @mousedown.stop="startResize(area.id, $event)"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12">
+            <svg width="24" height="24" viewBox="0 0 12 12">
               <path d="M12 0 L12 12 L0 12 Z" fill="currentColor" />
             </svg>
           </div>
@@ -84,7 +84,7 @@
             >
               <template v-slot:trigger>
                 <button type="button" class="_deleteAreaBtn">
-                  <b-icon icon="trash" scale="0.9" />
+                  <b-icon icon="trash" scale="1" />
                 </button>
               </template>
             </RemoveMenu>
@@ -555,8 +555,8 @@ export default {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 16px;
-  height: 16px;
+  width: 1.5rem;
+  height: 1.5rem;
   cursor: nwse-resize;
   color: var(--c-gris);
   display: flex;
