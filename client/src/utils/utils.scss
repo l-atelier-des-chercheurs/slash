@@ -875,7 +875,7 @@ code {
 fieldset {
   border: 2px solid var(--c-gris);
   margin: 0;
-  border-radius: 4px;
+  border-radius: var(--input-border-radius);
 
   legend {
     color: var(--c-gris_fonce) !important;

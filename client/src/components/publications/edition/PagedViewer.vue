@@ -148,7 +148,7 @@ export default {
           <!-- ${chapter.title} -->`;
         html += `<section class="chapter"
           data-starts-on-page="${chapter.starts_on_page}"
-          data-column-count="${chapter.column_count}"
+          style="--column-count: ${chapter.column_count};"
           data-chapter-meta-filename="${chapter.meta_filename}"
           data-chapter-title="${chapter.title}"
           data-chapter-type="${chapter.section_type}"

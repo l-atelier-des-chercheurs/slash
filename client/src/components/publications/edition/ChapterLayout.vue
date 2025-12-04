@@ -9,24 +9,6 @@
     >
       <legend>{{ $t("layout") }}</legend>
       <div class="_optionsRow">
-        <div class="_colCount" v-if="chapter.section_type === 'text'">
-          <DLabel :str="$t('column_count')" />
-          <div class="">
-            <SelectField2
-              :field_name="'column_count'"
-              :value="chapter.column_count || 1"
-              :path="chapter.$path"
-              size="small"
-              :hide_validation="true"
-              :can_edit="true"
-              :options="[
-                { key: 1, text: '1' },
-                { key: 2, text: '2' },
-                { key: 3, text: '3' },
-              ]"
-            />
-          </div>
-        </div>
         <div class="_selects--starts_on_page">
           <DLabel :str="$t('starts_on_page')" />
           <SelectField2
@@ -39,27 +21,31 @@
             :options="starts_on_page_options"
           />
         </div>
-        <NumberInput
-          :label="$t('column_count')"
-          :value="chapter.column_count || 6"
-          :size="'small'"
-          :min="1"
-          :max="12"
-          @save="updateChapterMeta({ column_count: $event })"
-        />
-        <NumberInput
-          :label="$t('row_count')"
-          :value="chapter.row_count || 6"
-          :size="'small'"
-          :min="1"
-          :max="12"
-          @save="updateChapterMeta({ row_count: $event })"
-        />
+        <template>
+          <NumberInput
+            v-if="['text', 'grid'].includes(chapter.section_type)"
+            :label="$t('column_count')"
+            :value="chapter.column_count || 6"
+            :size="'small'"
+            :min="1"
+            :max="12"
+            @save="updateChapterMeta({ column_count: $event })"
+          />
+          <NumberInput
+            v-if="['grid'].includes(chapter.section_type)"
+            :label="$t('row_count')"
+            :value="chapter.row_count || 6"
+            :size="'small'"
+            :min="1"
+            :max="12"
+            @save="updateChapterMeta({ row_count: $event })"
+          />
+        </template>
       </div>
 
-      <template v-if="chapter.section_type === 'grid'">
+      <div class="_gridConfiguration" v-if="chapter.section_type === 'grid'">
         <GridAreas :chapter="chapter" @deleteArea="deleteArea" />
-      </template>
+      </div>
     </fieldset>
   </div>
 </template>
@@ -164,7 +150,6 @@ export default {
   flex-flow: row nowrap;
   align-items: flex-start;
   gap: calc(var(--spacing) * 1);
-  margin-bottom: calc(var(--spacing) * 1);
 }
 
 ._selects--starts_on_page {
