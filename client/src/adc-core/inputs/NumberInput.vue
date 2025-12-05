@@ -20,7 +20,7 @@
           v-model.number="local_value"
           @keyup.enter="$emit('save', local_value)"
         />
-        <span class="u-suffix">
+        <span v-if="suffix" class="u-suffix">
           {{ suffix }}
         </span>
       </div>
