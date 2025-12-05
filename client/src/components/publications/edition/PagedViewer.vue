@@ -158,7 +158,6 @@ export default {
           <!-- ${chapter.title} -->`;
         html += `<section class="chapter"
           data-starts-on-page="${starts_on_page}"
-          style="--column-count: ${chapter.column_count};"
           data-chapter-meta-filename="${chapter.meta_filename}"
           data-chapter-title="${chapter.title}"
           data-chapter-type="${chapter.section_type}"
@@ -170,7 +169,10 @@ export default {
         )
           html += `<h1 class="chapterTitle">${chapter.title}</h1>`;
         if (chapter.content)
-          html += `<div class="chapterContent">${chapter.content}</div>`;
+          html += `
+        <div class="chapterContent"
+          style="--column-count: ${chapter.column_count};"
+        >${chapter.content}</div>`;
         html += `</section>`;
       });
 
