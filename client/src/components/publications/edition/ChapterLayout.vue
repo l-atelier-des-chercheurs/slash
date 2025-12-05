@@ -150,17 +150,21 @@ export default {
 
 ._optionsRow {
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: row wrap;
   align-items: flex-start;
-  gap: calc(var(--spacing) * 1);
+  gap: calc(var(--spacing) / 2);
+
+  > *  {
+    flex: 1 0 30ch;
+  }
 }
 
-._selects--starts_on_page {
-  width: 30ch;
-  flex: 0 0 auto;
-  position: relative;
-  z-index: 2;
-}
+// ._selects--starts_on_page {
+//   width: 30ch;
+//   flex: 0 0 auto;
+//   position: relative;
+//   z-index: 2;
+// }
 
 ._gridConfiguration {
   margin-top: calc(var(--spacing) * 1);
