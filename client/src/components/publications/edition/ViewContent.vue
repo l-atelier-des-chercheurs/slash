@@ -609,10 +609,10 @@ export default {
           $media_filename: media.$media_filename,
         });
 
-        if (!width && !height) {
-          width = media.$infos.width + "px";
-          height = media.$infos.height + "px";
-        }
+        // if (!width && !height) {
+        //   width = media.$infos.width + "px";
+        //   height = media.$infos.height;
+        // }
 
         if (media.$type === "text") {
           media_html = media.$content;
@@ -620,8 +620,6 @@ export default {
           media_html = `
             <img src="${src}"
               alt="${alt}"
-              ${width ? ` width="${width}"` : ""}
-              ${height ? ` height="${height}"` : ""}
             />
           `;
         } else {
@@ -639,16 +637,12 @@ export default {
               media_html = `
                 <video src="${src}" controls
                   alt="${alt}"
-                  ${width ? ` width="${width}"` : ""}
-                  ${height ? ` height="${height}"` : ""}
                 />
               `;
             } else if (media.$type === "audio") {
               media_html = `
                 <audio src="${src}" controls
                   alt="${alt}"
-                  ${width ? ` width="${width}"` : ""}
-                  ${height ? ` height="${height}"` : ""}
                 />
               `;
             }
