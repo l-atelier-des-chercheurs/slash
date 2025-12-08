@@ -125,6 +125,7 @@
                 <input
                   type="number"
                   min="1"
+                  step="1"
                   v-model.number="timelapse_interval"
                 />
                 <span>{{ $t("seconds") }}</span>
@@ -146,6 +147,7 @@
                 <input
                   type="number"
                   v-model.number="delay_seconds"
+                  step="1"
                   min="1"
                   max="60"
                 />
