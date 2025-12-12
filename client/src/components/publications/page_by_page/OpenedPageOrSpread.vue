@@ -15,6 +15,7 @@
             <PageMenu
               :can_edit="can_edit"
               :pages="pages"
+              :spreads="spreads"
               :active_page_number="active_page_number"
               :active_spread_index="active_spread_index"
               :is_spread="is_spread"
@@ -39,6 +40,7 @@
               @update:scale="scale = $event"
               @prevPage="prevPage()"
               @nextPage="nextPage()"
+              @goToPage="setPageActive($event)"
               @createPage="$emit('createPage')"
               @close="setPageActive(false)"
             />
