@@ -169,6 +169,11 @@ import {
   BIconCollection,
   BIconEnvelope,
   BIconArrowRepeat,
+  BIconFileEarmarkText,
+  BIconLayoutSidebar,
+  BIconLayoutSidebarInset,
+  BIconLayoutSidebarReverse,
+  BIconLayoutSidebarInsetReverse,
 } from "bootstrap-vue";
 
 Vue.component("BIconShieldCheck", BIconShieldCheck);
@@ -338,3 +343,8 @@ Vue.component("BIconPaletteFill", BIconPaletteFill);
 Vue.component("BIconCollection", BIconCollection);
 Vue.component("BIconEnvelope", BIconEnvelope);
 Vue.component("BIconArrowRepeat", BIconArrowRepeat);
+Vue.component("BIconFileEarmarkText", BIconFileEarmarkText);
+Vue.component("BIconLayoutSidebar", BIconLayoutSidebar);
+Vue.component("BIconLayoutSidebarInset", BIconLayoutSidebarInset);
+Vue.component("BIconLayoutSidebarReverse", BIconLayoutSidebarReverse);
+Vue.component("BIconLayoutSidebarInsetReverse", BIconLayoutSidebarInsetReverse);

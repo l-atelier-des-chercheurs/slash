@@ -375,6 +375,28 @@ button,
     }
   }
 }
+.u-button_glass {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+
+  transition: all 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
+  &:hover,
+  &:focus-visible {
+    &:not([disabled]) {
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.is--active {
+    background: white;
+    color: var(--c-noir);
+  }
+}
 .u-button_orange {
   background-color: var(--c-orange);
   color: white;

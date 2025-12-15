@@ -13,7 +13,7 @@
         <div class="_stickyClose--content">
           <button
             type="button"
-            class="u-button u-button_icon _navBtn"
+            class="u-button u-button_icon u-button_glass"
             @click="$emit('close')"
           >
             <b-icon icon="x-lg" />
@@ -26,107 +26,6 @@
         :media="file"
         @close="show_optimize_modal = false"
       />
-
-      <div class="_preview" :data-filetype="file.$type">
-        <MediaContent
-          :file="file"
-          :resolution="1600"
-          :context="'full'"
-          :show_fs_button="true"
-          :zoom_on_click="true"
-          :can_edit="true"
-          @zoomingIn="onZoomingIn"
-          @zoomingOut="onZoomingOut"
-          @videoPlayed="onVideoPlayed"
-          @videoPaused="onVideoPaused"
-        />
-        <div v-if="optimization_strongly_recommended" class="_optimizeNotice">
-          <div class="">
-            <div class="u-instructions">
-              {{ $t("convert_to_format") }}
-            </div>
-            <button
-              type="button"
-              class="u-button u-button_orange"
-              @click="show_optimize_modal = true"
-            >
-              <b-icon :icon="'file-play-fill'" />
-              {{ $t("convert_shorten") }}
-            </button>
-          </div>
-        </div>
-
-        <div
-          class="_topRightBtn"
-          v-if="!$root.is_mobile_view"
-          :class="{ 'is--hidden': !show_overlay_button }"
-        >
-          <DragFile class="_dragFile" :file="file" />
-          <button
-            type="button"
-            class="u-button u-button_icon _navBtn"
-            @click="toggleMeta"
-          >
-            <b-icon
-              :icon="
-                show_meta_sidebar
-                  ? 'chevron-double-right'
-                  : 'chevron-double-left'
-              "
-            />
-          </button>
-          <button
-            type="button"
-            class="u-button u-button_icon _navBtn"
-            @click="$emit('close')"
-          >
-            <b-icon icon="x-lg" />
-          </button>
-        </div>
-
-        <transition name="scaleOutFade" mode="out-in">
-          <div
-            class="_navBtns"
-            v-if="position_in_list !== 'alone' && show_nav_btn"
-            :class="{ 'is--hidden': !show_overlay_button }"
-            :key="file.$path"
-          >
-            <span>
-              <button
-                type="button"
-                class="u-button u-button_icon _navBtn _leftArrow"
-                v-if="position_in_list !== 'first'"
-                @click="$emit('prevMedia')"
-              >
-                <b-icon icon="arrow-left-short" />
-                <!-- 
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168">
-                  <path
-                    d="M87.46,49.46,73.39,64.77a65.3,65.3,0,0,1-6.15,6.15A47.8,47.8,0,0,1,61,75.29H131.6V91.14H61A39.1,39.1,0,0,1,67,95.51q2.81,2.46,6.36,6.15L87.46,117,74.48,128,34.17,83.21,74.48,38.39Z"
-                    style="fill: var(--c-noir)"
-                  />
-                </svg> -->
-              </button>
-            </span>
-            <span>
-              <button
-                type="button"
-                class="u-button u-button_icon _navBtn _rightArrow"
-                v-show="position_in_list !== 'last'"
-                @click="$emit('nextMedia')"
-              >
-                <b-icon icon="arrow-right-short" />
-                <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168">
-                  <path
-                    d="M78.31,117l14.07-15.31a65.3,65.3,0,0,1,6.15-6.15,47.52,47.52,0,0,1,6.29-4.37H34.17V75.29h70.65a39.1,39.1,0,0,1-6.08-4.37q-2.8-2.46-6.36-6.15L78.31,49.46l13-11.07L131.6,83.21,91.29,128Z"
-                    style="fill: #353535"
-                  />
-                </svg> -->
-              </button>
-            </span>
-          </div>
-        </transition>
-      </div>
 
       <div class="_meta" v-if="show_meta_sidebar || $root.is_mobile_view">
         <div class="u-spacingBottom">
@@ -367,6 +266,53 @@
           </div>
         </DetailsPane>
       </div>
+
+      <NavOverlay
+        sidebar_position="left"
+        :show_sidebar.sync="show_meta_sidebar"
+        :can_prev="position_in_list !== 'alone' && position_in_list !== 'first'"
+        :can_next="position_in_list !== 'alone' && position_in_list !== 'last'"
+        :has_sidebar_toggle="!$root.is_mobile_view"
+        @prev="$emit('prevMedia')"
+        @next="$emit('nextMedia')"
+        @close="$emit('close')"
+      >
+        <template slot="top-right">
+          <div v-if="!$root.is_mobile_view">
+            <DragFile class="_dragFile" :file="file" />
+          </div>
+        </template>
+
+        <div class="_preview" :data-filetype="file.$type">
+          <MediaContent
+            :file="file"
+            :resolution="1600"
+            :context="'full'"
+            :show_fs_button="true"
+            :zoom_on_click="true"
+            :can_edit="true"
+            @zoomingIn="onZoomingIn"
+            @zoomingOut="onZoomingOut"
+            @videoPlayed="onVideoPlayed"
+            @videoPaused="onVideoPaused"
+          />
+          <div v-if="optimization_strongly_recommended" class="_optimizeNotice">
+            <div class="">
+              <div class="u-instructions">
+                {{ $t("convert_to_format") }}
+              </div>
+              <button
+                type="button"
+                class="u-button u-button_orange"
+                @click="show_optimize_modal = true"
+              >
+                <b-icon :icon="'file-play-fill'" />
+                {{ $t("convert_shorten") }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </NavOverlay>
     </div>
     <div class="_selectBtn" v-if="select_mode">
       <button
@@ -389,6 +335,8 @@
 <script>
 import DuplicateMedia from "@/components/DuplicateMedia.vue";
 
+import NavOverlay from "@/adc-core/ui/NavOverlay.vue";
+
 export default {
   props: {
     file: Object,
@@ -397,6 +345,7 @@ export default {
     position_in_list: String,
   },
   components: {
+    NavOverlay,
     DuplicateMedia,
     CropAdjustMedia: () => import("@/adc-core/fields/CropAdjustMedia.vue"),
     OptimizeMedia: () => import("@/adc-core/fields/OptimizeMedia.vue"),
@@ -641,19 +590,6 @@ export default {
   }
 }
 
-._navBtn {
-  pointer-events: auto;
-  background: rgba(255, 255, 255, 0.4) !important;
-  backdrop-filter: blur(5px) !important;
-
-  position: relative;
-  z-index: 100;
-
-  &:hover {
-    background: rgba(255, 255, 255, 1) !important;
-  }
-}
-
 ._meta {
   // margin: calc(var(--spacing) / 2);
   padding: calc(var(--spacing) * 1) calc(var(--spacing) / 1);
@@ -688,10 +624,11 @@ export default {
   height: 100%;
   background: white;
 
-  > ._preview {
+  ._preview {
     position: relative;
     background: var(--c-gris_clair);
     overflow: hidden;
+    height: 100%;
 
     &[data-filetype="text"] {
       background: var(--c-gris_clair);
@@ -721,10 +658,6 @@ export default {
     overflow: hidden;
     height: 100%;
 
-    > ._preview {
-      top: 0;
-      flex: 10 1 320px;
-    }
     > ._meta {
       position: relative;
       z-index: 2;
@@ -732,11 +665,17 @@ export default {
       flex: 2 0 200px;
       overflow: auto;
     }
+    > ._navOverlay {
+      flex: 10 1 320px;
+      position: relative;
+    }
   }
   &.is--mobileView {
     overflow: auto;
 
-    > ._preview {
+    > ._navOverlay {
+      position: relative;
+      inset: auto;
       height: 70vh;
     }
     > ._meta {
@@ -744,71 +683,11 @@ export default {
   }
 }
 
-._topRightBtn,
-._stickyClose--content {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  flex-flow: row wrap;
-  gap: calc(var(--spacing) / 2);
-  padding: calc(var(--spacing) / 2);
-  pointer-events: none;
-
-  > * {
-    pointer-events: auto;
-  }
-}
-
-._topRightBtn.is--hidden {
-  opacity: 0.2;
-  pointer-events: auto;
-  transition: opacity 0.3s ease-in-out;
-  &:hover {
-    opacity: 1;
-  }
-}
 ._stickyClose {
   position: sticky;
   top: 0;
   height: 0;
   z-index: 101;
-}
-
-._navBtns {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-
-  padding: calc(var(--spacing) / 2);
-  // padding-bottom: calc(var(--spacing) * 1);
-  pointer-events: none;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  ._leftArrow {
-    &:not(:hover) {
-      // margin-left: -10px;
-    }
-  }
-
-  ._rightArrow {
-    &:not(:hover) {
-      // margin-right: -10px;
-    }
-  }
-
-  &.is--hidden ._navBtn {
-    opacity: 0.2;
-    transition: opacity 0.3s ease-in-out;
-    &:hover {
-      opacity: 1;
-    }
-  }
 }
 
 ._originInd {

@@ -1,11 +1,15 @@
 <template>
   <div class="_pageMenu">
     <div class="_pageMenu--pane">
-      <button type="button" class="u-buttonLink" @click="$emit('close')">
-        <b-icon icon="grid-fill" />
+      <!-- <button
+        type="button"
+        class="u-button u-button_bleuvert"
+        @click="$emit('close')"
+      >
+        <b-icon icon="chevron-left" />
         <template v-if="!is_spread">{{ $t("list_of_pages") }}</template>
         <template v-else>{{ $t("list_of_spreads") }}</template>
-      </button>
+      </button> -->
       <div class="_titleRow">
         <SelectField2
           :value="active_page_number"
@@ -1000,6 +1004,9 @@ export default {
   &:not(:first-child) {
     margin-top: calc(var(--spacing) / 2);
     border-top: 2px solid var(--c-gris_clair);
+  }
+  &:first-child {
+    padding-top: 0;
   }
 }
 

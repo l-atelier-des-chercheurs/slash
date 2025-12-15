@@ -178,6 +178,8 @@ import SingleTag from "@/adc-core/ui/SingleTag.vue";
 Vue.component("SingleTag", SingleTag);
 import ReorderedList from "@/adc-core/ui/ReorderedList.vue";
 Vue.component("ReorderedList", ReorderedList);
+import NavOverlay from "@/adc-core/ui/NavOverlay.vue";
+Vue.component("NavOverlay", NavOverlay);
 import CustomResolutionInput from "@/adc-core/fields/CustomResolutionInput.vue";
 Vue.component("CustomResolutionInput", CustomResolutionInput);
 

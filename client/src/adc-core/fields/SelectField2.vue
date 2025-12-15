@@ -18,7 +18,7 @@
       <div v-if="with_arrows" class="_arrows">
         <button
           type="button"
-          class="u-button u-button_transparent u-button_icon"
+          class="u-button u-button_icon"
           @click="selectPrev"
           :disabled="is_first_option"
         >
@@ -26,7 +26,7 @@
         </button>
         <button
           type="button"
-          class="u-button u-button_transparent u-button_icon"
+          class="u-button u-button_icon"
           @click="selectNext"
           :disabled="is_last_option"
         >
