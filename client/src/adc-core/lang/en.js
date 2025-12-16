@@ -1244,6 +1244,8 @@ export default {
   text_top_image_down: "Text top, image down",
   image_top_text_down: "Image top, text down",
   in_flow: "In the flow",
+  toggle_sidebar: "Toggle sidebar",
+  previous_page: "Previous page",
   next_page: "Next page",
   next_left_page: "Next left page",
   next_right_page: "Next right page",
@@ -1280,7 +1282,8 @@ export default {
   restore_projects: "Restore projects",
   bin: "Trash",
   items_in_bin: "Items in the trash",
-  bin_removal_notice: "Items in the trash are automatically removed after 30 days.",
+  bin_removal_notice:
+    "Items in the trash are automatically removed after 30 days.",
   all_pages: "All pages",
   all_spreads: "All spreads",
   spreads_to_export: "Spreads to export",
@@ -1465,4 +1468,10 @@ export default {
   no_areas_defined: "No areas defined",
   non_contributor: "Non contributor",
   space_title: "Space title",
+
+  video_options: "Video options",
+  autoplay: "Autoplay",
+  loop: "Loop",
+  muted: "Muted",
+  show_controls: "Show controls",
 };
