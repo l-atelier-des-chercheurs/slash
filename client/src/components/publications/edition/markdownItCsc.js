@@ -51,17 +51,32 @@ export default (md, o = {}) => {
       // Extract text from current position to end of line
       const remainingText = state.src.slice(pos, max);
 
-      // Find matching closing parenthesis accounting for nesting
+      // Find matching closing parenthesis accounting for nesting and quoted strings
+      // Rule: If a value contains a closing parenthesis, it MUST be quoted
       let depth = 0;
       let closeParenPos = -1;
+      let inQuotes = false;
+      let quoteChar = null;
       for (let i = 0; i < remainingText.length; i++) {
-        if (remainingText[i] === "(") {
-          depth++;
-        } else if (remainingText[i] === ")") {
-          depth--;
-          if (depth === 0) {
-            closeParenPos = i;
-            break;
+        const char = remainingText[i];
+        if (!inQuotes && (char === '"' || char === "'")) {
+          // Start of quoted string
+          inQuotes = true;
+          quoteChar = char;
+        } else if (inQuotes && char === quoteChar) {
+          // End of quoted string
+          inQuotes = false;
+          quoteChar = null;
+        } else if (!inQuotes) {
+          // Only count parentheses when not inside quotes
+          if (char === "(") {
+            depth++;
+          } else if (char === ")") {
+            depth--;
+            if (depth === 0) {
+              closeParenPos = i;
+              break;
+            }
           }
         }
       }
@@ -90,9 +105,8 @@ export default (md, o = {}) => {
       if (firstAttrMatch) {
         const firstAttrPos = firstAttrMatch.index;
         source = afterTag.substring(0, firstAttrPos).trim();
-        attrString = afterTag
-          .substring(firstAttrPos, afterTag.length - 1)
-          .trim(); // Remove closing parenthesis
+        // Keep the full attrString including closing paren - we'll handle it during parsing
+        attrString = afterTag.substring(firstAttrPos);
       } else {
         // No attributes, just source
         source = afterTag.substring(0, afterTag.length - 1).trim();
@@ -110,27 +124,95 @@ export default (md, o = {}) => {
       let attrs = {};
       attrs.src = source;
 
-      // Improved attribute parsing pattern
-      // Look for attribute keys followed by a colon, then capture everything up to the next attribute key
-      const attrPattern = /([\w-]+):\s+((?:(?!\s+[\w-]+:).)+)/g;
-      let attrMatch;
+      // Simplified attribute parsing:
+      // Rule: If a value contains a closing parenthesis, it MUST be quoted
+      // 1. Quoted values: caption: "Hello :)"
+      // 2. Unquoted values: width: 1cm (stops at next attribute or closing paren)
 
-      while ((attrMatch = attrPattern.exec(attrString + " "))) {
-        const key = attrMatch[1].trim();
-        const value = attrMatch[2] ? attrMatch[2].trim() : "";
-        if (key) {
-          // Ensure key is not empty
-          attrs[key] = value;
-        }
-      }
+      let attrPos = 0;
+      const attrLen = attrString.length;
 
-      // Special handling for the last attribute - make sure no trailing ")" is included
-      const lastAttrKey = Object.keys(attrs).pop();
-      if (lastAttrKey && lastAttrKey !== "src") {
-        const lastValue = attrs[lastAttrKey];
-        if (lastValue && lastValue.endsWith(")")) {
-          attrs[lastAttrKey] = lastValue.slice(0, -1);
+      while (attrPos < attrLen) {
+        // Skip whitespace
+        while (attrPos < attrLen && /\s/.test(attrString[attrPos])) {
+          attrPos++;
         }
+        if (attrPos >= attrLen) break;
+
+        // Find attribute key (word characters and hyphens)
+        const keyStart = attrPos;
+        while (attrPos < attrLen && /[\w-]/.test(attrString[attrPos])) {
+          attrPos++;
+        }
+        if (attrPos === keyStart) break; // No key found
+
+        const key = attrString.substring(keyStart, attrPos);
+
+        // Skip whitespace before colon
+        while (attrPos < attrLen && /\s/.test(attrString[attrPos])) {
+          attrPos++;
+        }
+
+        // Expect colon
+        if (attrPos >= attrLen || attrString[attrPos] !== ":") break;
+        attrPos++; // Skip colon
+
+        // Skip whitespace after colon
+        while (attrPos < attrLen && /\s/.test(attrString[attrPos])) {
+          attrPos++;
+        }
+        if (attrPos >= attrLen) break;
+
+        // Parse value (quoted or unquoted)
+        let value = "";
+
+        // Check if value is quoted
+        const quoteChar = attrString[attrPos];
+        if (quoteChar === '"' || quoteChar === "'") {
+          attrPos++; // Skip opening quote
+          // Find closing quote - everything between quotes is the value (including closing parens)
+          const quoteEnd = attrString.indexOf(quoteChar, attrPos);
+          if (quoteEnd !== -1) {
+            // Valid quoted value - extract everything between the quotes
+            value = attrString.substring(attrPos, quoteEnd);
+            attrPos = quoteEnd + 1; // Skip closing quote
+            // Skip any whitespace after the closing quote
+            while (attrPos < attrLen && /\s/.test(attrString[attrPos])) {
+              attrPos++;
+            }
+          } else {
+            // Unclosed quote - take rest of string up to closing paren
+            const rest = attrString.substring(attrPos);
+            const parenIndex = rest.indexOf(")");
+            if (parenIndex !== -1) {
+              value = rest.substring(0, parenIndex);
+              attrPos = attrLen; // Stop parsing
+            } else {
+              value = rest;
+              attrPos = attrLen;
+            }
+          }
+        } else {
+          // Unquoted value - stops at next attribute or closing paren
+          // Look for next attribute pattern: whitespace + word + colon
+          let valueEnd = attrLen;
+          const remaining = attrString.substring(attrPos);
+          const nextAttrMatch = /\s+[\w-]+:\s+/.exec(remaining);
+          if (nextAttrMatch) {
+            valueEnd = attrPos + nextAttrMatch.index;
+          } else {
+            // No next attribute, find closing paren
+            const parenIndex = attrString.indexOf(")", attrPos);
+            if (parenIndex !== -1) {
+              valueEnd = parenIndex;
+            }
+          }
+
+          value = attrString.substring(attrPos, valueEnd).trim();
+          attrPos = valueEnd;
+        }
+
+        attrs[key] = value;
       }
 
       // If this is the first shortcode on the line and there might be more, add a container start token
@@ -138,6 +220,7 @@ export default (md, o = {}) => {
         // Store the position to check for more shortcodes
         const checkPos = pos + shortcodeText.length;
         const remainingLine = state.src.slice(checkPos, max).trim();
+        // console.log("DEBUG CONTAINER: remainingLine", JSON.stringify(remainingLine));
 
         // Check if there are more shortcodes on this line
         if (remainingLine.startsWith("(") && /^\([-\w]+:/.test(remainingLine)) {
@@ -246,5 +329,7 @@ export default (md, o = {}) => {
   };
 
   // insert csc rule
-  md.block.ruler.before("paragraph", "csc", csc);
+  md.block.ruler.before("paragraph", "csc", csc, {
+    alt: ["paragraph", "reference", "blockquote", "list"],
+  });
 };
