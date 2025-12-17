@@ -185,6 +185,23 @@ export default (md, o = {}) => {
     return "</div>\n";
   };
 
+  // Helper function to apply custom classes to HTML
+  function applyCustomClasses(html, classAttr, floatAttr) {
+    if (!classAttr && !floatAttr) return html;
+
+    const customClasses = [];
+    if (classAttr) customClasses.push(classAttr);
+    if (floatAttr) customClasses.push(`float-${floatAttr}`);
+
+    if (customClasses.length > 0) {
+      return html.replace(
+        'class="media',
+        `class="media ${customClasses.join(" ")}`
+      );
+    }
+    return html;
+  }
+
   // set render csc
   md.renderer.rules.csc = function (tokens, index, type) {
     const token = tokens[index];
@@ -196,43 +213,7 @@ export default (md, o = {}) => {
         return `<div class="break break-${token.attrs.src}"></div>\n`;
       }
 
-      // Handle external URLs using renderMedia
-      if (token.attrs.src.startsWith("http")) {
-        const alt = token.attrs.caption || "";
-        const width = token.attrs.width || "";
-        const height = token.attrs.height || "";
-        const title = token.attrs.title || "";
-
-        let html = `
-            <img src="${token.attrs.src}"
-              alt="${alt}"
-              ${width ? ` width="${width}"` : ""}
-              ${height ? ` height="${height}"` : ""}
-            />
-          `;
-
-        // Apply custom classes and attributes if specified
-        let processedHtml = html;
-        if (token.attrs.class || token.attrs.float) {
-          const customClasses = [];
-          if (token.attrs.class) customClasses.push(token.attrs.class);
-          if (token.attrs.float)
-            customClasses.push(`float-${token.attrs.float}`);
-
-          if (customClasses.length > 0) {
-            // Add custom classes to the figure element
-            processedHtml = html.replace(
-              'class="media',
-              `class="media ${customClasses.join(" ")}`
-            );
-          }
-
-          return processedHtml;
-        }
-        return processedHtml;
-      }
-
-      // Use renderMedia for local media
+      // Use renderMedia for both external URLs and local media
       if (renderMedia) {
         const alt = token.attrs.caption || "";
         const width = token.attrs.width || "";
@@ -252,23 +233,7 @@ export default (md, o = {}) => {
         }
 
         // Apply custom classes and attributes if specified
-        let processedHtml = html;
-        if (token.attrs.class || token.attrs.float) {
-          const customClasses = [];
-          if (token.attrs.class) customClasses.push(token.attrs.class);
-          if (token.attrs.float)
-            customClasses.push(`float-${token.attrs.float}`);
-
-          if (customClasses.length > 0) {
-            // Add custom classes to the figure element
-            processedHtml = html.replace(
-              'class="media',
-              `class="media ${customClasses.join(" ")}`
-            );
-          }
-        }
-
-        return processedHtml;
+        return applyCustomClasses(html, token.attrs.class, token.attrs.float);
       }
 
       // Fallback if no renderMedia function

@@ -558,6 +558,13 @@ export default {
 
       return media;
     },
+    // Helper function to build style attribute from width/height
+    buildStyleAttribute(width, height) {
+      if (!width && !height) return "";
+      const _width = width ? `width: ${width};` : "";
+      const _height = height ? `height: ${height};` : "";
+      return ` style="${_width}${_height}"`;
+    },
     renderMedia({ media, meta_src, source_medias, alt, width, height, title }) {
       let media_html = "";
       let is_qr_code = false;
@@ -583,11 +590,11 @@ export default {
 
       // Handle external URLs (http/https)
       if (meta_src && meta_src.startsWith("http")) {
+        const style_attr = this.buildStyleAttribute(width, height);
+
         media_html = `
           <img src="${meta_src}"
-            alt="${alt}"
-            ${width ? ` width="${width}"` : ""}
-            ${height ? ` height="${height}"` : ""}
+            alt="${alt}"${style_attr}
           />
         `;
       } else {
@@ -655,12 +662,7 @@ export default {
         media_html += `<figcaption class="mediaCaption"><span>${alt}</span></figcaption>`;
       }
 
-      let style_attr = "";
-      if (width || height) {
-        const _width = width ? `width: ${width};` : "";
-        const _height = height ? `height: ${height};` : "";
-        style_attr = ` style="${_width}${_height}"`;
-      }
+      const style_attr = this.buildStyleAttribute(width, height);
 
       const html = `<figure class="${custom_classes.join(
         " "
