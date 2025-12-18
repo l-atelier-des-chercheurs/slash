@@ -234,7 +234,7 @@ export default {
             media_html += ` caption: ${md_caption}`;
         }
 
-        media_html += ")";
+        media_html += ")\n";
         html.push(media_html);
       });
 
