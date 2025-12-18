@@ -87,7 +87,7 @@
                   class="_inlineBtn _addPaneBtn"
                 >
                   <b-icon
-                    icon="plus-circle-fill"
+                    icon="plus-circle"
                     :label="$t('add')"
                     @click.stop="addPane(pane)"
                   />
@@ -97,6 +97,19 @@
           </SlickItem>
         </SlickList>
       </span>
+      <div>
+        <button
+          type="button"
+          class="u-button u-button_icon"
+          :title="$t('options')"
+        >
+          <b-icon
+            icon="three-dots"
+            style="flex: 0 0 auto"
+            :aria-label="$t('options')"
+          />
+        </button>
+      </div>
       <span v-if="!$root.is_mobile_view" />
     </span>
   </div>
@@ -127,6 +140,12 @@ export default {
         },
         {
           type: "collect",
+        },
+        {
+          type: "notes",
+        },
+        {
+          type: "todo",
         },
         {
           type: "make",
@@ -251,6 +270,8 @@ export default {
       else if (type === "collect") return this.dodoc_icon_collect;
       else if (type === "make") return this.dodoc_icon_make;
       else if (type === "publish") return this.dodoc_icon_publish;
+      else if (type === "notes") return this.dodoc_icon_notes;
+      else if (type === "todo") return this.dodoc_icon_todo;
       return false;
     },
     animatePane(pane) {

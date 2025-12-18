@@ -51,5 +51,32 @@ export default {
         </svg>
       `;
     },
+    dodoc_icon_notes() {
+      return `
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+         viewBox="0 0 168 168" style="enable-background:new 0 0 168 168;" xml:space="preserve">
+          <path style="fill:var(--c-bleuvert);" d="M84,0C37.6,0,0,37.6,0,84c0,46.4,37.6,84,84,84c46.4,0,84-37.6,84-84
+            C168,37.6,130.4,0,84,0z"/>
+          <path style="fill:#ffffff;" d="M50,65h68v8H50V65z"/>
+          <path style="fill:#ffffff;" d="M50,85h68v8H50V85z"/>
+          <path style="fill:#ffffff;" d="M50,105h48v8H50V105z"/>
+        </svg>
+      `;
+    },
+    dodoc_icon_todo() {
+      return `
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+         viewBox="0 0 168 168" style="enable-background:new 0 0 168 168;" xml:space="preserve">
+          <path style="fill:var(--c-bleumarine);" d="M84,0C37.6,0,0,37.6,0,84c0,46.4,37.6,84,84,84c46.4,0,84-37.6,84-84
+            C168,37.6,130.4,0,84,0z"/>
+          <circle cx="50" cy="65" r="6" style="fill:#ffffff;"/>
+          <path style="fill:#ffffff;" d="M60,63h48v6H60V63z"/>
+          <circle cx="50" cy="84" r="6" style="fill:#ffffff;"/>
+          <path style="fill:#ffffff;" d="M60,82h48v6H60V82z"/>
+          <circle cx="50" cy="103" r="6" style="fill:#ffffff;"/>
+          <path style="fill:#ffffff;" d="M60,101h48v6H60V101z"/>
+        </svg>
+      `;
+    },
   },
 };

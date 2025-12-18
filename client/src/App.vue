@@ -210,6 +210,8 @@ export default {
 
   --color-capture: var(--c-rouge);
   --color-collect: var(--c-orange);
+  --color-notes: var(--c-bleuvert);
+  --color-todo: var(--c-bleumarine);
   --color-make: var(--c-bleumarine);
   --color-publish: var(--c-bleuvert);
 

@@ -1028,6 +1028,8 @@ export default {
   collect: "Collecter",
   make: "Fabriquer",
   publish: "Publier",
+  notes: "Notes",
+  todo: "Todo/Liste",
 
   projects_you_edited_last: "Derniers projets que vous avez modifiés",
 
