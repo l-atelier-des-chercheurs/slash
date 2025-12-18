@@ -240,10 +240,14 @@ export default {
         });
     },
     css_styles() {
-      return `
-      ${pagedengine || ""}
-      ${this.custom_styles_unnested}
-      `;
+      return (
+        // prettier-ignore
+        "/******************************* paged.js engine styles (added by do•doc) *******************************/" +
+        (pagedengine || "") +
+        // prettier-ignore
+        `/******************************* custom styles ${this.opened_style_file_meta || "default"} *******************************/` +
+        (this.custom_styles_unnested || "")
+      );
     },
   },
   methods: {
@@ -323,13 +327,6 @@ export default {
     },
 
     parseMarkdownWithMarkedownIt(content, source_medias) {
-      // Preprocess content to handle multiple line breaks
-      // Convert multiple consecutive newlines to HTML breaks
-      // content = content.replace(/\n{3,}/g, (match) => {
-      //   const breakCount = match.length - 2; // Keep one paragraph break, add extra <br> tags
-      //   return "\n\n" + "<br>\n".repeat(breakCount);
-      // });
-
       const md = markdownit({
         breaks: true,
         linkify: true,

@@ -2,8 +2,10 @@
   <div class="_debugMode" ref="debugMode">
     <h2>HTML</h2>
     <code ref="chapter" v-html="pretty_content_html" />
+
+    <hr />
     <h2>CSS</h2>
-    <code ref="cssStyles" v-html="css_styles" />
+    <code ref="cssStyles" v-html="pretty_css_styles" />
   </div>
 </template>
 <script>
@@ -42,6 +44,9 @@ export default {
       const highlighted = hljs.highlight(html, { language: "xml" }).value;
       return highlighted;
     },
+    pretty_css_styles() {
+      return hljs.highlight(this.css_styles, { language: "css" }).value;
+    },
   },
   methods: {
     scrollToChapter() {
@@ -79,8 +84,14 @@ export default {
   background-color: var(--c-noir);
   color: white;
   overflow: auto;
-  padding: calc(var(--spacing) * 2);
+  padding: calc(var(--spacing) * 4) calc(var(--spacing) * 2);
   scroll-behavior: smooth;
+
+  h2 {
+    margin: calc(var(--spacing) * 2) 0;
+    text-align: center;
+    // font-size: var(--sl-font-size-xx-large);
+  }
 
   code {
     background-color: var(--c-noir);
