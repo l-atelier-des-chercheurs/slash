@@ -8,6 +8,16 @@
       />
     </div>
 
+    <div v-if="available_groups.length > 0" class="u-spacingBottom">
+      <DLabel :str="$t('add_by_group')" />
+      <TagsList
+        :tags="available_groups"
+        :tag_type="'accountgroup'"
+        :mode="'add'"
+        @tagClick="addAuthorsFromGroup($event)"
+      />
+    </div>
+
     <div v-if="filtered_authors.length === 0" class="u-instructions">
       {{ $t("no_authors_to_show") }}
     </div>
@@ -43,6 +53,17 @@ export default {
   beforeDestroy() {},
   watch: {},
   computed: {
+    available_groups() {
+      const groups = new Set();
+      this.all_authors_except_current.forEach((author) => {
+        if (author.group && Array.isArray(author.group)) {
+          author.group.forEach((g) => {
+            if (g) groups.add(g);
+          });
+        }
+      });
+      return Array.from(groups).sort();
+    },
     all_authors_except_current() {
       return this.all_authors.filter((a) => {
         if (this.current_authors.length > 0)
@@ -67,7 +88,22 @@ export default {
       });
     },
   },
-  methods: {},
+  methods: {
+    addAuthorsFromGroup(group_name) {
+      const authors_in_group = this.all_authors_except_current.filter(
+        (author) => {
+          return (
+            author.group &&
+            Array.isArray(author.group) &&
+            author.group.includes(group_name)
+          );
+        }
+      );
+      authors_in_group.forEach((author) => {
+        this.$emit("addAuthor", author.$path);
+      });
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>

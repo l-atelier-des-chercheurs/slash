@@ -6,7 +6,6 @@
       :tag="tag"
       :instructions="instructions"
     />
-
     <transition-group tag="div" class="_authors" name="listComplete" appear>
       <div v-if="authors_paths === 'everyone'" class="t-500" key="everyone">
         {{ $t("everyone") }}

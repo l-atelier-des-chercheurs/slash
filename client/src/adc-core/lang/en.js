@@ -218,6 +218,7 @@ export default {
   login_no_account_matches: "No accounts match",
 
   add_accounts: "Add accounts",
+  add_by_group: "Add by group",
   show: "Show",
   show_title: "Show title",
   hide: "Hide",

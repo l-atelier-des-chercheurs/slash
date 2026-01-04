@@ -404,6 +404,7 @@ export default {
 
   no_accounts_yet: "Aucun compte créé pour le moment",
   add_accounts: "Rajouter des comptes",
+  add_by_group: "Ajouter par groupe",
   restart_to_apply:
     "Fermez et redémarrez do•doc manuellement ou avec le bouton ci-dessous pour que le réglage prenne effet.",
   restart: "Fermer et redémarrer",
