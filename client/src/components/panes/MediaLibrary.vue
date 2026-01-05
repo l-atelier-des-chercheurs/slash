@@ -51,7 +51,7 @@
               <template v-else>
                 <button
                   type="button"
-                  class="u-button u-button_transparent is--active _mediaCount--filtered"
+                  class="u-button u-button_orange is--active _mediaCount--filtered"
                   @click="resetFilters"
                 >
                   {{ filtered_medias.length }}
@@ -64,7 +64,7 @@
 
             <button
               type="button"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               :class="{ 'is--active': filters_opened }"
               @click="toggleFilters"
             >
@@ -74,7 +74,7 @@
 
             <button
               type="button"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               v-if="!batch_mode && select_mode !== 'single'"
               @click="batch_mode = !batch_mode"
             >
@@ -84,7 +84,7 @@
             <button
               type="button"
               v-if="batch_mode"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               :class="{ 'is--active': batch_mode }"
               @click="cancelSelect"
             >
@@ -93,9 +93,9 @@
             </button>
             <button
               type="button"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               v-if="batch_mode"
-              :disabled="filtered_medias.length === 0"
+              :disabled="filtered_medias.length === 0 || all_medias_selected"
               @click="selectAllVisibleMedias"
             >
               <b-icon icon="plus-square" />
@@ -114,44 +114,19 @@
 
             <div class="_tileMode">
               <button
-                class="u-button u-button_transparent"
+                v-for="mode in ['table', 'tiny', 'medium', 'map']"
+                :key="mode"
+                class="u-button u-button_orange u-button_icon"
                 type="button"
                 :class="{
-                  'is--active': tile_mode === 'table',
+                  'is--active': tile_mode === mode,
                 }"
-                @click="tile_mode = 'table'"
+                @click="tile_mode = mode"
               >
-                <b-icon icon="list-ol" />
-              </button>
-              <button
-                class="u-button u-button_transparent"
-                type="button"
-                :class="{
-                  'is--active': tile_mode === 'tiny',
-                }"
-                @click="tile_mode = 'tiny'"
-              >
-                <b-icon icon="grid-3x2-gap-fill" />
-              </button>
-              <button
-                class="u-button u-button_transparent"
-                type="button"
-                :class="{
-                  'is--active': tile_mode === 'medium',
-                }"
-                @click="tile_mode = 'medium'"
-              >
-                <b-icon icon="grid-fill" />
-              </button>
-              <button
-                class="u-button u-button_transparent"
-                type="button"
-                :class="{
-                  'is--active': tile_mode === 'map',
-                }"
-                @click="tile_mode = 'map'"
-              >
-                <b-icon icon="map-fill" />
+                <b-icon v-if="mode === 'table'" icon="list-ol" />
+                <b-icon v-if="mode === 'tiny'" icon="grid-3x2-gap-fill" />
+                <b-icon v-if="mode === 'medium'" icon="grid-fill" />
+                <b-icon v-if="mode === 'map'" icon="map-fill" />
               </button>
             </div>
           </div>
@@ -740,6 +715,13 @@ export default {
         this.medias.find((m) => m.$path === p)
       );
     },
+    all_medias_selected() {
+      return (
+        this.filtered_medias.some(
+          (m) => !this.selected_medias_paths.includes(m.$path)
+        ) === false
+      );
+    },
   },
   methods: {
     scrollToMediaTile(path) {
@@ -1069,8 +1051,8 @@ export default {
 }
 
 ._topSection {
-  border-bottom: 2px solid var(--c-orange_clair);
-  padding: calc(var(--spacing) / 8) 0;
+  border-bottom: 2px solid var(--c-orange_fonce);
+  padding: calc(var(--spacing) / 8) 0 0;
 
   > ._row {
     display: flex;
@@ -1083,8 +1065,10 @@ export default {
     z-index: 1;
 
     &._filters {
-      justify-content: center;
-      border-top: 2px solid var(--c-orange_clair);
+      // justify-content: center;
+      padding: calc(var(--spacing) / 2);
+      margin-bottom: -2px;
+      background: var(--c-orange_fonce);
     }
   }
 }

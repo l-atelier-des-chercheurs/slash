@@ -403,7 +403,6 @@ button,
 }
 .u-button_orange {
   background-color: var(--c-orange);
-  color: white;
 
   &:hover,
   &:focus-visible,
@@ -411,6 +410,10 @@ button,
     &:not([disabled]) {
       background-color: var(--c-orange_fonce);
     }
+  }
+
+  &[disabled] {
+    color: var(--c-gris);
   }
 }
 .u-button_bleumarine {
