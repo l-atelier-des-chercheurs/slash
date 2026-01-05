@@ -37,7 +37,7 @@
       </template>
 
       <fieldset v-if="connected_as && current_mode === 'login'">
-        <legend class="u-label">{{ $t("your_account") }}</legend>
+        <legend>{{ $t("your_account") }}</legend>
 
         <AuthorCard
           :key="connected_as.$path"

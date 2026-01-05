@@ -427,6 +427,19 @@
 
     <div class="u-spacingBottom"></div>
 
+    <fieldset>
+      <legend>My Fieldset</legend>
+      <div class="u-spacingBottom">
+        <label>Input inside fieldset</label>
+        <input type="text" />
+      </div>
+      <div>
+        Some other content
+      </div>
+    </fieldset>
+
+    <div class="u-spacingBottom"></div>
+
     <SizeDisplay :size="2059" />
   </div>
 </template>

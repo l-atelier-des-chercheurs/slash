@@ -29,7 +29,7 @@
       </div>
 
       <fieldset class="_newTagPane" v-if="create_new_tag">
-        <legend class="u-label">{{ $t("add_item") }}</legend>
+        <legend>{{ $t("add_item") }}</legend>
 
         <div class="u-spacingBottom">
           <TagsSuggestion

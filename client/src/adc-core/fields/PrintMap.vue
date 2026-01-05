@@ -20,7 +20,7 @@
       />
     </div>
     <fieldset class="u-spacingBottom _previewCanvas">
-      <legend class="u-label">{{ $t("preview") }}</legend>
+      <legend>{{ $t("preview") }}</legend>
       <canvas v-show="false" ref="mapCanvas" class="" />
       <canvas ref="pageCanvas" class="" />
     </fieldset>
