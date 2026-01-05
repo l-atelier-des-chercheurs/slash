@@ -261,98 +261,100 @@
         {{ $t("no_media_in_project") }}
       </div>
 
-      <transition name="pagechange" mode="out-in">
-        <MediaMap
-          v-if="tile_mode === 'map'"
-          key="mediaMap"
-          :medias="filtered_medias"
-          @toggleMediaFocus="toggleMediaFocus"
-        />
-        <div v-else :key="group_mode" class="_gridSection">
-          <div
-            class="_dayFileSection"
-            v-for="{ label, files } in grouped_medias"
-            :key="label"
-          >
+      <template v-else>
+        <transition name="pagechange" mode="out-in">
+          <MediaMap
+            v-if="tile_mode === 'map'"
+            key="mediaMap"
+            :medias="filtered_medias"
+            @toggleMediaFocus="toggleMediaFocus"
+          />
+          <div v-else :key="group_mode" class="_gridSection">
             <div
-              class="_mediaLibrary--lib--label"
-              :class="{
-                'is--clickable': select_mode !== 'single' && batch_mode,
-              }"
+              class="_dayFileSection"
+              v-for="{ label, files } in grouped_medias"
+              :key="label"
             >
-              <input
-                v-if="batch_mode"
-                type="checkbox"
-                class="_groupSelectCheckbox"
-                :id="'select_btn_' + label"
-                :checked="groupAllSelected(files)"
-                @click="handleGroupLabelClick(files)"
-              />
-              <label :for="'select_btn_' + label">{{ label }}</label>
-              <!-- <div class="u-nut" data-isfilled>
+              <div
+                class="_mediaLibrary--lib--label"
+                :class="{
+                  'is--clickable': select_mode !== 'single' && batch_mode,
+                }"
+              >
+                <input
+                  v-if="batch_mode"
+                  type="checkbox"
+                  class="_groupSelectCheckbox"
+                  :id="'select_btn_' + label"
+                  :checked="groupAllSelected(files)"
+                  @click="handleGroupLabelClick(files)"
+                />
+                <label :for="'select_btn_' + label">{{ label }}</label>
+                <!-- <div class="u-nut" data-isfilled>
                 {{ files.length }}
               </div> -->
+              </div>
+              <transition-group
+                tag="div"
+                class="_mediaLibrary--lib--grid"
+                :data-tilemode="tile_mode"
+                name="StoryModules"
+                ref="mediaTiles"
+                appear
+              >
+                <MediaTile
+                  v-for="file of files"
+                  :key="file.$path"
+                  :project_path="project.$path"
+                  :index="file._index"
+                  :file="file"
+                  :was_focused="media_just_focused === getFilename(file.$path)"
+                  :was_imported="
+                    recently_imported_meta_filenames.includes(
+                      getFilename(file.$path)
+                    )
+                  "
+                  :is_selectable="mediaTileIsSelectable(file.$path)"
+                  :is_selected="selected_medias_paths.includes(file.$path)"
+                  :data-filepath="file.$path"
+                  :tile_mode="tile_mode"
+                  :is_already_selected="mediaTileAlreadySelected(file.$path)"
+                  @toggleMediaFocus="toggleMediaFocus(file.$path)"
+                  @setSelected="(present) => setSelected(present, file.$path)"
+                />
+              </transition-group>
             </div>
-            <transition-group
-              tag="div"
-              class="_mediaLibrary--lib--grid"
-              :data-tilemode="tile_mode"
-              name="StoryModules"
-              ref="mediaTiles"
-              appear
-            >
-              <MediaTile
-                v-for="file of files"
-                :key="file.$path"
-                :project_path="project.$path"
-                :index="file._index"
-                :file="file"
-                :was_focused="media_just_focused === getFilename(file.$path)"
-                :was_imported="
-                  recently_imported_meta_filenames.includes(
-                    getFilename(file.$path)
-                  )
-                "
-                :is_selectable="mediaTileIsSelectable(file.$path)"
-                :is_selected="selected_medias_paths.includes(file.$path)"
-                :data-filepath="file.$path"
-                :tile_mode="tile_mode"
-                :is_already_selected="mediaTileAlreadySelected(file.$path)"
-                @toggleMediaFocus="toggleMediaFocus(file.$path)"
-                @setSelected="(present) => setSelected(present, file.$path)"
-              />
-            </transition-group>
-          </div>
 
-          <div class="_binButton" v-if="can_edit_project">
-            <button
-              type="button"
-              class="u-buttonLink"
-              @click="show_bin_modal = true"
+            <div class="_binButton" v-if="can_edit_project">
+              <button
+                type="button"
+                class="u-buttonLink"
+                @click="show_bin_modal = true"
+              >
+                <b-icon icon="recycle" />
+                {{ $t("bin") }}
+              </button>
+            </div>
+            <BinFolder
+              v-if="show_bin_modal"
+              :modal_title="$t('restore_medias')"
+              :path="project.$path"
+              @close="show_bin_modal = false"
             >
-              <b-icon icon="recycle" />
-              {{ $t("bin") }}
-            </button>
+              <template v-slot="slotProps">
+                <MediaTile
+                  :file="slotProps.project"
+                  :index="0"
+                  :project_path="project.$path"
+                  :tile_mode="tile_mode"
+                  :is_selectable="false"
+                  :is_selected="false"
+                />
+              </template>
+            </BinFolder>
           </div>
-          <BinFolder
-            v-if="show_bin_modal"
-            :modal_title="$t('restore_medias')"
-            :path="project.$path"
-            @close="show_bin_modal = false"
-          >
-            <template v-slot="slotProps">
-              <MediaTile
-                :file="slotProps.project"
-                :index="0"
-                :project_path="project.$path"
-                :tile_mode="tile_mode"
-                :is_selectable="false"
-                :is_selected="false"
-              />
-            </template>
-          </BinFolder>
-        </div>
-      </transition>
+        </transition>
+      </template>
 
       <transition name="slideup">
         <div v-if="selected_medias_paths.length > 0" class="_selectBtn">
