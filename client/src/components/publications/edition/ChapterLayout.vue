@@ -25,7 +25,7 @@
           <NumberInput
             v-if="['text', 'grid'].includes(chapter.section_type)"
             :label="$t('column_count')"
-            :value="chapter.column_count || 6"
+            :value="column_count"
             :size="'small'"
             :min="1"
             :max="12"
@@ -34,7 +34,7 @@
           <NumberInput
             v-if="['grid'].includes(chapter.section_type)"
             :label="$t('row_count')"
-            :value="chapter.row_count || 6"
+            :value="row_count"
             :size="'small'"
             :min="1"
             :max="12"
@@ -104,6 +104,16 @@ export default {
             text: this.$t("next_right_page"),
           },
         ];
+    },
+    column_count() {
+      if (this.chapter.section_type === "grid") {
+        return this.chapter.column_count || 6;
+      }
+      return this.chapter.column_count || 1;
+    },
+    row_count() {
+      // only for grid
+      return this.chapter.row_count || 6;
     },
   },
   methods: {
