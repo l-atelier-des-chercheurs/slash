@@ -120,7 +120,7 @@ export default {
     // },
     async createSection({ type = "text" } = {}) {
       let additional_meta = {
-        section_starts_on_page: "right",
+        section_starts_on_page: "page",
       };
 
       if (type === "text") {
