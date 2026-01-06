@@ -215,7 +215,7 @@ export default {
   top: 0;
   right: 0;
   margin: var(--spacing);
-  padding: calc(var(--spacing) / 3);
+  // padding: calc(var(--spacing) / 3);
   z-index: 1;
 }
 
