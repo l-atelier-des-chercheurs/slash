@@ -390,7 +390,7 @@ button,
     &:not([disabled]) {
       background: rgba(255, 255, 255, 1);
       color: var(--c-noir);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       transform: translateY(-1px);
     }
   }

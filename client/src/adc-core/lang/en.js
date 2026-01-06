@@ -139,6 +139,7 @@ export default {
 
   login: "Login",
   logout: "Logout",
+  logging_out: "Logging out…",
   name_or_pseudonym: "Name or nickname",
   email: "Email",
   email_instr: "Contact email, only visible to admins.",

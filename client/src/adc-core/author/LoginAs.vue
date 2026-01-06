@@ -122,9 +122,6 @@
       </fieldset>
 
       <LoaderSpinner v-if="connection_status === 'pending'" />
-      <div class="" v-else-if="connection_status === 'success'">
-        {{ $t("logged_in") }}
-      </div>
     </form>
   </div>
 </template>

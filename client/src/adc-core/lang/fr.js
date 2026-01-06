@@ -163,6 +163,7 @@ export default {
 
   login: "se connecter",
   logout: "se déconnecter",
+  logging_out: "Déconnexion en cours…",
   name_or_pseudonym: "Nom ou pseudonyme",
   email: "Courriel",
   email_instr:

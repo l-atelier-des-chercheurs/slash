@@ -67,6 +67,12 @@
           {{ $t("show_all_accounts") }}
         </router-link>
       </template>
+
+      <BaseModal2 v-if="is_logging_out" :size="'small'">
+        <div class="u-instructions" style="text-align: center">
+          {{ $t("logging_out") }}
+        </div>
+      </BaseModal2>
     </div>
   </BaseModal2>
 </template>
@@ -93,6 +99,7 @@ export default {
       show_authors_list: false,
       authors: [],
       path: "authors",
+      is_logging_out: false,
     };
   },
   created() {},
@@ -127,9 +134,13 @@ export default {
     },
     async logout() {
       try {
+        this.is_logging_out = true;
         this.reponse = await this.$api.logoutFromFolder();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       } catch (err) {
+        this.is_logging_out = false;
         this.response = err;
         this.$alertify.delay(4000).error(err);
         return false;
