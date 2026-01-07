@@ -334,13 +334,13 @@ export default {
   // border: 1px solid var(--c-gris);
 
   // border-style: ridge;
-  border-radius: 0 0 24px 24px;
+  // border-radius: 0 0 24px 24px;
   overflow: hidden;
 
   transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:not(.is--uptop) {
-    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.05));
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     // padding-top: var(--spacing);
   }
 
@@ -381,6 +381,7 @@ export default {
     &._bc {
       flex: 1 0 0;
       overflow: hidden;
+      min-width: 0;
     }
     &._topRightButtons {
       flex: 0 0 auto;
