@@ -465,8 +465,8 @@ export default {
 
 ._gridCell--background {
   background: transparent;
-  outline: 1px dashed var(--c-gris);
-  background: var(--c-gris);
+  background: var(--c-gris_clair);
+  color: var(--c-gris_fonce);
   outline-offset: -1px;
   height: 80px;
   border-radius: var(--input-border-radius);
@@ -477,13 +477,16 @@ export default {
   justify-content: center;
   transition: background 0.15s ease;
 
+  ._gridCell--addIcon {
+    color: var(--c-gris);
+  }
+
   &:not(._gridCell--occupied):hover {
     background: rgba(0, 0, 0, 0.02);
-    outline-color: var(--c-gris);
+    outline: 1px dashed var(--c-gris);
 
     ._gridCell--addIcon {
-      opacity: 0.7;
-      color: var(--active-color);
+      opacity: 1;
     }
   }
 
