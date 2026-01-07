@@ -279,6 +279,14 @@ button,
   &.is--active {
     background-color: var(--c-noir);
     color: white;
+
+    &:hover,
+    &:active,
+    &:focus-visible {
+      &:not([disabled]) {
+        background-color: var(--c-gris_fonce);
+      }
+    }
   }
 
   &.u-button_small {
@@ -323,6 +331,14 @@ button,
 .u-button_black {
   background-color: var(--c-noir);
   color: white;
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--c-gris_fonce);
+    }
+  }
 }
 .u-button_white {
   background-color: white;
@@ -332,8 +348,8 @@ button,
   &:focus-visible,
   &.is--active {
     &:not([disabled]) {
-      background-color: var(--active-color);
-      color: white;
+      // background-color: var(--active-color);
+      // color: white;
     }
   }
 }
