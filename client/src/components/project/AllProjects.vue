@@ -8,12 +8,12 @@
         :folders="filtered_projects"
         :display_original_space="true"
         :folder_type="'project'"
-        :available_view_modes="['medium', 'map']"
+        :available_view_modes="['tiny', 'medium', 'map']"
       >
-        <template #item="{ item }">
+        <template #item="{ item, view_mode }">
           <ProjectPresentation
             :project="item"
-            :context="'list'"
+            :context="view_mode"
             :display_original_space="true"
             :can_edit="false"
             @toggleFilter="toggleFilter($event)"

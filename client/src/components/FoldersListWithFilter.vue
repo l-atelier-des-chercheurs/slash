@@ -49,6 +49,17 @@
             <b-icon icon="list-ol" />
           </button>
           <button
+            v-if="available_view_modes.includes('tiny')"
+            class="u-button u-button_icon"
+            type="button"
+            :class="{
+              'is--active': current_view_mode === 'tiny',
+            }"
+            @click="current_view_mode = 'tiny'"
+          >
+            <b-icon icon="grid-3x2-gap-fill" />
+          </button>
+          <button
             v-if="available_view_modes.includes('medium')"
             class="u-button u-button_icon"
             type="button"
@@ -229,7 +240,11 @@
       <slot name="list-header" />
 
       <template
-        v-if="current_view_mode === 'list' || current_view_mode === 'medium'"
+        v-if="
+          current_view_mode === 'list' ||
+          current_view_mode === 'medium' ||
+          current_view_mode === 'tiny'
+        "
       >
         <FoldersList
           :folders="filtered_folders"
@@ -242,7 +257,11 @@
           :view_mode="current_view_mode"
           v-slot="slotProps"
         >
-          <slot name="item" :item="slotProps.item" />
+          <slot
+            name="item"
+            :item="slotProps.item"
+            :view_mode="current_view_mode"
+          />
         </FoldersList>
       </template>
       <template v-else-if="current_view_mode === 'map'">
@@ -272,7 +291,7 @@ export default {
     can_edit: Boolean,
     folder_type: {
       type: String,
-      default: "project", // 'project' or 'author'
+      default: "project", // 'project', 'author', 'publication', 'space'
     },
     pin_field_name: String,
     pin_label: String,
@@ -280,7 +299,7 @@ export default {
     display_original_space: Boolean,
     available_view_modes: {
       type: Array,
-      default: () => ["list", "medium", "map"],
+      default: () => ["list", "medium", "map", "tiny"],
     },
   },
   components: {
@@ -313,9 +332,10 @@ export default {
       return true;
     },
     search_placeholder() {
-      return this.folder_type === "project"
-        ? this.$t("search_in_title_desc_kw")
-        : this.$t("search_by_name");
+      if (this.folder_type === "project")
+        return this.$t("search_in_title_desc_kw");
+      if (this.folder_type === "publication") return this.$t("search_in_title");
+      return this.$t("search_by_name");
     },
     order_options() {
       return [
@@ -381,6 +401,9 @@ export default {
         if (this.search_query) {
           if (this.folder_type === "project") {
             if (!this.searchInProject(f)) return false;
+          } else if (this.folder_type === "publication") {
+            if (!this.twoStringsSearch(f.title, this.search_query))
+              return false;
           } else {
             if (!this.twoStringsSearch(f.name, this.search_query)) return false;
           }
@@ -489,6 +512,8 @@ export default {
     },
     show_sidebar_toggle() {
       if (this.folder_type === "author") return this.all_groups.length > 0;
+      if (this.folder_type === "publication" || this.folder_type === "space")
+        return this.$slots.sidebar || false;
       return true;
     },
   },

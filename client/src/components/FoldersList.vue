@@ -15,7 +15,8 @@
         :path="path"
         :folders="folders"
         :can_edit="can_edit"
-        :direction="view_mode === 'medium' ? 'grid' : 'list'"
+        :direction="['medium', 'tiny'].includes(view_mode) ? 'grid' : 'list'"
+        :view_mode="view_mode"
         v-slot="slotProps"
       >
         <slot :item="slotProps.item" />

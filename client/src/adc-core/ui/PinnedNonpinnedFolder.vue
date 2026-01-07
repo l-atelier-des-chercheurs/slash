@@ -18,6 +18,8 @@
             :class="{
               'is--mobileView': $root.is_mobile_view,
               'is--grid': direction === 'grid',
+              'is--tiny': view_mode === 'tiny',
+              'is--medium': view_mode === 'medium',
             }"
             name="listComplete"
             appear
@@ -80,6 +82,8 @@
       :class="{
         'is--mobileView': $root.is_mobile_view,
         'is--grid': direction === 'grid',
+        'is--tiny': view_mode === 'tiny',
+        'is--medium': view_mode === 'medium',
       }"
       name="listComplete"
       appear
@@ -116,6 +120,10 @@ export default {
     folders: Array,
     can_edit: Boolean,
     direction: {
+      default: "list",
+      type: String,
+    },
+    view_mode: {
       default: "list",
       type: String,
     },
@@ -231,10 +239,14 @@ export default {
     grid-auto-rows: max-content;
     grid-gap: var(--item-gap, calc(var(--spacing) / 1));
     align-items: stretch;
-    grid-template-columns: repeat(
-      auto-fill,
-      minmax(min(100%, var(--item-width, 320px)), 1fr)
-    );
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+
+    &.is--medium {
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    }
+    &.is--tiny {
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    }
   }
   &:not(.is--grid) {
     ._item {

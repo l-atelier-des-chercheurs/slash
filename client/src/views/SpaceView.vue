@@ -22,7 +22,7 @@
 
       <div class="_projectsList">
         <div class="_projectsList--header">
-          <DLabel :str="$t('list_of_projects')" :tag="'h2'" />
+          <DLabel :str="$t('list_of_projects')" :tag="'h1'" />
 
           <div v-if="can_contribute_to_space" class="u-sameRow">
             <button
@@ -55,12 +55,12 @@
           :folder_type="'project'"
           :pin_field_name="'projects_pinned'"
           :pin_label="$t('projects_pinned')"
-          :available_view_modes="['medium', 'map']"
+          :available_view_modes="['tiny', 'medium', 'map']"
         >
-          <template #item="{ item }">
+          <template #item="{ item, view_mode }">
             <ProjectPresentation
               :project="item"
-              :context="'list'"
+              :context="view_mode"
               :display_original_space="false"
               :can_edit="false"
               @toggleFilter="toggleFilter($event)"
