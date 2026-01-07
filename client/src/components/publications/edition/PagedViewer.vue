@@ -474,7 +474,7 @@ export default {
 
     /* Show grid structure in edit mode */
     @media screen {
-      .is--editable & {
+      &.is--editable {
         /* Show grid lines on the grid container */
         /* Add visible border to each grid cell */
         .grid-cell {
