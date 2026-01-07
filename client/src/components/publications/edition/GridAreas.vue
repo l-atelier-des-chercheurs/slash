@@ -109,6 +109,10 @@ export default {
       type: Object,
       required: true,
     },
+    publication: {
+      type: Object,
+      required: true,
+    },
   },
   components: {},
   data() {
@@ -192,17 +196,40 @@ export default {
         );
       });
     },
-    addAreaAtCell(cellIndex) {
+    async addAreaAtCell(cellIndex) {
       if (this.isCellOccupied(cellIndex)) return;
 
       const { col, row } = this.getCellPosition(cellIndex);
+      const new_area_id = this.generateNextLetterId();
+
       const new_area = {
-        id: this.generateNextLetterId(),
+        id: new_area_id,
         column_start: col,
         column_end: col + 1,
         row_start: row,
         row_end: row + 1,
       };
+
+      if (this.publication) {
+        const chapter_name = this.chapter.$path.split("/").pop();
+        const filename = `${chapter_name}-${new_area_id}_text.md`;
+
+        try {
+          const { meta_filename } = await this.$api.uploadText({
+            path: this.publication.$path,
+            filename,
+            content: "",
+            additional_meta: {
+              content_type: "markdown",
+              grid_area_id: new_area_id,
+            },
+          });
+          new_area.main_text_meta = meta_filename;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       const grid_areas = [...this.grid_areas, new_area];
       this.updateChapter({ grid_areas });
     },

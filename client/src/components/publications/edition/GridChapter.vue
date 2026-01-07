@@ -34,7 +34,9 @@ export default {
   },
   methods: {
     async createText(areaId) {
-      const filename = areaId + "_text.md";
+      const chapter_name = this.chapter.$path.split("/").pop();
+      const filename = `${chapter_name}-${areaId}_text.md`;
+
       const { meta_filename } = await this.$api.uploadText({
         path: this.publication.$path,
         filename,
@@ -44,8 +46,31 @@ export default {
           grid_area_id: areaId,
         },
       });
+
+      // Update grid area with the new file
+      const new_grid_areas = this.chapter.grid_areas.map((area) => {
+        if (area.id === areaId) {
+          return {
+            ...area,
+            main_text_meta: meta_filename,
+          };
+        }
+        return area;
+      });
+
+      this.$api.updateMeta({
+        path: this.chapter.$path,
+        new_meta: {
+          grid_areas: new_grid_areas,
+        },
+      });
     },
     getAreaTextMeta(area) {
+      if (area.main_text_meta) {
+        return this.publication.$files.find((f) =>
+          f.$path.endsWith("/" + area.main_text_meta)
+        );
+      }
       return this.publication.$files.find((f) => f.grid_area_id === area.id);
     },
   },

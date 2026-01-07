@@ -44,7 +44,11 @@
       </div>
 
       <div class="_gridConfiguration" v-if="chapter.section_type === 'grid'">
-        <GridAreas :chapter="chapter" @deleteArea="deleteArea" />
+        <GridAreas
+          :chapter="chapter"
+          :publication="publication"
+          @deleteArea="deleteArea"
+        />
       </div>
     </fieldset>
   </div>
@@ -125,10 +129,19 @@ export default {
     },
 
     async deleteArea(areaId) {
+      const area = this.chapter.grid_areas.find((a) => a.id === areaId);
+
       // Find and delete associated text file if it exists
-      const text_meta = this.publication.$files.find(
-        (f) => f.grid_area_id === areaId
-      );
+      let text_meta;
+      if (area && area.main_text_meta) {
+        text_meta = this.publication.$files.find((f) =>
+          f.$path.endsWith("/" + area.main_text_meta)
+        );
+      } else {
+        text_meta = this.publication.$files.find(
+          (f) => f.grid_area_id === areaId
+        );
+      }
 
       if (text_meta) {
         try {
