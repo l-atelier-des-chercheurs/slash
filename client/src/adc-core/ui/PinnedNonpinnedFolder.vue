@@ -124,7 +124,7 @@ export default {
       type: String,
     },
     view_mode: {
-      default: "list",
+      default: "grid",
       type: String,
     },
   },
