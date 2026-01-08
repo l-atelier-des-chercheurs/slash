@@ -202,13 +202,7 @@ export default {
 
   // box-shadow: 0 1px 40px rgb(0 0 0 / 10%);
 
-  // margin-top: -0.5rem;
-  // margin-bottom: -0.5rem;
-  // width: 24px;
-  // height: 24px;
-  // flex: 0 0 24px;
-  padding-left: 2px;
-  padding: calc(var(--spacing) / 2);
+  padding: calc(var(--spacing) / 4);
 
   border-radius: 50%;
   transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
@@ -218,6 +212,7 @@ export default {
   &:focus-visible {
     z-index: 2;
     // transform: scale(1.2);
+    background: transparent;
   }
 
   ._icon {
@@ -282,6 +277,7 @@ export default {
       color: inherit;
       background: var(--color-bg-hover);
       color: var(--color-icon-hover);
+      pointer-events: auto;
 
       opacity: 1;
       max-width: 40ch;
