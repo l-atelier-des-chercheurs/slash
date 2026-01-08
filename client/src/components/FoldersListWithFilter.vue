@@ -311,11 +311,19 @@ export default {
     return {
       search_query: "",
       order_key: "$date_created",
+
       current_view_mode: "medium", // 'list' or 'map' or 'medium'
       filter_by_group: "", // for authors
     };
   },
+  created() {
+    this.current_view_mode =
+      localStorage.getItem(this.view_mode_saved_key) || "medium";
+  },
   watch: {
+    current_view_mode(newVal) {
+      if (newVal) localStorage.setItem(this.view_mode_saved_key, newVal);
+    },
     folder_type: {
       immediate: true,
       handler() {
@@ -326,6 +334,9 @@ export default {
     },
   },
   computed: {
+    view_mode_saved_key() {
+      return "folders_view_mode_" + this.folder_type.toLowerCase();
+    },
     view_mode() {
       // Return true if map view should be available
       // Check if any folder has location data could be an enhancement
