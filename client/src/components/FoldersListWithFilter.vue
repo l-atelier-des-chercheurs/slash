@@ -317,12 +317,21 @@ export default {
     };
   },
   created() {
-    this.current_view_mode =
-      localStorage.getItem(this.view_mode_saved_key) || "medium";
+    // this.current_view_mode =
+    //   localStorage.getItem(this.view_mode_saved_key) || "medium";
   },
   watch: {
     current_view_mode(newVal) {
       if (newVal) localStorage.setItem(this.view_mode_saved_key, newVal);
+    },
+    search_query(newVal) {
+      localStorage.setItem(this.search_query_saved_key, newVal);
+    },
+    order_key(newVal) {
+      localStorage.setItem(this.order_key_saved_key, newVal);
+    },
+    filter_by_group(newVal) {
+      localStorage.setItem(this.filter_by_group_saved_key, newVal);
     },
     folder_type: {
       immediate: true,
@@ -330,12 +339,22 @@ export default {
         if (this.folder_type === "author") {
           this.order_key = "alphabetical";
         }
+        this.loadSettings();
       },
     },
   },
   computed: {
     view_mode_saved_key() {
       return "folders_view_mode_" + this.folder_type.toLowerCase();
+    },
+    search_query_saved_key() {
+      return "folders_search_query_" + this.folder_type.toLowerCase();
+    },
+    order_key_saved_key() {
+      return "folders_order_key_" + this.folder_type.toLowerCase();
+    },
+    filter_by_group_saved_key() {
+      return "folders_filter_by_group_" + this.folder_type.toLowerCase();
     },
     view_mode() {
       // Return true if map view should be available
@@ -529,6 +548,20 @@ export default {
     },
   },
   methods: {
+    loadSettings() {
+      this.current_view_mode =
+        localStorage.getItem(this.view_mode_saved_key) || "medium";
+      this.search_query =
+        localStorage.getItem(this.search_query_saved_key) || "";
+
+      const saved_order = localStorage.getItem(this.order_key_saved_key);
+      if (saved_order) {
+        this.order_key = saved_order;
+      }
+
+      this.filter_by_group =
+        localStorage.getItem(this.filter_by_group_saved_key) || "";
+    },
     extractAll(key) {
       return this.extractArr(this.filtered_folders, key);
     },
