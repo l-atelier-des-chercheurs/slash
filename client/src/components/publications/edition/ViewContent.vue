@@ -493,9 +493,16 @@ export default {
       let html = `<div class="grid"><div class="grid-content" style="--col-count: ${col_count}; --row-count: ${row_count};">`;
 
       chapter.grid_areas.forEach((area) => {
-        const text_meta = this.publication.$files.find(
-          (f) => f.grid_area_id === area.id
-        );
+        let text_meta;
+        if (area.main_text_meta) {
+          text_meta = this.publication.$files.find((f) =>
+            f.$path.endsWith("/" + area.main_text_meta)
+          );
+        } else {
+          text_meta = this.publication.$files.find(
+            (f) => f.grid_area_id === area.id
+          );
+        }
 
         if (text_meta && text_meta.$content) {
           const text = this.parseMarkdownWithMarkedownIt(

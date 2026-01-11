@@ -416,7 +416,16 @@ export default function () {
         const response = await this.$axios.get(path).catch((err) => {
           throw this.processError(err);
         });
-        const folders = response.data.length === 0 ? [] : response.data;
+
+        let folders = response.data;
+        if (!Array.isArray(folders)) {
+          console.error(
+            `getFolders: Expected array for path "${path}" but got:`,
+            folders
+          );
+          folders = [];
+        }
+
         this.$set(this.store, path, folders);
         // we use the store to trigger updates to array if item is updated
         return this.store[path];
@@ -433,7 +442,19 @@ export default function () {
         const response = await this.$axios.get(path).catch((err) => {
           throw this.processError(err);
         });
-        const folder = response.data;
+        let folder = response.data;
+
+        if (
+          typeof folder !== "object" ||
+          folder === null ||
+          Array.isArray(folder)
+        ) {
+          console.error(
+            `getFolder: Expected object for path "${path}" but got:`,
+            folder
+          );
+          folder = {};
+        }
 
         if (use_store) {
           // to get reactivity

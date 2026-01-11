@@ -163,6 +163,7 @@ export default {
 
   login: "se connecter",
   logout: "se déconnecter",
+  logging_out: "Déconnexion en cours…",
   name_or_pseudonym: "Nom ou pseudonyme",
   email: "Courriel",
   email_instr:
@@ -176,8 +177,8 @@ export default {
   create: "Créer",
   existing: "Existant",
   create_account: "créer un compte",
-  your_account: "votre compte",
-  new_account: "nouveau compte",
+  your_account: "Votre compte",
+  new_account: "Nouveau compte",
   account_group: "Groupe (pour les comptes)",
   group: "Groupe",
   show_list: "Afficher la liste",
@@ -404,6 +405,7 @@ export default {
 
   no_accounts_yet: "Aucun compte créé pour le moment",
   add_accounts: "Rajouter des comptes",
+  add_by_group: "Ajouter par groupe",
   restart_to_apply:
     "Fermez et redémarrez do•doc manuellement ou avec le bouton ci-dessous pour que le réglage prenne effet.",
   restart: "Fermer et redémarrer",

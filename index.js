@@ -1,10 +1,36 @@
+// Check Node.js version before anything else
+const packagejson = require("./package.json");
+const requiredNodeVersion = packagejson.engines?.node;
+const currentNodeVersion = process.version;
+
+if (requiredNodeVersion) {
+  // Normalize versions for comparison (remove 'v' prefix and any non-version characters)
+  const requiredVersion = requiredNodeVersion.replace(/[^0-9.]/g, "");
+  const currentVersion = currentNodeVersion.replace(/^v/, "");
+
+  // Compare exact version match
+  if (requiredVersion !== currentVersion) {
+    console.error("\n❌ Node.js version mismatch!");
+    console.error(`   Required: ${requiredNodeVersion}`);
+    console.error(`   Current:  ${currentNodeVersion}`);
+    console.error(
+      `\nPlease install Node.js version ${requiredNodeVersion} exactly to run this application.`
+    );
+    console.error(
+      "You can use nvm (Node Version Manager) to switch versions:\n"
+    );
+    console.error(`   nvm install ${requiredNodeVersion}`);
+    console.error(`   nvm use ${requiredNodeVersion}\n`);
+    process.exit(1);
+  }
+}
+
 const path = require("path");
 
 // Configure Node.js to accept self-signed certificates
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
-const packagejson = require("./package.json"),
-  base_settings = require("./settings_base.json");
+const base_settings = require("./settings_base.json");
 
 global.appRoot = path.resolve(__dirname);
 global.appInfos = {

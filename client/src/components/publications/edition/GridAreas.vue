@@ -109,6 +109,10 @@ export default {
       type: Object,
       required: true,
     },
+    publication: {
+      type: Object,
+      required: true,
+    },
   },
   components: {},
   data() {
@@ -192,17 +196,40 @@ export default {
         );
       });
     },
-    addAreaAtCell(cellIndex) {
+    async addAreaAtCell(cellIndex) {
       if (this.isCellOccupied(cellIndex)) return;
 
       const { col, row } = this.getCellPosition(cellIndex);
+      const new_area_id = this.generateNextLetterId();
+
       const new_area = {
-        id: this.generateNextLetterId(),
+        id: new_area_id,
         column_start: col,
         column_end: col + 1,
         row_start: row,
         row_end: row + 1,
       };
+
+      if (this.publication) {
+        const chapter_name = this.chapter.$path.split("/").pop();
+        const filename = `${chapter_name}-${new_area_id}_text.md`;
+
+        try {
+          const { meta_filename } = await this.$api.uploadText({
+            path: this.publication.$path,
+            filename,
+            content: "",
+            additional_meta: {
+              content_type: "markdown",
+              grid_area_id: new_area_id,
+            },
+          });
+          new_area.main_text_meta = meta_filename;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       const grid_areas = [...this.grid_areas, new_area];
       this.updateChapter({ grid_areas });
     },
@@ -438,8 +465,8 @@ export default {
 
 ._gridCell--background {
   background: transparent;
-  outline: 1px dashed var(--c-gris);
-  background: var(--c-gris);
+  background: var(--c-gris_clair);
+  color: var(--c-gris_fonce);
   outline-offset: -1px;
   height: 80px;
   border-radius: var(--input-border-radius);
@@ -450,13 +477,16 @@ export default {
   justify-content: center;
   transition: background 0.15s ease;
 
+  ._gridCell--addIcon {
+    color: var(--c-gris);
+  }
+
   &:not(._gridCell--occupied):hover {
     background: rgba(0, 0, 0, 0.02);
-    outline-color: var(--c-gris);
+    outline: 1px dashed var(--c-gris);
 
     ._gridCell--addIcon {
-      opacity: 0.7;
-      color: var(--active-color);
+      opacity: 1;
     }
   }
 
@@ -484,6 +514,7 @@ export default {
 ._gridArea {
   position: relative;
   border: 2px solid var(--c-gris);
+  border-radius: var(--input-border-radius);
   background: white;
   cursor: move;
   transition: border-color 0.15s ease;
@@ -500,7 +531,7 @@ export default {
 
   &._gridArea--selected {
     border-color: var(--c-bleuvert);
-    box-shadow: 0 0 0 2px rgba(94, 185, 196, 0.15);
+    // box-shadow: 0 0 0 2px rgba(94, 185, 196, 0.15);
   }
 
   &._gridArea--dragging {

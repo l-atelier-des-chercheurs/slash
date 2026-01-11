@@ -1,38 +1,89 @@
 <template>
   <div class="_publicationsList">
-    <div class="u-sameRow _topBtn">
-      <DLabel :str="$t('publications')" :tag="'h2'" />
-      <button
-        type="button"
-        class="u-button u-button_bleuvert"
-        v-if="can_edit"
-        @click="show_create_publication = true"
-      >
-        <svg
-          version="1.1"
-          xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          x="0px"
-          y="0px"
-          viewBox="0 0 168 168"
-          style="enable-background: new 0 0 168 168"
-          xml:space="preserve"
+    <FoldersListWithFilter
+      ref="foldersList"
+      :folders="publications"
+      :pinned_folders="project.publications_pinned"
+      :path="project.$path"
+      :can_edit="can_edit_project"
+      :folder_type="'publication'"
+      :pin_field_name="'publications_pinned'"
+      :pin_label="$t('publications_pinned')"
+      :empty_message="$t('no_publications')"
+      :available_view_modes="['tiny', 'medium']"
+    >
+      <template #before-sidebar-toggle>
+        <DLabel :str="$t('publications')" :tag="'h2'" />
+        <button
+          type="button"
+          class="u-button u-button_bleuvert"
+          v-if="can_edit"
+          @click="show_create_publication = true"
         >
-          <path
-            style="fill: var(--color-publish)"
-            d="M24.6,24.4c-32.8,32.8-32.8,86.1,0,119c32.8,32.8,85.9,32.8,118.7,0c32.8-32.8,32.8-85.9,0-118.7
+          <svg
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            x="0px"
+            y="0px"
+            viewBox="0 0 168 168"
+            style="enable-background: new 0 0 168 168"
+            xml:space="preserve"
+          >
+            <path
+              style="fill: var(--color-publish)"
+              d="M24.6,24.4c-32.8,32.8-32.8,86.1,0,119c32.8,32.8,85.9,32.8,118.7,0c32.8-32.8,32.8-85.9,0-118.7
 		C110.5-8.2,57.5-8.2,24.6,24.4z"
-          />
-          <polygon
-            style="fill: #ffffff"
-            points="132.3,73.4 132.3,94.4 94.6,94.4 94.6,132.1 73.6,132.1 73.6,94.4 35.9,94.4 35.9,73.4 
+            />
+            <polygon
+              style="fill: #ffffff"
+              points="132.3,73.4 132.3,94.4 94.6,94.4 94.6,132.1 73.6,132.1 73.6,94.4 35.9,94.4 35.9,73.4 
 		73.6,73.4 73.6,35.7 94.6,35.7 94.6,73.4 		"
-          />
-        </svg>
-        &nbsp;
-        {{ $t("create") }}
-      </button>
-    </div>
+            />
+          </svg>
+          &nbsp;
+          {{ $t("create") }}
+        </button>
+      </template>
+
+      <template #item="{ item, view_mode }">
+        <PublicationPreview
+          :publication="item"
+          :template_options="template_options"
+          :can_edit="can_edit"
+          :context="view_mode"
+          @open="openEntry(item.$path)"
+        />
+      </template>
+
+      <template #top-right>
+        <template v-if="can_edit">
+          <button
+            type="button"
+            class="u-buttonLink"
+            @click="show_bin_modal = true"
+          >
+            <b-icon icon="recycle" />
+            {{ $t("bin") }}
+          </button>
+          <BinFolder
+            v-if="show_bin_modal"
+            :modal_title="$t('restore_publications')"
+            :path="project.$path + '/publications'"
+            @close="show_bin_modal = false"
+          >
+            <template v-slot="slotProps">
+              <PublicationPreview
+                :publication="slotProps.project"
+                :template_options="template_options"
+                :can_edit="slotProps.can_edit"
+              />
+            </template>
+          </BinFolder>
+        </template>
+      </template>
+    </FoldersListWithFilter>
+
     <CreatePublication
       v-if="show_create_publication"
       :project_path="project.$path"
@@ -40,66 +91,13 @@
       @close="show_create_publication = false"
       @openPubli="$emit('togglePubli', $event)"
     />
-    <br />
-
-    <div class="_publications">
-      <div
-        v-if="sorted_publications.length === 0"
-        class="u-instructions"
-        :key="'nopublis'"
-      >
-        {{ $t("no_publications") }}
-      </div>
-      <PinnedNonpinnedFolder
-        v-else
-        :field_name="'publications_pinned'"
-        :label="$t('publications_pinned')"
-        :content="project.publications_pinned"
-        :path="project.$path"
-        :folders="sorted_publications"
-        :can_edit="can_edit_project"
-        v-slot="slotProps"
-      >
-        <PublicationPreview
-          :publication="slotProps.item"
-          :template_options="template_options"
-          :can_edit="can_edit"
-          @open="openEntry(slotProps.item.$path)"
-        />
-      </PinnedNonpinnedFolder>
-
-      <template v-if="can_edit">
-        <button
-          type="button"
-          class="u-buttonLink"
-          @click="show_bin_modal = true"
-        >
-          <b-icon icon="recycle" />
-          {{ $t("bin") }}
-        </button>
-        <BinFolder
-          v-if="show_bin_modal"
-          :modal_title="$t('restore_publications')"
-          :path="project.$path + '/publications'"
-          @close="show_bin_modal = false"
-        >
-          <template v-slot="slotProps">
-            <PublicationPreview
-              :publication="slotProps.project"
-              :template_options="template_options"
-              :can_edit="slotProps.can_edit"
-            />
-          </template>
-        </BinFolder>
-      </template>
-    </div>
   </div>
 </template>
 <script>
 import CreatePublication from "@/components/publications/CreatePublication.vue";
 import PublicationPreview from "@/components/publications/PublicationPreview.vue";
-import PinnedNonpinnedFolder from "@/adc-core/ui/PinnedNonpinnedFolder.vue";
 import BinFolder from "@/adc-core/fields/BinFolder.vue";
+import FoldersListWithFilter from "@/components/FoldersListWithFilter.vue";
 
 export default {
   props: {
@@ -109,8 +107,8 @@ export default {
   components: {
     CreatePublication,
     PublicationPreview,
-    PinnedNonpinnedFolder,
     BinFolder,
+    FoldersListWithFilter,
   },
   data() {
     return {
@@ -206,36 +204,6 @@ export default {
         </svg>
           `,
         },
-        // {
-        //   key: "face_masks",
-        //   label: this.$t("face_masks") + " (EXPERIMENTAL)",
-        //   disabled: true,
-        //   icon: `
-        //   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 201 201">
-        //     <rect x="67" y="67" width="67" height="67" style="fill: #fff"/>
-        //   </svg>
-        //       `,
-        // },
-        // {
-        //   key: "image_tracking",
-        //   label: this.$t("image_tracking") + " (EXPERIMENTAL)",
-        //   disabled: true,
-        //   icon: `
-        //   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 201 201">
-        //     <rect x="67" y="67" width="67" height="67" style="fill: #fff"/>
-        //   </svg>
-        //       `,
-        // },
-        // {
-        //   key: "carreau",
-        //   summary: "carreau_summary",
-        //   show_instructions: false,
-        //   instructions: "carreau_instructions",
-        //   show_all_recipes: false,
-        //   icon: `
-
-        //   `
-        // }
       ],
     };
   },
@@ -251,18 +219,6 @@ export default {
   },
   watch: {},
   computed: {
-    sorted_publications() {
-      return this.publications
-        .slice()
-        .filter((f) => {
-          if (this.can_edit) return true;
-          if (f.$status !== "invisible" && f.$status !== "private") return true;
-          return false;
-        })
-        .sort(
-          (a, b) => +new Date(b.$date_created) - +new Date(a.$date_created)
-        );
-    },
     can_edit_project() {
       return this.canLoggedinEditFolder({ folder: this.project.$path });
     },
@@ -280,16 +236,9 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._publicationsList {
-  --item-width: 180px;
-  --item-gap: calc(var(--spacing) * 2);
-
   width: 100%;
   max-width: min(var(--max-column-width), var(--max-column-width-px));
   margin: 0 auto;
   padding-top: calc(var(--spacing) * 1);
-}
-
-._topBtn {
-  margin-top: calc(var(--spacing) * 1);
 }
 </style>

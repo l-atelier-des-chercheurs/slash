@@ -274,7 +274,8 @@ export default {
 }
 
 ._edit {
-  // margin-top: -4px;
+  margin-top: calc(var(--spacing) / -1);
+  margin-bottom: calc(var(--spacing) / -2);
 
   /* Hide edit button by default on devices that support hover */
   @media (hover: hover) {

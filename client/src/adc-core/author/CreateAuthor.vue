@@ -40,7 +40,7 @@
         @submit.prevent="createAuthor"
       >
         <fieldset>
-          <legend class="u-label">{{ $t("new_account") }}</legend>
+          <legend>{{ $t("new_account") }}</legend>
 
           <TextInput
             :content.sync="new_author_name"

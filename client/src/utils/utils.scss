@@ -212,13 +212,13 @@ button,
   gap: calc(var(--spacing) / 4);
   align-items: center;
   justify-content: center;
-  // text-transform: uppercase;
+  border: 2px solid transparent;
   font-weight: 400;
-  // letter-spacing: 0.02em;
   font-size: var(--input-font-size);
   text-decoration: none;
   color: inherit;
   white-space: nowrap;
+  cursor: pointer;
   background-color: var(--c-gris_clair);
   white-space: break-spaces;
 
@@ -255,8 +255,7 @@ button,
     }
   }
   &.is--active {
-    background: var(--active-color);
-    color: white;
+    border-color: rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -279,12 +278,24 @@ button,
     }
   }
   &.is--active {
-    background-color: var(--active-color);
+    background-color: var(--c-noir);
     color: white;
+
+    &:hover,
+    &:active,
+    &:focus-visible {
+      &:not([disabled]) {
+        background-color: var(--c-gris_fonce);
+      }
+    }
   }
 
   &.u-button_small {
     padding: calc(var(--spacing) / 4);
+    .b-icon.bi {
+      width: 1em;
+      height: 1em;
+    }
   }
 }
 .u-button_inline {
@@ -321,6 +332,14 @@ button,
 .u-button_black {
   background-color: var(--c-noir);
   color: white;
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--c-gris_fonce);
+    }
+  }
 }
 .u-button_white {
   background-color: white;
@@ -330,8 +349,8 @@ button,
   &:focus-visible,
   &.is--active {
     &:not([disabled]) {
-      background-color: var(--active-color);
-      color: white;
+      // background-color: var(--active-color);
+      // color: white;
     }
   }
 }
@@ -385,21 +404,16 @@ button,
 
   &:hover,
   &:focus-visible {
-    &:not([disabled]) {
+    &:not([disabled]):not(.is--active) {
       background: rgba(255, 255, 255, 1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      color: var(--c-noir);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       transform: translateY(-1px);
     }
-  }
-
-  &.is--active {
-    background: white;
-    color: var(--c-noir);
   }
 }
 .u-button_orange {
   background-color: var(--c-orange);
-  color: white;
 
   &:hover,
   &:focus-visible,
@@ -407,6 +421,10 @@ button,
     &:not([disabled]) {
       background-color: var(--c-orange_fonce);
     }
+  }
+
+  &[disabled] {
+    color: var(--c-gris);
   }
 }
 .u-button_bleumarine {
@@ -432,11 +450,6 @@ button,
   font-size: var(--sl-font-size-x-small);
   padding: calc(var(--spacing) / 8) calc(var(--spacing) / 4);
 }
-.u-button_big {
-  font-size: var(--input-font-size-big);
-  min-height: 2.9em;
-}
-
 .u-colorOrange {
   color: var(--c-orange);
 }
@@ -895,21 +908,21 @@ code {
 }
 
 fieldset {
-  border: 2px solid var(--c-gris);
+  border: 2px solid var(--c-gris_clair);
+  padding: calc(var(--spacing) / 2);
   margin: 0;
   border-radius: var(--input-border-radius);
+  min-width: 0;
 
   legend {
-    color: var(--c-gris_fonce) !important;
-    background: white;
-    border-radius: 4px;
-    text-align: center;
-    padding: 0 calc(var(--spacing) / 2);
-    font-weight: 500;
-    margin-bottom: -0.5rem;
+    @extend .u-label;
+    width: 100%;
+    float: left;
+    margin-bottom: calc(var(--spacing) / 2);
+    padding: 0;
 
-    &.u-label {
-      margin-bottom: 0;
+    & + * {
+      clear: both;
     }
   }
 }

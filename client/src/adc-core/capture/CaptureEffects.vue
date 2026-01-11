@@ -28,7 +28,7 @@
           :show_toggle.sync="chroma_key_settings.enable"
         >
           <fieldset>
-            <legend class="u-label">{{ $t("chroma_key_color") }}</legend>
+            <legend>{{ $t("chroma_key_color") }}</legend>
 
             <ColorInput
               :label="$t('color')"
@@ -94,7 +94,7 @@
           </fieldset>
 
           <fieldset>
-            <legend class="u-label">{{ $t("replace_color_with") }}</legend>
+            <legend>{{ $t("replace_color_with") }}</legend>
 
             <RadioCheckboxInput
               :value="chroma_key_settings.replacement_mode"

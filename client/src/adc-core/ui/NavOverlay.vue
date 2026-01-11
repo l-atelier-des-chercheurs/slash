@@ -7,6 +7,9 @@
       <button
         type="button"
         class="u-button u-button_icon u-button_glass"
+        :class="{
+          'is--active': show_sidebar,
+        }"
         @click="$emit('update:show_sidebar', !show_sidebar)"
         :title="$t('toggle_sidebar')"
       >
@@ -20,6 +23,9 @@
         v-if="has_sidebar_toggle && sidebar_position === 'right'"
         type="button"
         class="u-button u-button_icon u-button_glass"
+        :class="{
+          'is--active': show_sidebar,
+        }"
         @click="$emit('update:show_sidebar', !show_sidebar)"
         :title="$t('toggle_sidebar')"
       >

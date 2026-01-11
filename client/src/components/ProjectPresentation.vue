@@ -2,7 +2,7 @@
   <div
     class="_projectInfos"
     :class="{
-      'is--list': ['list', 'tiny'].includes(context),
+      'is--list': ['list', 'tiny', 'medium'].includes(context),
       'is--own': is_own_project,
       'u-card2': context !== 'full',
       'is--mobileView': $root.is_mobile_view,
@@ -27,12 +27,18 @@
               project.$status === 'finished' || project.$status === 'private'
             "
             class="_icon"
-            :class="{ 'is--list': context === 'list' }"
+            :class="{
+              'is--list': ['list', 'tiny', 'medium'].includes(context),
+            }"
             :key="project.$status"
             :show_label="false"
             :status="project.$status"
             :can_edit="false"
-            :mode="context === 'list' ? 'active' : 'inactive'"
+            :mode="
+              ['list', 'tiny', 'medium'].includes(context)
+                ? 'active'
+                : 'inactive'
+            "
             @click="
               $emit('toggleFilter', {
                 filter_type: '$status',
@@ -123,7 +129,13 @@
           :path="project.$path"
           :required="true"
           :maxlength="40"
-          :tag="context === 'full' ? 'h1' : context === 'list' ? 'h3' : 'h5'"
+          :tag="
+            context === 'full'
+              ? 'h1'
+              : ['list', 'tiny', 'medium'].includes(context)
+              ? 'h3'
+              : 'h5'
+          "
           :can_edit="can_edit"
           :instructions="
             can_edit ? $t('project_title_instructions') : undefined
@@ -132,7 +144,8 @@
 
         <TitleField
           v-if="
-            (context === 'list' && project.description) ||
+            (['list', 'tiny', 'medium'].includes(context) &&
+              project.description) ||
             (context === 'full' && (project.description || can_edit))
           "
           :field_name="'description'"
@@ -169,7 +182,7 @@
 
         <div
           class="_allTags"
-          v-if="context !== 'tiny' && context !== 'full' && all_tags.length > 0"
+          v-if="!['tiny', 'full'].includes(context) && all_tags.length > 0"
         >
           <template v-for="tags in all_tags">
             <SingleTag
@@ -187,7 +200,7 @@
 
         <div
           class="_compactExpandButton"
-          v-if="context === 'list'"
+          v-if="['medium'].includes(context)"
           :class="{ 'is--active': !short_project_view }"
           @click="toggleCompacted"
         >
@@ -227,7 +240,7 @@
 
     <router-link
       class="js--showCursor _projectInfos--open"
-      v-if="['list', 'tiny'].includes(context)"
+      v-if="['tiny', 'medium'].includes(context)"
       :to="{ path: createURLFromPath(project.$path) }"
       :title="$t('open') + ' ' + project.title"
     />
@@ -294,7 +307,7 @@ export default {
       return space.title;
     },
     is_compacted() {
-      return this.context === "list" && this.short_project_view;
+      return ["list"].includes(this.context) && this.short_project_view;
     },
     is_own_project() {
       return this.isOwnItem({ folder: this.project });
@@ -354,6 +367,15 @@ export default {
   &.is--linkToProject {
   }
 
+  &.is--medium {
+    // background: white;
+    // border-radius: 4px;
+
+    ._title {
+      // font-size: var(--sl-font-size-small);
+    }
+  }
+
   &.is--list {
     background-color: #fff;
     border-radius: 4px;
@@ -391,6 +413,11 @@ export default {
   &[data-context="tiny"] {
     ._projectInfos--infos {
       padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
+    }
+  }
+  &[data-context="medium"] {
+    ._projectInfos--infos {
+      padding: calc(var(--spacing) / 2) calc(var(--spacing) / 2);
     }
   }
 

@@ -1,13 +1,22 @@
 <template>
   <div class="_uiView">
-    <!-- INSERT_YOUR_CODE -->
+    <div class="u-spacingBottom">
+      <h3>Radio Switch</h3>
+      <RadioSwitch
+        :content.sync="radioswitch_content"
+        :options="[
+          { label: 'Option 1', value: 'opt1' },
+          { label: 'Option 2', value: 'opt2' },
+          { label: 'Option 3', value: 'opt3' },
+        ]"
+      />
+    </div>
 
     <h2>Buttons Demo</h2>
 
     <h3>Standard Buttons</h3>
     <div class="_buttonsDemo">
       <button class="u-button">Default Button</button>
-      <button class="u-button u-button_big">Big Button</button>
       <button class="u-button u-button_floating">Floating</button>
       <button class="u-button u-button_wide">Wide</button>
       <button class="u-button u-button_inline">
@@ -31,6 +40,27 @@
         :class="{ 'is--active': true }"
       >
         Active Transparent
+      </button>
+    </div>
+
+    <h3>Active Buttons</h3>
+    <div class="_buttonsDemo">
+      <button class="u-button is--active">Default Active</button>
+      <button class="u-button u-button_black is--active">Black Active</button>
+      <button class="u-button u-button_white is--active">White Active</button>
+      <button class="u-button u-button_red is--active">Red Active</button>
+      <button class="u-button u-button_bleuvert is--active">
+        Bleuvert Active
+      </button>
+      <button class="u-button u-button_bleuvert_fonce is--active">
+        Bleuvert Foncé Active
+      </button>
+      <button class="u-button u-button_orange is--active">Orange Active</button>
+      <button class="u-button u-button_bleumarine is--active">
+        Bleumarine Active
+      </button>
+      <button class="u-button u-button_transparent is--active">
+        Transparent Active
       </button>
     </div>
 
@@ -70,13 +100,13 @@
         <b-icon icon="star" />
       </button>
       <button class="u-button u-button_icon">
-        <b-icon icon="heart" />
+        <b-icon icon="x-lg" />
       </button>
       <button class="u-button u-button_icon">
-        <b-icon icon="settings" />
+        <b-icon icon="play-circle-fill" />
       </button>
       <button class="u-button u-button_icon" :class="{ 'is--active': true }">
-        <b-icon icon="heart" />
+        <b-icon icon="x-lg" />
       </button>
     </div>
 
@@ -142,16 +172,16 @@
         <b-icon icon="star" />
       </button>
       <button class="u-button u-button_icon u-button_small">
-        <b-icon icon="heart" />
+        <b-icon icon="play-circle-fill" />
       </button>
       <button class="u-button u-button_icon u-button_small">
-        <b-icon icon="settings" />
+        <b-icon icon="x-lg" />
       </button>
       <button class="u-button u-button_icon u-button_small">
-        <b-icon icon="eye" />
+        <b-icon icon="globe" />
       </button>
       <button class="u-button u-button_icon u-button_small">
-        <b-icon icon="download" />
+        <b-icon icon="file-earmark-arrow-down" />
       </button>
     </div>
 
@@ -427,6 +457,17 @@
 
     <div class="u-spacingBottom"></div>
 
+    <fieldset>
+      <legend>My Fieldset</legend>
+      <div class="u-spacingBottom">
+        <label>Input inside fieldset</label>
+        <input type="text" />
+      </div>
+      <div>Some other content</div>
+    </fieldset>
+
+    <div class="u-spacingBottom"></div>
+
     <SizeDisplay :size="2059" />
   </div>
 </template>
@@ -436,6 +477,7 @@ export default {
   components: {},
   data() {
     return {
+      radioswitch_content: "opt1",
       authors: [],
       show_modal: 0,
       modal_size: "small",

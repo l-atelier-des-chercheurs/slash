@@ -25,7 +25,7 @@
           <NumberInput
             v-if="['text', 'grid'].includes(chapter.section_type)"
             :label="$t('column_count')"
-            :value="chapter.column_count || 6"
+            :value="column_count"
             :size="'small'"
             :min="1"
             :max="12"
@@ -34,7 +34,7 @@
           <NumberInput
             v-if="['grid'].includes(chapter.section_type)"
             :label="$t('row_count')"
-            :value="chapter.row_count || 6"
+            :value="row_count"
             :size="'small'"
             :min="1"
             :max="12"
@@ -44,7 +44,11 @@
       </div>
 
       <div class="_gridConfiguration" v-if="chapter.section_type === 'grid'">
-        <GridAreas :chapter="chapter" @deleteArea="deleteArea" />
+        <GridAreas
+          :chapter="chapter"
+          :publication="publication"
+          @deleteArea="deleteArea"
+        />
       </div>
     </fieldset>
   </div>
@@ -105,6 +109,16 @@ export default {
           },
         ];
     },
+    column_count() {
+      if (this.chapter.section_type === "grid") {
+        return this.chapter.column_count || 6;
+      }
+      return this.chapter.column_count || 1;
+    },
+    row_count() {
+      // only for grid
+      return this.chapter.row_count || 6;
+    },
   },
   methods: {
     updateChapterMeta(new_meta) {
@@ -115,10 +129,19 @@ export default {
     },
 
     async deleteArea(areaId) {
+      const area = this.chapter.grid_areas.find((a) => a.id === areaId);
+
       // Find and delete associated text file if it exists
-      const text_meta = this.publication.$files.find(
-        (f) => f.grid_area_id === areaId
-      );
+      let text_meta;
+      if (area && area.main_text_meta) {
+        text_meta = this.publication.$files.find((f) =>
+          f.$path.endsWith("/" + area.main_text_meta)
+        );
+      } else {
+        text_meta = this.publication.$files.find(
+          (f) => f.grid_area_id === areaId
+        );
+      }
 
       if (text_meta) {
         try {

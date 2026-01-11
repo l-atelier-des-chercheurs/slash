@@ -13,11 +13,7 @@
           @click="selected_source = 'project'"
         >
           <span class="u-icon" v-html="dodoc_icon_collect" />
-          <div class="_sourceBtnContent">
-            <div>
-              <strong>{{ $t("import_from_project") }}</strong>
-            </div>
-          </div>
+          {{ $t("import_from_project") }}
         </button>
         <div class="u-instructions">
           {{ $t("import_from_project_description") }}
@@ -31,11 +27,7 @@
           @click="selected_source = 'resources'"
         >
           <b-icon icon="collection" />
-          <div class="_sourceBtnContent">
-            <div>
-              <strong>{{ $t("free_resources") }}</strong>
-            </div>
-          </div>
+          {{ $t("free_resources") }}
         </button>
         <div class="u-instructions">
           {{ $t("free_resources_description") }}

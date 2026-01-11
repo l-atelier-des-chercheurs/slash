@@ -139,6 +139,7 @@ export default {
 
   login: "Login",
   logout: "Logout",
+  logging_out: "Logging out…",
   name_or_pseudonym: "Name or nickname",
   email: "Email",
   email_instr: "Contact email, only visible to admins.",
@@ -218,6 +219,7 @@ export default {
   login_no_account_matches: "No accounts match",
 
   add_accounts: "Add accounts",
+  add_by_group: "Add by group",
   show: "Show",
   show_title: "Show title",
   hide: "Hide",
