@@ -1559,4 +1559,6 @@ export default {
   space_title: "Titre de l’espace",
 
   new_note_todo: "Nouvelle note/tâche",
+  list_of_notes_todo: "Liste des notes/tâches",
+  list_of_notes_done: "Liste des notes/tâches terminées",
 };

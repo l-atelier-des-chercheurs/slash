@@ -245,6 +245,9 @@
                       "type": "string",
                       "options": ["todo", "done", "canceled"],
                       "default": "todo"
+                    },
+                    "done_date": {
+                      "type": "string"
                     }
                   }
                 }

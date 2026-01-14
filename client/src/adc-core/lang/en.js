@@ -1489,4 +1489,8 @@ export default {
   loop: "Loop",
   muted: "Muted",
   show_controls: "Show controls",
+
+  new_note_todo: "Nouvelle note/tâche",
+  list_of_notes_todo: "Liste des notes/tâches",
+  list_of_notes_done: "Liste des notes/tâches terminées",
 };
