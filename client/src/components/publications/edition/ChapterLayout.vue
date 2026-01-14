@@ -1,15 +1,12 @@
 <template>
   <div class="_chapterLayout">
     <fieldset
-      v-if="
-        ['text', 'gallery', 'grid'].includes(chapter.section_type) &&
-        view_mode === 'book'
-      "
+      v-if="['text', 'gallery', 'grid'].includes(chapter.section_type)"
       class="u-spacingBottom _layout"
     >
       <legend>{{ $t("layout") }}</legend>
       <div class="_optionsRow">
-        <div class="_selects--starts_on_page">
+        <div class="_selects--starts_on_page" v-if="view_mode === 'book'">
           <DLabel :str="$t('starts_on_page')" />
           <SelectField2
             :field_name="'section_starts_on_page'"
