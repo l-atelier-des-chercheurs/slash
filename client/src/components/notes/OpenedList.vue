@@ -1,6 +1,7 @@
 <template>
   <div class="_openedList">
     <!-- <DLabel :str="list_meta.title" /> -->
+    dragOverIndex {{ dragOverIndex }}
     <transition-group name="listComplete" class="_listItems" appear>
       <div key="header">
         <DLabel :str="$t('new_note_todo')" />
@@ -39,30 +40,49 @@
           "
         />
       </div>
+
       <div
-        v-for="(item, index) in local_todo_items"
-        :key="item.$path"
-        class="_listItem _listItem_todo"
+        class="_dropZone"
         :class="{
-          _dragging: draggedIndex === index,
-          '_drag-over': dragOverIndex === index,
+          _dropZone_active: dragOverIndex === 0 && draggedIndex !== null,
         }"
-        draggable="true"
-        @dragstart="handleDragStart($event, index)"
-        @dragend="handleDragEnd"
-        @dragover.prevent="handleDragOver($event, index)"
-        @dragenter.prevent="handleDragEnter(index)"
+        :key="'first_dropZone'"
+        @dragover.prevent="handleDragOver($event, 0)"
+        @dragenter.prevent="handleDragEnter(0)"
         @dragleave="handleDragLeave"
-        @drop.prevent="handleDrop($event, index)"
-      >
-        <input
-          type="checkbox"
-          :checked="item.state === 'done'"
-          @change="toggleItemState(item, $event.target.checked)"
-          class="_checkbox"
+        @drop.prevent="handleDrop($event, 0)"
+      />
+      <template v-for="(item, index) in local_todo_items">
+        <div
+          class="_listItem _listItem_todo"
+          :class="{
+            _dragging: draggedIndex === index,
+          }"
+          :key="item.$path"
+          draggable="true"
+          @dragstart="handleDragStart($event, index)"
+          @dragend="handleDragEnd"
+        >
+          <input
+            type="checkbox"
+            :checked="item.state === 'done'"
+            @change="toggleItemState(item, $event.target.checked)"
+            class="_checkbox"
+          />
+          <span class="_itemTitle">{{ item.title }}</span>
+        </div>
+        <div
+          class="_dropZone"
+          :class="{
+            _dropZone_active: dragOverIndex === index && draggedIndex !== null,
+          }"
+          :key="item.$path + '_dropZone'"
+          @dragover.prevent="handleDragOver($event, index)"
+          @dragenter.prevent="handleDragEnter(index)"
+          @dragleave="handleDragLeave"
+          @drop.prevent="handleDrop($event, index)"
         />
-        <span class="_itemTitle">{{ item.title }}</span>
-      </div>
+      </template>
 
       <div v-if="local_todo_items.length === 0" key="no-todo-items" class="">
         <b-icon icon="check-lg" />
@@ -403,33 +423,24 @@ export default {
   &._dragging {
     opacity: 0.5;
   }
-
-  &._drag-over {
-    transform: translateY(4px);
-    position: relative;
-
-    &::before {
-      opacity: 1;
-    }
-  }
-  &::before {
-    content: "→";
-    font-family: "Fira Code";
-    font-weight: 600;
-    position: absolute;
-    top: -10px;
-    right: 100%;
-    height: 24px;
-    width: 28px;
-    pointer-events: none;
-    color: white;
-    display: flex;
-    align-items: center;
-    font-size: 20px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    z-index: 2;
-  }
+  // &::before {
+  //   content: "→";
+  //   font-family: "Fira Code";
+  //   font-weight: 600;
+  //   position: absolute;
+  //   top: -10px;
+  //   right: 100%;
+  //   height: 24px;
+  //   width: 28px;
+  //   pointer-events: none;
+  //   color: white;
+  //   display: flex;
+  //   align-items: center;
+  //   font-size: 20px;
+  //   opacity: 0;
+  //   transition: opacity 0.2s ease;
+  //   z-index: 2;
+  // }
 }
 
 ._checkbox {
@@ -457,5 +468,20 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 2);
   opacity: 0.7;
+}
+
+._dropZone {
+  min-height: 10px;
+  margin-top: -10px;
+  margin-bottom: -10px;
+  border-radius: var(--border-radius);
+  transition: min-height 0.2s ease, background-color 0.2s ease;
+  background-color: red;
+  z-index: 1000;
+}
+
+._dropZone_active {
+  min-height: 40px;
+  background-color: white;
 }
 </style>
