@@ -70,7 +70,10 @@
           @drag-end="handleDragEnd"
         />
         <div
-          v-if="index === local_todo_items.length - 1"
+          v-if="
+            index === local_todo_items.length - 1 &&
+            draggedIndex !== local_todo_items.length - 1
+          "
           class="_dropZone _dropZone_last"
           :class="{
             _dropZone_active: draggedIndex !== null,
