@@ -57,24 +57,15 @@
           @drop.prevent="handleDrop($event, index)"
         ></div>
 
-        <div
-          class="_listItem _listItem_todo"
-          :class="{
-            _dragging: draggedIndex === index,
-          }"
+        <TodoListItem
           :key="item.$path"
-          draggable="true"
-          @dragstart="handleDragStart($event, index)"
-          @dragend="handleDragEnd"
-        >
-          <input
-            type="checkbox"
-            :checked="item.state === 'done'"
-            @change="toggleItemState(item, $event.target.checked)"
-            class="_checkbox"
-          />
-          <span class="_itemTitle">{{ item.title }}</span>
-        </div>
+          :item="item"
+          :index="index"
+          :draggable="true"
+          @toggle-state="toggleItemState"
+          @drag-start="handleDragStart"
+          @drag-end="handleDragEnd"
+        />
         <div
           v-if="index === local_todo_items.length - 1"
           class="_dropZone _dropZone_last"
@@ -112,20 +103,13 @@
             "
           />
         </div>
-        <div
-          class="_listItem _listItem_done"
+        <TodoListItem
           v-for="item in list_items_done"
           :key="item.$path"
-        >
-          <input
-            type="checkbox"
-            :checked="true"
-            @change="toggleItemState(item, $event.target.checked)"
-            class="_checkbox"
-          />
-          <span class="_itemTitle">{{ item.title }} </span>
-          <span class="u-instructions _doneDate">{{ showDoneDate(item) }}</span>
-        </div>
+          :item="item"
+          :draggable="false"
+          @toggle-state="toggleItemState"
+        />
       </template>
     </transition-group>
 
@@ -133,6 +117,8 @@
   </div>
 </template>
 <script>
+import TodoListItem from "./TodoListItem.vue";
+
 export default {
   props: {
     path: {
@@ -140,7 +126,9 @@ export default {
       required: true,
     },
   },
-  components: {},
+  components: {
+    TodoListItem,
+  },
   data() {
     return {
       new_item_title: "",
@@ -148,6 +136,8 @@ export default {
       draggedIndex: null,
       dragOverIndex: null,
       local_todo_items: [],
+
+      opened_item_path: undefined,
     };
   },
   async created() {
@@ -242,13 +232,6 @@ export default {
           notes_list: current_list,
         },
       });
-
-      // this.$api.updateMeta({
-      //   path: this.list_meta.$path,
-      //   new_meta: {
-      //     notes_list: [...this.list_items, { meta_filename }],
-      //   },
-      // });
     },
     async toggleItemState(item, isChecked) {
       const new_meta = {
@@ -265,16 +248,33 @@ export default {
         path: item.$path,
         new_meta,
       });
+
+      // Remove from notes_list when set to done
+      if (isChecked) {
+        const filename = item.$path.split("/").pop();
+        const current_list = JSON.parse(
+          JSON.stringify(this.list_meta?.notes_list || [])
+        );
+        const updated_list = current_list.filter(
+          (meta) => meta.meta_filename !== filename
+        );
+
+        await this.$api.updateMeta({
+          path: this.list_meta.$path,
+          new_meta: {
+            notes_list: updated_list,
+          },
+        });
+      }
     },
-    handleDragStart(event, index) {
+    handleDragStart(event, item, index) {
       this.draggedIndex = index;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/html", event.target);
-      // Add a slight delay to allow the drag image to be set
-      event.target.style.opacity = "0.5";
+      // Event handling is already done in TodoListItem
     },
     handleDragEnd(event) {
-      event.target.style.opacity = "";
+      if (event.target && event.target.style) {
+        event.target.style.opacity = "";
+      }
       this.draggedIndex = null;
       this.dragOverIndex = null;
     },
@@ -351,12 +351,6 @@ export default {
         },
       });
     },
-    showDoneDate(item) {
-      if (item.done_date) {
-        return `${new Date(item.done_date).toLocaleDateString()}`;
-      }
-      return "";
-    },
   },
 };
 </script>
@@ -414,34 +408,6 @@ export default {
   }
 }
 
-._listItem_todo {
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  width: 100%;
-  gap: calc(var(--spacing) / 2);
-  cursor: grab;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  user-select: none;
-
-  &:active {
-    cursor: grabbing;
-  }
-
-  &._dragging {
-    opacity: 0.5;
-  }
-}
-
-._checkbox {
-  flex: 0 0 auto;
-  cursor: pointer;
-}
-
-._itemTitle {
-  flex: 1 1 auto;
-}
-
 ._separator {
   margin: calc(var(--spacing)) 0;
   // border: none;
@@ -450,14 +416,6 @@ export default {
 
 ._listItems_done {
   margin-top: calc(var(--spacing) / 2);
-}
-
-._listItem_done {
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  gap: calc(var(--spacing) / 2);
-  opacity: 0.7;
 }
 
 ._dropZone {
@@ -512,7 +470,7 @@ export default {
     opacity: 1;
   }
 
-  + ._listItem {
+  + ._todoListItem {
     transform: translateY(5px);
     transition: transform 0.2s 0.3s ease;
   }
