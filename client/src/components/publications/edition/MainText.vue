@@ -165,17 +165,20 @@ export default {
       // update list of embedded medias if it changed
 
       // remove duplicates
-      source_medias = source_medias.filter(
-        (media, index, self) =>
-          index ===
-          self.findIndex(
-            (t) =>
-              t.meta_filename_in_project === media.meta_filename_in_project ||
-              t.meta_filename === media.meta_filename
-          )
-      );
+      // Two media objects are duplicates if they have the same identifier
+      // (either meta_filename_in_project or meta_filename)
+      source_medias = source_medias.filter((media, index, self) => {
+        const mediaId = media.meta_filename_in_project || media.meta_filename;
+        if (!mediaId) return true; // Keep items without identifiers
 
-      debugger;
+        // Find the first occurrence of this media
+        const firstIndex = self.findIndex((t) => {
+          const tId = t.meta_filename_in_project || t.meta_filename;
+          return tId && tId === mediaId;
+        });
+
+        return index === firstIndex;
+      });
 
       if (
         JSON.stringify(source_medias) !==
