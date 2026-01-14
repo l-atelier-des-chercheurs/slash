@@ -68,6 +68,7 @@
           @toggle-state="toggleItemState"
           @drag-start="handleDragStart"
           @drag-end="handleDragEnd"
+          @remove-item="removeItem"
         />
         <div
           v-if="
@@ -290,6 +291,18 @@ export default {
     async removeItem(item) {
       await this.$api.deleteItem({
         path: item.$path,
+      });
+
+      let current_list = JSON.parse(
+        JSON.stringify(this.list_meta?.notes_list || [])
+      );
+      current_list = current_list.filter(
+        (meta) => meta.meta_filename !== item.$path.split("/").pop()
+      );
+
+      await this.$api.updateMeta({
+        path: this.list_meta.$path,
+        new_meta: { notes_list: current_list },
       });
     },
     handleDragStart(event, item, index) {

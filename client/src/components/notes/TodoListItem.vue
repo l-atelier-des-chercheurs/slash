@@ -60,6 +60,7 @@
           :path="item.$path"
           :content="item.$content"
           :can_edit="can_edit"
+          :custom_formats="['bold', 'italic', 'link']"
           :mode="'always_active'"
           class="_noteEditor"
         />
