@@ -51,21 +51,14 @@ export default {
         </svg>
       `;
     },
-    dodoc_icon_notes() {
-      return `
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-         viewBox="0 0 168 168" style="enable-background:new 0 0 168 168;" xml:space="preserve">
-          <path style="fill:var(--c-bleuvert);" d="M84,0C37.6,0,0,37.6,0,84c0,46.4,37.6,84,84,84c46.4,0,84-37.6,84-84
-            C168,37.6,130.4,0,84,0z"/>
-          <path style="fill:#ffffff;" d="M50,65h68v8H50V65z"/>
-          <path style="fill:#ffffff;" d="M50,85h68v8H50V85z"/>
-          <path style="fill:#ffffff;" d="M50,105h48v8H50V105z"/>
-        </svg>
-      `;
-    },
     dodoc_icon_todo() {
       return `
-<svg viewBox="-8 -8 32 32" width="1em" height="1em" focusable="false" role="img" aria-label="list ul" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi-list-ul mx-auto b-icon bi" data-v-41be6633=""><g data-v-41be6633=""><path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2"></path></g></svg>      `;
+        <svg viewBox="-8 -8 32 32" width="1em" height="1em" focusable="false" role="img" aria-label="list ul" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+          <circle cx="8" cy="8" r="16" style="fill: var(--c-bleumarine)"></circle>
+          <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2" 
+            style="fill: white;"></path>
+        </svg>
+      `;
     },
   },
 };
