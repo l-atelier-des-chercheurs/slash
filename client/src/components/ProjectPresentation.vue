@@ -132,7 +132,7 @@
           :tag="
             context === 'full'
               ? 'h1'
-              : ['list', 'tiny', 'medium'].includes(context)
+              : ['list', 'medium'].includes(context)
               ? 'h3'
               : 'h5'
           "
@@ -144,8 +144,7 @@
 
         <TitleField
           v-if="
-            (['list', 'tiny', 'medium'].includes(context) &&
-              project.description) ||
+            (['list', 'medium'].includes(context) && project.description) ||
             (context === 'full' && (project.description || can_edit))
           "
           :field_name="'description'"
@@ -307,7 +306,7 @@ export default {
       return space.title;
     },
     is_compacted() {
-      return ["list"].includes(this.context) && this.short_project_view;
+      return ["medium"].includes(this.context) && this.short_project_view;
     },
     is_own_project() {
       return this.isOwnItem({ folder: this.project });
