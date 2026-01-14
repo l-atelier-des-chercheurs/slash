@@ -409,17 +409,26 @@ export default {
     position: relative;
 
     &::before {
-      content: "";
-      position: absolute;
-      top: -2px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background-color: var(--c-bleumarine_clair);
-      border-radius: 2px;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
+      opacity: 1;
     }
+  }
+  &::before {
+    content: "→";
+    font-family: "Fira Code";
+    font-weight: 600;
+    position: absolute;
+    top: -10px;
+    right: 100%;
+    height: 24px;
+    width: 28px;
+    pointer-events: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 2;
   }
 }
 
