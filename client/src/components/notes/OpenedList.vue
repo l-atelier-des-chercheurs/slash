@@ -83,6 +83,20 @@
           />
           <span class="_itemTitle">{{ item.title }}</span>
         </div>
+        <div
+          v-if="index === local_todo_items.length - 1"
+          class="_dropZone _dropZone_last"
+          :class="{
+            _dropZone_active: draggedIndex !== null,
+            _dropZone_hovered:
+              dragOverIndex === index + 1 && draggedIndex !== null,
+          }"
+          :key="item.$path + '_dropZone_last'"
+          @dragover.prevent="handleDragOver($event, index + 1)"
+          @dragenter.prevent="handleDragEnter(index + 1)"
+          @dragleave="handleDragLeave"
+          @drop.prevent="handleDrop($event, index + 1)"
+        ></div>
       </template>
 
       <div v-if="local_todo_items.length === 0" key="no-todo-items" class="">
@@ -469,7 +483,7 @@ export default {
   width: calc(100% + 20px);
   margin-left: -10px;
   background-color: transparent;
-  // background-color: red;
+  pointer-events: none;
 
   z-index: 1000;
 
@@ -496,6 +510,7 @@ export default {
 }
 
 ._dropZone_active {
+  pointer-events: auto;
   &::before {
     opacity: 0.2;
   }
@@ -509,7 +524,8 @@ export default {
   }
 
   + ._listItem {
-    transform: translateY(10px);
+    transform: translateY(5px);
+    transition: transform 0.2s 0.3s ease;
   }
 }
 </style>
