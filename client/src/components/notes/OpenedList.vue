@@ -31,7 +31,13 @@
       />
 
       <div key="list">
-        <DLabel :str="$t('list_of_notes_todo')" />
+        <DLabel
+          :str="
+            $tc('list_of_notes_todo', local_todo_items.length, {
+              count: local_todo_items.length,
+            })
+          "
+        />
       </div>
       <div
         v-for="(item, index) in local_todo_items"
@@ -71,7 +77,13 @@
 
       <template v-if="list_items_done.length > 0">
         <div key="done-header">
-          <DLabel :str="$t('list_of_notes_done')" />
+          <DLabel
+            :str="
+              $tc('archived', list_items_done.length, {
+                count: list_items_done.length,
+              })
+            "
+          />
         </div>
         <div
           class="_listItem _listItem_done"
@@ -84,7 +96,9 @@
             @change="toggleItemState(item, $event.target.checked)"
             class="_checkbox"
           />
-          <span class="_itemTitle">{{ item.title }}</span>
+          <span class="_itemTitle"
+            >{{ item.title }} {{ showDoneDate(item) }}</span
+          >
         </div>
       </template>
     </transition-group>
@@ -306,6 +320,14 @@ export default {
           notes_list: updated_list,
         },
       });
+    },
+    showDoneDate(item) {
+      if (item.done_date) {
+        return ` - ${this.$t("done_on")} ${new Date(
+          item.done_date
+        ).toLocaleDateString()}`;
+      }
+      return "";
     },
   },
 };
