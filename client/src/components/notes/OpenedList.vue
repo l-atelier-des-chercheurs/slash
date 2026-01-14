@@ -40,7 +40,7 @@
         />
       </div>
 
-      <div
+      <!-- <div
         class="_dropZone _dropZone_first"
         :class="{
           _dropZone_active: dragOverIndex === 0 && draggedIndex !== null,
@@ -50,8 +50,21 @@
         @dragenter.prevent="handleDragEnter(0)"
         @dragleave="handleDragLeave"
         @drop.prevent="handleDrop($event, 0)"
-      />
+      /> -->
       <template v-for="(item, index) in local_todo_items">
+        <div
+          class="_dropZone"
+          :class="{
+            _dropZone_active: draggedIndex !== null,
+            _dropZone_hovered: dragOverIndex === index && draggedIndex !== null,
+          }"
+          :key="item.$path + '_dropZone'"
+          @dragover.prevent="handleDragOver($event, index)"
+          @dragenter.prevent="handleDragEnter(index)"
+          @dragleave="handleDragLeave"
+          @drop.prevent="handleDrop($event, index)"
+        ></div>
+
         <div
           class="_listItem _listItem_todo"
           :class="{
@@ -70,17 +83,6 @@
           />
           <span class="_itemTitle">{{ item.title }}</span>
         </div>
-        <div
-          class="_dropZone"
-          :class="{
-            _dropZone_active: dragOverIndex === index && draggedIndex !== null,
-          }"
-          :key="item.$path + '_dropZone'"
-          @dragover.prevent="handleDragOver($event, index)"
-          @dragenter.prevent="handleDragEnter(index)"
-          @dragleave="handleDragLeave"
-          @drop.prevent="handleDrop($event, index)"
-        />
       </template>
 
       <div v-if="local_todo_items.length === 0" key="no-todo-items" class="">
@@ -297,6 +299,10 @@ export default {
         return;
       }
 
+      if (dropIndex > this.draggedIndex) {
+        dropIndex--;
+      }
+
       // Reorder items locally for immediate visual feedback
       const newItems = [...this.local_todo_items];
       const draggedItem = newItems[this.draggedIndex];
@@ -409,6 +415,7 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
+  width: 100%;
   gap: calc(var(--spacing) / 2);
   cursor: grab;
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -457,15 +464,52 @@ export default {
   margin-bottom: calc(var(--spacing) / -2);
   border-radius: var(--border-radius);
   transition: height 0.2s ease, background-color 0.2s ease;
-  background-color: red;
+  background-color: transparent;
+  height: 20px;
+  width: calc(100% + 20px);
+  margin-left: -10px;
+  background-color: transparent;
+  // background-color: red;
+
   z-index: 1000;
 
   &:not(._dropZone_first) {
   }
+
+  &::before {
+    content: "•";
+    font-weight: 600;
+    font-family: "Fira Mono";
+    position: absolute;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // top: -10px;
+    line-height: 0;
+    left: 0;
+    font-size: 150%;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
 }
 
 ._dropZone_active {
-  height: 20px;
-  background-color: white;
+  &::before {
+    opacity: 0.2;
+  }
+}
+
+._dropZone_hovered {
+  // background-color: white;
+
+  &::before {
+    opacity: 1;
+  }
+
+  + ._listItem {
+    transform: translateY(10px);
+  }
 }
 </style>
