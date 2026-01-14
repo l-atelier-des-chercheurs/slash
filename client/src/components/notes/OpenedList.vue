@@ -1,7 +1,6 @@
 <template>
   <div class="_openedList">
     <!-- <DLabel :str="list_meta.title" /> -->
-    dragOverIndex {{ dragOverIndex }}
     <transition-group name="listComplete" class="_listItems" appear>
       <div key="header">
         <DLabel :str="$t('new_note_todo')" />
@@ -25,7 +24,7 @@
         </TextInput>
       </div>
 
-      <hr
+      <div
         v-if="list_items_done.length > 0"
         key="todo-separator"
         class="_separator"
@@ -42,7 +41,7 @@
       </div>
 
       <div
-        class="_dropZone"
+        class="_dropZone _dropZone_first"
         :class="{
           _dropZone_active: dragOverIndex === 0 && draggedIndex !== null,
         }"
@@ -89,7 +88,7 @@
         <DLabel :str="$t('no_todo_items')" />
       </div>
 
-      <hr
+      <div
         v-if="list_items_done.length > 0"
         key="done-separator"
         class="_separator"
@@ -368,9 +367,8 @@ export default {
 
 ._listItems {
   position: relative;
-  display: flex;
-  flex-flow: column nowrap;
-  gap: calc(var(--spacing) / 2);
+  // display: flex;
+  // flex-flow: column nowrap;
   background-color: rgba(0, 0, 0, 0.1);
   padding: calc(var(--spacing) / 2);
   border-radius: calc(var(--border-radius) * 2);
@@ -391,6 +389,7 @@ export default {
   background-color: white;
   padding: calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
+  margin-bottom: calc(var(--spacing) / 4);
 }
 
 ._listItem_newItem {
@@ -399,7 +398,6 @@ export default {
   padding: 0;
   background-color: transparent;
   padding-right: calc(var(--spacing) / 4);
-  margin-bottom: calc(var(--spacing) * 1);
   gap: calc(var(--spacing) / 2);
 
   .u-button {
@@ -423,24 +421,6 @@ export default {
   &._dragging {
     opacity: 0.5;
   }
-  // &::before {
-  //   content: "→";
-  //   font-family: "Fira Code";
-  //   font-weight: 600;
-  //   position: absolute;
-  //   top: -10px;
-  //   right: 100%;
-  //   height: 24px;
-  //   width: 28px;
-  //   pointer-events: none;
-  //   color: white;
-  //   display: flex;
-  //   align-items: center;
-  //   font-size: 20px;
-  //   opacity: 0;
-  //   transition: opacity 0.2s ease;
-  //   z-index: 2;
-  // }
 }
 
 ._checkbox {
@@ -454,8 +434,8 @@ export default {
 
 ._separator {
   margin: calc(var(--spacing)) 0;
-  border: none;
-  border-top: 1px solid var(--c-bleumarine_clair);
+  // border: none;
+  // border-top: 1px solid var(--c-bleumarine_clair);
 }
 
 ._listItems_done {
@@ -471,17 +451,21 @@ export default {
 }
 
 ._dropZone {
-  min-height: 10px;
-  margin-top: -10px;
-  margin-bottom: -10px;
+  position: relative;
+  height: calc(var(--spacing) / 1);
+  margin-top: calc(var(--spacing) / -2);
+  margin-bottom: calc(var(--spacing) / -2);
   border-radius: var(--border-radius);
-  transition: min-height 0.2s ease, background-color 0.2s ease;
+  transition: height 0.2s ease, background-color 0.2s ease;
   background-color: red;
   z-index: 1000;
+
+  &:not(._dropZone_first) {
+  }
 }
 
 ._dropZone_active {
-  min-height: 40px;
+  height: 20px;
   background-color: white;
 }
 </style>
