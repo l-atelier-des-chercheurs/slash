@@ -1,5 +1,5 @@
 <template>
-  <span class="_titleField">
+  <span class="_titleField" :data-input_type="input_type">
     <DLabel v-if="label && show_label" class="_label" :str="label" />
 
     <div class="_container">
@@ -276,6 +276,9 @@ export default {
 ._edit {
   margin-top: calc(var(--spacing) / -1);
   margin-bottom: calc(var(--spacing) / -2);
+
+  // ._titleField:not([data-input_type="text"]) & {
+  // }
 
   /* Hide edit button by default on devices that support hover */
   @media (hover: hover) {

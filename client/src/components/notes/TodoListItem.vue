@@ -19,7 +19,17 @@
         @click.stop
         class="_checkbox"
       />
-      <span class="_itemTitle">{{ item.title }} </span>
+      <span class="_itemTitle">
+        <TitleField
+          :field_name="'title'"
+          :label="$t('title')"
+          :show_label="false"
+          :content="item.title"
+          :path="item.$path"
+          :required="true"
+          :can_edit="isExpanded"
+        />
+      </span>
       <span v-if="item.state === 'done'" class="u-instructions _doneDate">
         {{ showDoneDate(item) }}
       </span>

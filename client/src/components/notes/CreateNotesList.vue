@@ -12,6 +12,7 @@
         :autofocus="true"
         ref="titleInput"
         @toggleValidity="($event) => (allow_save = $event)"
+        @onEnter="createNotesList"
       />
 
       <template v-if="error_msg">
