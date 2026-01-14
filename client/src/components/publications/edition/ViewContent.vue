@@ -616,6 +616,12 @@ export default {
                   media.$infos.duration
                 )}
               </div>`;
+      } else if (media.$type === "pdf") {
+        // Show PDF name for PDFs
+        const pdf_name = media.title || media.$media_filename || this.$t("pdf");
+        html += `<div class="mediaDuration">
+                ${pdf_name}
+              </div>`;
       }
 
       html += `

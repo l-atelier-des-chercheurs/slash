@@ -7,6 +7,74 @@ export function buildStyleAttribute(width, height) {
   return vars.length > 0 ? ` style="${vars.join("; ")}"` : "";
 }
 
+// Helper function to detect media type from URL
+function detectMediaTypeFromURL(url) {
+  const lowerSrc = url.toLowerCase();
+  if (
+    lowerSrc.includes(".mp4") ||
+    lowerSrc.includes(".webm") ||
+    lowerSrc.includes(".ogg") ||
+    lowerSrc.includes("video")
+  ) {
+    return "video";
+  }
+  if (
+    lowerSrc.includes(".mp3") ||
+    lowerSrc.includes(".wav") ||
+    lowerSrc.includes(".ogg") ||
+    lowerSrc.includes("audio")
+  ) {
+    return "audio";
+  }
+  if (lowerSrc.includes(".pdf")) {
+    return "pdf";
+  }
+  return "image";
+}
+
+// Helper function to render QR code for book mode
+function renderQRCode({ makeQREmbedForQR, alt, width, height, media }) {
+  return makeQREmbedForQR({ alt, width, height, media });
+}
+
+// Helper function to render media HTML based on type
+function renderMediaHTML({
+  media_type,
+  src,
+  width,
+  height,
+  alt,
+  has_caption,
+  view_mode,
+  makeQREmbedForQR,
+  media,
+  use_qr_code = false,
+}) {
+  const iframe_style_attr = buildStyleAttribute(width, height);
+  const img_style_attr = buildStyleAttribute(width, height);
+  const alt_attr = has_caption ? "" : alt ? ` alt="${alt}"` : "";
+
+  // Use QR code if requested (only for local media in book mode)
+  if (use_qr_code && media) {
+    return renderQRCode({ makeQREmbedForQR, alt, width, height, media });
+  }
+
+  switch (media_type) {
+    case "video":
+      return `<video src="${src}" controls></video>`;
+    case "audio":
+      return `<audio src="${src}" controls></audio>`;
+    case "pdf":
+      return `<iframe src="${src}" type="application/pdf" frameborder="0"${iframe_style_attr}></iframe>`;
+    case "image":
+      return `<img src="${src}"${alt_attr}${img_style_attr} />`;
+    case "text":
+      return media?.$content || "";
+    default:
+      return "";
+  }
+}
+
 /**
  * Renders media (image, video, audio) as HTML
  * @param {Object} params - Rendering parameters
@@ -51,14 +119,19 @@ export function renderMedia({
   const has_caption = alt && alt.trim() !== "";
 
   // Handle size attribute (size: full or size: full-cover)
-  if (size === "full" || size === "full-page") {
-    if (view_mode === "book") {
+  if (view_mode === "book") {
+    const isFullPage =
+      size === "full" ||
+      size === "full-page" ||
+      size === "full-cover" ||
+      size === "full-page-cover";
+    const isFullCover = size === "full-cover" || size === "full-page-cover";
+
+    if (isFullPage) {
       custom_classes.push("full-page");
-    }
-  } else if (size === "full-cover" || size === "full-page-cover") {
-    if (view_mode === "book") {
-      custom_classes.push("full-page");
-      custom_classes.push("full-page-cover");
+      if (isFullCover) {
+        custom_classes.push("full-page-cover");
+      }
     }
   }
 
@@ -82,47 +155,21 @@ export function renderMedia({
 
   // Handle external URLs (http/https)
   if (meta_src && meta_src.startsWith("http")) {
-    // Detect media type from URL extension
-    let media_type = "image"; // default
-    const lowerSrc = meta_src.toLowerCase();
-    if (
-      lowerSrc.includes(".mp4") ||
-      lowerSrc.includes(".webm") ||
-      lowerSrc.includes(".ogg") ||
-      lowerSrc.includes("video")
-    ) {
-      media_type = "video";
-      custom_classes.push("media-video");
-    } else if (
-      lowerSrc.includes(".mp3") ||
-      lowerSrc.includes(".wav") ||
-      lowerSrc.includes(".ogg") ||
-      lowerSrc.includes("audio")
-    ) {
-      media_type = "audio";
-      custom_classes.push("media-audio");
-    } else if (lowerSrc.includes(".pdf")) {
-      media_type = "pdf";
-      custom_classes.push("media-pdf");
-    } else {
-      custom_classes.push("media-image");
-    }
+    const media_type = detectMediaTypeFromURL(meta_src);
+    custom_classes.push(`media-${media_type}`);
 
-    if (media_type === "video") {
-      media_html = `<video src="${meta_src}" controls></video>`;
-    } else if (media_type === "audio") {
-      media_html = `<audio src="${meta_src}" controls></audio>`;
-    } else if (media_type === "pdf") {
-      const iframe_style_attr = buildStyleAttribute(width, height);
-      media_html = `<iframe src="${meta_src}" type="application/pdf" frameborder="0"${iframe_style_attr}></iframe>`;
-    } else {
-      // For images, style goes on the img tag for external URLs
-      // Don't add alt if we're also adding a figcaption with the same text
-      const alt_attr = has_caption ? "" : alt ? ` alt="${alt}"` : "";
-      // For external URLs, use CSS variables on img tag
-      const img_style_attr = buildStyleAttribute(width, height);
-      media_html = `<img src="${meta_src}"${alt_attr}${img_style_attr} />`;
-    }
+    media_html = renderMediaHTML({
+      media_type,
+      src: meta_src,
+      width,
+      height,
+      alt,
+      has_caption,
+      view_mode,
+      makeQREmbedForQR,
+      media: null, // External URLs don't have media object
+      use_qr_code: false, // External URLs never use QR codes
+    });
   } else {
     // Handle local media
     if (!media) {
@@ -142,37 +189,31 @@ export function renderMedia({
       $media_filename: media.$media_filename,
     });
 
-    if (media.$type === "text") {
-      media_html = media.$content;
-    } else if (media.$type === "image") {
-      custom_classes.push("media-image");
-      // Don't add alt if we're also adding a figcaption with the same text
-      const alt_attr = has_caption ? "" : alt ? ` alt="${alt}"` : "";
-      media_html = `<img src="${src}"${alt_attr} />`;
-    } else if (media.$type === "pdf") {
-      custom_classes.push("media-pdf");
-      const iframe_style_attr = buildStyleAttribute(width, height);
-      media_html = `<iframe src="${src}" type="application/pdf" frameborder="0"${iframe_style_attr}></iframe>`;
-    } else {
-      if (view_mode === "book") {
-        is_qr_code = true;
-        custom_classes.push("_isqrcode");
-        media_html = makeQREmbedForQR({
-          alt,
-          width,
-          height,
-          media,
-        });
-      } else {
-        if (media.$type === "video") {
-          custom_classes.push("media-video");
-          media_html = `<video src="${src}" controls></video>`;
-        } else if (media.$type === "audio") {
-          custom_classes.push("media-audio");
-          media_html = `<audio src="${src}" controls></audio>`;
-        }
-      }
+    const media_type = media.$type;
+    custom_classes.push(`media-${media_type}`);
+
+    // Types that need QR code in book mode
+    const qr_code_types = ["video", "audio", "pdf"];
+    const use_qr_code =
+      view_mode === "book" && qr_code_types.includes(media_type);
+
+    if (use_qr_code) {
+      is_qr_code = true;
+      custom_classes.push("_isqrcode");
     }
+
+    media_html = renderMediaHTML({
+      media_type,
+      src,
+      width,
+      height,
+      alt,
+      has_caption,
+      view_mode,
+      makeQREmbedForQR,
+      media,
+      use_qr_code,
+    });
   }
 
   // Add caption if alt text is provided
