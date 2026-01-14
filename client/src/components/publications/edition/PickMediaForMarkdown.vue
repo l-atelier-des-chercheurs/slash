@@ -115,6 +115,7 @@
             code="size: full-cover"
             :explanation="$t('embed_attr_size_full_cover')"
           />
+          <CodeBlock code="width: 5cm" :explanation="$t('embed_attr_width')" />
         </div>
         <div>
           {{ $t("for_example") }}

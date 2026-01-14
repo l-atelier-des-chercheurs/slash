@@ -1363,6 +1363,7 @@ export default {
   embed_attr_size_full: "Afficher le média en pleine largeur",
   embed_attr_size_full_cover:
     "Afficher le média en pleine largeur avec recouvrement",
+  embed_attr_width: "Définir la largeur du média en centimètres",
   show_source_html: "Afficher le code source HTML",
   reset: "Réinitialiser",
 
