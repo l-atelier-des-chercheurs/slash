@@ -84,7 +84,8 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
   submit: "Invia",
   search_in_title_desc_kw:
     "Cerca nei titoli, nelle descrizioni, nelle parole chiave, nelle macchine e nei materiali.",
-  search_by_name: "Cerca nei nomi o nei nickname",
+  search_by_name: "Cerca per nome",
+  search_by_author_name: "Cerca nei nomi o nei nickname",
   search_by_title_or_subtitle: "Cerca nei titoli e sottotitoli",
 
   search: "Cerca",

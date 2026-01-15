@@ -20,7 +20,7 @@
       <template #before-sidebar-toggle>
         <button
           type="button"
-          class="u-button u-button_red u-button_small"
+          class="u-button u-button_small u-button_red"
           v-if="is_instance_admin || is_instance_contributor"
           @click="show_create_modal = true"
         >

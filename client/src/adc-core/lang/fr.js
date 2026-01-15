@@ -105,7 +105,9 @@ export default {
   submit: "Valider",
   search_in_title_desc_kw:
     "Chercher dans les titres, descriptions, mots-clés, machines et matériaux.",
-  search_by_name: "Chercher dans les noms ou pseudonymes",
+  search_in_title: "Chercher dans les titres.",
+  search_by_name: "Chercher par nom",
+  search_by_author_name: "Chercher dans les noms ou pseudonymes",
   search_by_title_or_subtitle: "Chercher dans les titres ou sous-titres",
 
   search: "Chercher",

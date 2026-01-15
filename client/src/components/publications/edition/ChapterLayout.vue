@@ -38,12 +38,8 @@
             @save="updateChapterMeta({ row_count: $event })"
           />
         </template>
-        <button
-          type="button"
-          class="u-button u-button_small u-button_white"
-          @click="presetGrid"
-        >
-          {{ $t("preset_grid") }}
+        <button type="button" class="u-button u-button_small u-button_white">
+          {{ $t("preset_grid") }} (todo)
         </button>
       </div>
 
