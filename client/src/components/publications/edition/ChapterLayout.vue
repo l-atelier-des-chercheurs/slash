@@ -134,8 +134,6 @@ export default {
       // Find and delete associated text file if it exists
       const content_meta = area.content_meta || area.main_text_meta;
 
-      if (!content_meta) return;
-
       const media = this.publication.$files.find((f) =>
         f.$path.endsWith("/" + content_meta)
       );

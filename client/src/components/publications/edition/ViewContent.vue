@@ -516,6 +516,14 @@ export default {
           media = this.publication.$files.find((f) =>
             f.$path.endsWith("/" + content_meta)
           );
+        } else {
+          media = this.publication.$files.find(
+            (f) => f.grid_area_id === area.id
+          );
+        }
+
+        if (!media) {
+          return;
         }
 
         html += `<div class="grid-cell" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">`;
