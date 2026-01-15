@@ -38,9 +38,9 @@
             @save="updateChapterMeta({ row_count: $event })"
           />
         </template>
-        <button type="button" class="u-button u-button_small u-button_white">
+        <!-- <button type="button" class="u-button u-button_small u-button_white">
           {{ $t("preset_grid") }} (todo)
-        </button>
+        </button> -->
       </div>
 
       <div class="_gridConfiguration" v-if="chapter.section_type === 'grid'">
