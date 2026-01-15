@@ -233,11 +233,16 @@ export default {
   gap: calc(var(--spacing) / 2);
   user-select: none;
   cursor: pointer;
+
+  button,
+  input[type="checkbox"] {
+    position: relative;
+    z-index: 2;
+  }
 }
 ._todoListItem_header--clickZone {
   position: absolute;
   inset: calc(var(--spacing) / -2);
-  background-color: rgba(0, 255, 0, 0.1);
   z-index: 1;
 }
 
