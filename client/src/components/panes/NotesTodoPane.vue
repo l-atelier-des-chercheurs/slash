@@ -23,13 +23,15 @@
       </button>
     </div>
 
-    <transition name="fade" mode="out-in">
-      <OpenedList
-        v-if="!!opened_notes_path"
-        :key="opened_notes_path"
-        :path="opened_notes_path"
-      />
-    </transition>
+    <div class="_content">
+      <transition name="fade" mode="out-in">
+        <OpenedList
+          v-if="!!opened_notes_path"
+          :key="opened_notes_path"
+          :path="opened_notes_path"
+        />
+      </transition>
+    </div>
 
     <CreateNotesList
       v-if="show_create_notes_modal"
@@ -123,9 +125,7 @@ export default {
 ._notesTodoPane {
   position: relative;
   height: 100%;
-  overflow: auto;
   background-color: var(--color-notes_todo);
-  padding-bottom: calc(var(--spacing) * 2);
   display: flex;
   flex-flow: column nowrap;
 }
@@ -142,29 +142,8 @@ export default {
 }
 
 ._content {
-  flex: 1 1 auto;
-  padding: calc(var(--spacing) / 2);
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing));
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-._noteItem {
-  background: white;
-  padding: calc(var(--spacing) / 2);
-  border-radius: 4px;
-}
-
-._noteContent {
-  margin-bottom: calc(var(--spacing) / 4);
-}
-
-._noteCaption {
-  font-size: 0.8em;
-  color: #666;
-  text-align: right;
+  flex: 1 1 0;
+  height: 100%;
+  overflow: auto;
 }
 </style>

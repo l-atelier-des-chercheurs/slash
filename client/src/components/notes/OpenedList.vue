@@ -1,13 +1,5 @@
 <template>
   <div class="_openedList">
-    <!-- <div style="background-color: white">
-      <pre>{{ list_meta?.notes_list }}</pre>
-    </div> -->
-
-    <div style="background-color: white">
-      <!-- <pre>{{ list_meta.notes_list }}</pre> -->
-      <!-- <pre>{{ all_notes }}</pre> -->
-    </div>
     <transition-group name="listComplete" class="_listItems" appear>
       <div key="header">
         <DLabel :str="$t('new_note_todo')" />
@@ -126,6 +118,8 @@
         />
       </template>
     </transition-group>
+
+    <div class="_footer"></div>
 
     <!-- <pre>{{ list_meta }}</pre> -->
   </div>
@@ -424,13 +418,11 @@ export default {
 ._openedList {
   position: relative;
   height: 100%;
-  overflow: auto;
   display: flex;
   flex-flow: column nowrap;
 
-  width: 100%;
-  max-width: 500px;
   padding: calc(var(--spacing) * 2);
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -539,5 +531,11 @@ export default {
     transform: translateY(5px);
     transition: transform 0.2s 0.3s ease;
   }
+}
+
+._footer {
+  flex: 0 0 auto;
+  height: calc(var(--spacing) * 2);
+  width: 100%;
 }
 </style>
