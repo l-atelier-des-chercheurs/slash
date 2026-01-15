@@ -103,11 +103,11 @@ export default {
   computed: {},
   methods: {
     socketConnected() {
-      if (this.$root.debug_mode)
-        this.$alertify
-          .closeLogOnClick(true)
-          .delay(4000)
-          .success(`Connected or reconnected with id ${this.$api.socket.id}`);
+      // if (this.$root.debug_mode)
+      //   this.$alertify
+      //     .closeLogOnClick(true)
+      //     .delay(4000)
+      //     .success(`Connected or reconnected with id ${this.$api.socket.id}`);
     },
     socketDisconnected(reason) {
       if (this.$root.debug_mode)

@@ -1501,4 +1501,5 @@ export default {
   create_list_instructions:
     "Create a new list to organize your notes and tasks.",
   no_notes_to_show: "No notes to show",
+  note_content: "Note content…",
 };

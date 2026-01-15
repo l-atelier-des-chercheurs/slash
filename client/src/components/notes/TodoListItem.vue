@@ -39,7 +39,7 @@
         type="button"
         class="u-button u-button_icon u-button_small"
         @click.stop="collapse"
-        title="Close"
+        :title="$t('close')"
       >
         <b-icon icon="chevron-up" />
       </button>
@@ -48,7 +48,7 @@
         type="button"
         class="u-button u-button_icon u-button_small"
         @click.stop="expand"
-        title="Open note"
+        :title="$t('open')"
       >
         <b-icon icon="chevron-down" />
       </button>
@@ -59,15 +59,15 @@
         <CollaborativeEditor3
           :path="item.$path"
           :content="item.$content"
+          :placeholder="$t('note_content')"
           :can_edit="can_edit"
           :custom_formats="['bold', 'italic', 'link']"
-          :mode="'always_active'"
           class="_noteEditor"
         />
         <div class="_todoListItem_content_footer">
           <button
             type="button"
-            class="u-button u-button_verysmall u-button_red"
+            class="u-button u-button_verysmall"
             @click.stop="removeItem"
           >
             <b-icon icon="trash" />
@@ -236,7 +236,7 @@ export default {
 
 ._todoListItem_content {
   position: relative;
-  min-height: 100px;
+  // min-height: 100px;
 }
 
 ._noteEditor {
@@ -250,6 +250,9 @@ export default {
   justify-content: flex-end;
   gap: calc(var(--spacing) / 2);
   margin-top: calc(var(--spacing) / 2);
+  padding-top: calc(var(--spacing) / 2);
+
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 // Expand transition

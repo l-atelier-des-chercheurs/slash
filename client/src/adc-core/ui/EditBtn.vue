@@ -198,6 +198,7 @@ export default {
   // display: inline-flex;
   background: var(--color-bg);
   color: var(--color-icon);
+  border: none;
   // border: 1px solid var(--color-bg);
 
   // box-shadow: 0 1px 40px rgb(0 0 0 / 10%);
