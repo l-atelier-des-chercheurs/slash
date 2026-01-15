@@ -1332,7 +1332,7 @@ export default {
   add_row: "Add row",
   remove_column: "Remove column",
   remove_row: "Remove row",
-  chats: "Discussion topics",
+  chats: "Discussions",
   enable_chats: "Enable the discussion feature",
   enable_chats_instructions:
     "The discussion feature allows you to create topics where selected users can exchange messages. Once enabled, click on the bubble in the top right of the screen to access it.",

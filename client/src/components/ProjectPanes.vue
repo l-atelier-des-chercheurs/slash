@@ -68,6 +68,7 @@
           :project="project"
           @close="removePane(pane)"
         />
+        <ChatsPane v-else-if="pane.type === 'chats'" :project="project" />
         <MakePane
           v-if="pane.type === 'make'"
           :project="project"
@@ -91,6 +92,7 @@ import { Splitpanes, Pane } from "splitpanes";
 import CapturePane from "@/components/panes/CapturePane.vue";
 import MediaLibrary from "@/components/panes/MediaLibrary.vue";
 import NotesTodoPane from "@/components/panes/NotesTodoPane.vue";
+import ChatsPane from "@/components/panes/ChatsPane.vue";
 import MakePane from "@/components/panes/MakePane.vue";
 import PublierPane from "@/components/panes/PublierPane.vue";
 import InstructionsWindow from "@/components/project/InstructionsWindow.vue";
@@ -108,6 +110,7 @@ export default {
     PublierPane,
     MediaLibrary,
     NotesTodoPane,
+    ChatsPane,
     MakePane,
     CapturePane,
     InstructionsWindow,

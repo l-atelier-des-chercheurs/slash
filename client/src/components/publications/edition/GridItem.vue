@@ -1,6 +1,17 @@
 <template>
   <div class="_gridItem">
-    <div class="_gridItem--header">{{ area.id }}</div>
+    <div class="_gridItem--header">
+      <span class="_gridItem--label">
+        {{ area.id }}
+      </span>
+
+      <select class="_gridItem--select" size="small">
+        <option value="1">texte (markdown)</option>
+        <option value="2">titre</option>
+        <option value="3">sous-titre</option>
+        <option value="4">média (image, video, audio)</option>
+      </select>
+    </div>
     <div class="_gridItem--content">
       <button
         v-if="!area_text_meta"
@@ -59,10 +70,21 @@ export default {
 }
 
 ._gridItem--header {
-  font-weight: bold;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 2);
   margin-bottom: calc(var(--spacing) * 1);
 }
 
 ._gridItem--content {
+}
+
+._gridItem--label {
+  font-weight: bold;
+}
+._gridItem--select {
+  width: 25ch;
 }
 </style>

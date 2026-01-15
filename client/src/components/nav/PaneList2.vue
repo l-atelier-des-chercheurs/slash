@@ -144,6 +144,9 @@ export default {
           type: "notes_todo",
         },
         {
+          type: "chats",
+        },
+        {
           type: "make",
         },
         {
@@ -267,6 +270,7 @@ export default {
       else if (type === "make") return this.dodoc_icon_make;
       else if (type === "publish") return this.dodoc_icon_publish;
       else if (type === "notes_todo") return this.dodoc_icon_todo;
+      else if (type === "chats") return this.dodoc_icon_chats;
       return false;
     },
     animatePane(pane) {
