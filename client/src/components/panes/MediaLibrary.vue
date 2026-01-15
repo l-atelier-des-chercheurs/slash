@@ -863,7 +863,7 @@ export default {
       const { meta_filename } = await this.$api.uploadText({
         path: this.project.$path,
         filename,
-        content: "…",
+        content: "",
         additional_meta: {
           $origin: "collect",
           $authors: [this.connected_as.$path],

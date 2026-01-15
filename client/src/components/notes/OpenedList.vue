@@ -23,9 +23,18 @@
             <button
               type="button"
               class="u-button u-button_icon"
+              :disabled="new_item_title.length === 0"
               @click="createNewItem"
             >
-              <b-icon icon="plus-circle" />
+              <transition name="fade">
+                <b-icon
+                  :icon="
+                    new_item_title.length === 0
+                      ? 'plus-circle'
+                      : 'plus-circle-fill'
+                  "
+                />
+              </transition>
             </button>
           </template>
         </TextInput>
@@ -68,6 +77,7 @@
           @toggle-state="toggleItemState"
           @drag-start="handleDragStart"
           @drag-end="handleDragEnd"
+          @duplicate-item="duplicateItem($event, index)"
           @remove-item="removeItem"
         />
         <div
@@ -111,6 +121,7 @@
           :item="item"
           :draggable="false"
           @toggle-state="toggleItemState"
+          @duplicate-item="duplicateItem"
           @remove-item="removeItem"
         />
       </template>
@@ -304,6 +315,23 @@ export default {
         path: this.list_meta.$path,
         new_meta: { notes_list: current_list },
       });
+    },
+    async duplicateItem(item, index) {
+      const meta_filename = await this.$api.copyFile({
+        path: item.$path,
+      });
+
+      if (item.state === "todo" && index !== undefined) {
+        const current_list = JSON.parse(
+          JSON.stringify(this.list_meta?.notes_list || [])
+        );
+        current_list.splice(index + 1, 0, { meta_filename });
+
+        await this.$api.updateMeta({
+          path: this.list_meta.$path,
+          new_meta: { notes_list: current_list },
+        });
+      }
     },
     handleDragStart(event, item, index) {
       this.draggedIndex = index;

@@ -197,7 +197,10 @@ export default {
     path: String,
     sharedb_id: String,
     content: String,
-    placeholder: String,
+    placeholder: {
+      type: String,
+      default: "…",
+    },
     field_to_edit: {
       type: String,
       default: "$content",

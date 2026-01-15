@@ -11,7 +11,11 @@
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
   >
-    <div class="_todoListItem_header" @click.stop="expandCollapse">
+    <div class="_todoListItem_header">
+      <div
+        class="_todoListItem_header--clickZone"
+        @click.stop="expandCollapse"
+      />
       <input
         type="checkbox"
         :checked="item.state === 'done'"
@@ -65,6 +69,14 @@
           class="_noteEditor"
         />
         <div class="_todoListItem_content_footer">
+          <button
+            type="button"
+            class="u-button u-button_verysmall"
+            @click.stop="duplicateItem"
+          >
+            <b-icon icon="file-plus" />
+            {{ $t("duplicate") }}
+          </button>
           <button
             type="button"
             class="u-button u-button_verysmall"
@@ -164,6 +176,9 @@ export default {
       }
       return "";
     },
+    async duplicateItem() {
+      this.$emit("duplicate-item", this.item);
+    },
     async removeItem() {
       this.$emit("remove-item", this.item);
     },
@@ -210,6 +225,7 @@ export default {
 }
 
 ._todoListItem_header {
+  position: relative;
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
@@ -217,6 +233,12 @@ export default {
   gap: calc(var(--spacing) / 2);
   user-select: none;
   cursor: pointer;
+}
+._todoListItem_header--clickZone {
+  position: absolute;
+  inset: calc(var(--spacing) / -2);
+  background-color: rgba(0, 255, 0, 0.1);
+  z-index: 1;
 }
 
 ._checkbox {
