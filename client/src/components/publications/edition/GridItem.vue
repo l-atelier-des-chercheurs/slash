@@ -5,12 +5,12 @@
         {{ area.id }}
       </span>
 
-      <select class="_gridItem--select" size="small">
+      <!-- <select class="_gridItem--select" size="small">
         <option value="1">texte (markdown)</option>
         <option value="2">titre</option>
         <option value="3">sous-titre</option>
         <option value="4">média (image, video, audio)</option>
-      </select>
+      </select> -->
     </div>
     <div class="_gridItem--content">
       <button
