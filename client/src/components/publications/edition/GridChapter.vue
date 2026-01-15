@@ -52,7 +52,7 @@ export default {
         if (area.id === areaId) {
           return {
             ...area,
-            main_text_meta: meta_filename,
+            content_meta: meta_filename,
           };
         }
         return area;
@@ -66,9 +66,10 @@ export default {
       });
     },
     getAreaTextMeta(area) {
-      if (area.main_text_meta) {
+      const content_meta = area.content_meta || area.main_text_meta;
+      if (content_meta) {
         return this.publication.$files.find((f) =>
-          f.$path.endsWith("/" + area.main_text_meta)
+          f.$path.endsWith("/" + content_meta)
         );
       }
       return this.publication.$files.find((f) => f.grid_area_id === area.id);

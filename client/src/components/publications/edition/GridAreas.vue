@@ -224,7 +224,7 @@ export default {
               grid_area_id: new_area_id,
             },
           });
-          new_area.main_text_meta = meta_filename;
+          new_area.content_meta = meta_filename;
         } catch (e) {
           console.error(e);
         }

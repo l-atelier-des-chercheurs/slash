@@ -132,25 +132,17 @@ export default {
       const area = this.chapter.grid_areas.find((a) => a.id === areaId);
 
       // Find and delete associated text file if it exists
-      let text_meta;
-      if (area && area.main_text_meta) {
-        text_meta = this.publication.$files.find((f) =>
-          f.$path.endsWith("/" + area.main_text_meta)
-        );
-      } else {
-        text_meta = this.publication.$files.find(
-          (f) => f.grid_area_id === areaId
-        );
-      }
+      const content_meta = area.content_meta || area.main_text_meta;
 
-      if (text_meta) {
-        try {
-          await this.$api.deleteItem({
-            path: text_meta.$path,
-          });
-        } catch (error) {
-          console.error("Error deleting text block:", error);
-        }
+      if (!content_meta) return;
+
+      const media = this.publication.$files.find((f) =>
+        f.$path.endsWith("/" + content_meta)
+      );
+      if (media) {
+        await this.$api.deleteItem({
+          path: media.$path,
+        });
       }
 
       // Remove area from grid_areas

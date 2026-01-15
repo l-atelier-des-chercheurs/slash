@@ -509,30 +509,33 @@ export default {
       let html = `<div class="grid"><div class="grid-content" style="--col-count: ${col_count}; --row-count: ${row_count};">`;
 
       chapter.grid_areas.forEach((area) => {
-        let text_meta;
-        if (area.main_text_meta) {
-          text_meta = this.publication.$files.find((f) =>
-            f.$path.endsWith("/" + area.main_text_meta)
-          );
-        } else {
-          text_meta = this.publication.$files.find(
-            (f) => f.grid_area_id === area.id
+        let media;
+
+        const content_meta = area.content_meta || area.main_text_meta;
+        if (content_meta) {
+          media = this.publication.$files.find((f) =>
+            f.$path.endsWith("/" + content_meta)
           );
         }
 
-        if (text_meta && text_meta.$content) {
+        html += `<div class="grid-cell" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">`;
+
+        if (media?.$content) {
           const text = this.parseMarkdownWithMarkedownIt(
-            text_meta.$content,
-            text_meta.source_medias
+            media.$content,
+            media.source_medias
           );
 
-          html += `<div class="grid-cell" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">
-            ${text}
-          </div>`;
-        } else {
-          // Empty cell with grid positioning
-          html += `<div class="grid-cell" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};"></div>`;
+          html += text;
+        } else if (media?.$type === "image") {
+          html += `<img src="${this.makeMediaFileURL({
+            $path: media.$path,
+            $media_filename: media.$media_filename,
+          })}" />`;
+        } else if (media?.$type === "video") {
         }
+
+        html += "</div>";
       });
 
       html += "</div></div>";
