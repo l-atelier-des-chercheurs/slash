@@ -664,6 +664,9 @@
           },
           "last_message_count": {
             "type": "number"
+          },
+          "linked_project_path": {
+            "type": "string"
           }
         },
         "$files": {

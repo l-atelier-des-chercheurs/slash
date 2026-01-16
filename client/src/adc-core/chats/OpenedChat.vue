@@ -26,7 +26,20 @@
             :can_edit="can_edit_chat"
           />
 
-          <DropDown v-if="can_edit_chat" :show_label="false" :right="true">
+          <DropDown
+            v-if="can_edit_chat"
+            class="_actions"
+            :show_label="false"
+            :right="true"
+          >
+            <button
+              type="button"
+              class="u-buttonLink"
+              @click="show_project_link_modal = true"
+            >
+              <b-icon icon="folder-symlink" />
+              {{ $t("linked_project") }}
+            </button>
             <button
               type="button"
               class="u-buttonLink u-buttonLink_red"
@@ -35,6 +48,13 @@
               <b-icon icon="trash" />
               {{ $t("remove") }}
             </button>
+
+            <ProjectLinkModal
+              v-if="show_project_link_modal"
+              :path="chat.$path"
+              :current_linked_project_path="chat.linked_project_path"
+              @close="show_project_link_modal = false"
+            />
 
             <RemoveMenu2
               v-if="show_remove_modal"
@@ -57,6 +77,12 @@
             }}
           </div>
         </div> -->
+        <div class="_openedChat--header--row">
+          <div>
+            <div class="u-label">{{ $t("linked_project") }}</div>
+            <div class="">{{ chat.linked_project_path }}</div>
+          </div>
+        </div>
 
         <div class="_openedChat--header--row _adminsAndContributors">
           <AdminsAndContributorsField
@@ -214,6 +240,7 @@
 <script>
 import Message from "./Message.vue";
 import authorMessageMixin from "./mixins/authorMessageMixin";
+import ProjectLinkModal from "../modals/ProjectLinkModal.vue";
 
 export default {
   props: {
@@ -224,6 +251,7 @@ export default {
   },
   components: {
     Message,
+    ProjectLinkModal,
   },
   mixins: [authorMessageMixin],
   data() {
@@ -235,6 +263,7 @@ export default {
       max_messages_to_display: 50,
       load_all_messages: false,
       show_remove_modal: false,
+      show_project_link_modal: false,
       pane_scroll_until_end: 0,
 
       is_posting_message: false,
@@ -374,6 +403,10 @@ export default {
     closeChat() {
       this.$emit("close");
     },
+    onProjectSelected(projectPath) {
+      // Handle project selection if needed
+      // For now, the path is displayed in the modal
+    },
     async postMessage() {
       if (!this.new_message) return;
 
@@ -487,6 +520,12 @@ export default {
 ._openedChat--header {
   padding: calc(var(--spacing) / 2);
   color: white;
+
+  :deep(.u-label),
+  :deep(._icon),
+  :deep(.u-instructions) {
+    color: white !important;
+  }
 }
 ._openedChat--header--row {
   display: flex;
@@ -509,6 +548,9 @@ export default {
   > ._status {
     flex: 0 0 9ch;
   }
+}
+._actions {
+  color: var(--c-noir);
 }
 
 ._openedChat--header--title {
@@ -569,11 +611,6 @@ export default {
 }
 
 ._adminsAndContributors {
-  :deep(.u-label),
-  :deep(._icon),
-  :deep(.u-instructions) {
-    color: white !important;
-  }
 }
 
 ._backBtn {

@@ -19,6 +19,7 @@
           </div>
 
           <br />
+          <DLabel :str="$t('destination_project')" />
 
           <SpaceProjectPicker
             class="u-spacingBottom"
