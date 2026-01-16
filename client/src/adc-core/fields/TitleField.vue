@@ -107,6 +107,7 @@ export default {
       type: Boolean,
     },
     custom_formats: Array,
+    mode: String,
   },
   components: {},
   data() {
@@ -120,7 +121,9 @@ export default {
     };
   },
   created() {},
-  mounted() {},
+  mounted() {
+    if (this.mode === "edit_on_mounted") this.enableEditMode();
+  },
   beforeDestroy() {},
   watch: {
     content() {
