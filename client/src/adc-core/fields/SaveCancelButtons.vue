@@ -35,9 +35,7 @@ export default {
     return {};
   },
   created() {},
-  mounted() {
-    // if (this.autofocus_save && this.$refs.save) this.$refs.save.focus();
-  },
+  mounted() {},
   beforeDestroy() {},
   watch: {},
   computed: {},

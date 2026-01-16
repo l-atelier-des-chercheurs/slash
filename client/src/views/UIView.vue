@@ -4,26 +4,17 @@
     <div class="_floatingDebug">
       <div class="_floatingDebug--content">
         <div class="_floatingDebug--header">
-          <button class="u-button u-button_bleuvert" @click="toggleAllActive">
-            {{ all_active ? "Hide" : "Show" }} All Active States
+          <button
+            class="u-button u-button_bleuvert u-button_small"
+            @click="toggleAllActive"
+          >
+            {{ all_active ? "Hide" : "Show" }} Active
+          </button>
+          <button class="u-button u-button_small" @click="cycleBackgroundColor">
+            Background: {{ currentBackgroundLabel }}
           </button>
         </div>
-        <button class="u-button u-button_small" @click="cycleBackgroundColor">
-          Background: {{ currentBackgroundLabel }}
-        </button>
       </div>
-    </div>
-
-    <div class="u-spacingBottom">
-      <h3>Radio Switch</h3>
-      <RadioSwitch
-        :content.sync="radioswitch_content"
-        :options="[
-          { label: 'Option 1', value: 'opt1' },
-          { label: 'Option 2', value: 'opt2' },
-          { label: 'Option 3', value: 'opt3' },
-        ]"
-      />
     </div>
 
     <h2>Buttons Demo</h2>
@@ -265,7 +256,18 @@
       </button>
     </div>
 
-    <hr />
+    <h2>Radio Switch</h2>
+
+    <div class="u-spacingBottom">
+      <RadioSwitch
+        :content.sync="radioswitch_content"
+        :options="[
+          { label: 'Option 1', value: 'opt1' },
+          { label: 'Option 2', value: 'opt2' },
+          { label: 'Option 3', value: 'opt3' },
+        ]"
+      />
+    </div>
 
     <h2>Button Link Demo</h2>
 
@@ -523,38 +525,7 @@
     <h3>Standard Checkboxes</h3>
     <div class="_inputsDemo">
       <div>
-        <label>
-          <input type="checkbox" />
-          Unchecked
-        </label>
-      </div>
-      <div>
-        <label>
-          <input type="checkbox" checked />
-          Checked
-        </label>
-      </div>
-      <div>
-        <label>
-          <input type="checkbox" :class="{ 'is--active': all_active }" />
-          Active (unchecked)
-        </label>
-      </div>
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked
-            :class="{ 'is--active': all_active }"
-          />
-          Active (checked)
-        </label>
-      </div>
-      <div>
-        <label>
-          <input type="checkbox" disabled />
-          Disabled
-        </label>
+        <ToggleInput :label="$t('no_padding')" />
       </div>
     </div>
 
@@ -724,6 +695,15 @@
     <div class="u-spacingBottom"></div>
 
     <SizeDisplay :size="2059" />
+    <SizeDisplay :size="2059000" />
+
+    <CollaborativeEditor3
+      :label="$t('caption')"
+      :content="'test'"
+      :custom_formats="['bold', 'italic', 'link']"
+      :is_collaborative="false"
+      :can_edit="true"
+    />
   </div>
 </template>
 <script>
@@ -738,7 +718,7 @@ export default {
       modal_size: "small",
       modal_nopadding: false,
       modal_notitle: false,
-      all_active: true,
+      all_active: false,
       backgroundIndex: 0,
       backgrounds: ["white", "var(--c-gris)", "var(--c-noir)"],
       backgroundLabels: ["White", "Gris", "Noir"],
@@ -846,7 +826,7 @@ h3 {
   pointer-events: none;
 
   ._floatingDebug--content {
-    max-width: 200px;
+    max-width: 300px;
     margin: 0 auto;
     background: white;
     border: 2px solid var(--c-gris);
