@@ -52,6 +52,11 @@
           v-else-if="opened_chapter.section_type === 'story'"
           v-html="opened_chapter.content"
         />
+        <div
+          class="grid"
+          v-else-if="opened_chapter.section_type === 'grid'"
+          v-html="opened_chapter.content"
+        />
       </section>
     </transition>
   </div>

@@ -229,7 +229,8 @@ hr {
   padding: calc(var(--spacing) * 1) !important;
 }
 
-.web .gallery-content {
+.web .gallery-content,
+.web .grid-content {
   height: 80vh;
 }
 
