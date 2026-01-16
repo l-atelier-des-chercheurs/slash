@@ -697,9 +697,18 @@
     <SizeDisplay :size="2059" />
     <SizeDisplay :size="2059000" />
 
-    <CollaborativeEditor3
+    <TextEditor
       :label="$t('caption')"
       :content="'test'"
+      :path="'/fakepath'"
+      :custom_formats="['bold', 'italic', 'link']"
+      :is_collaborative="false"
+      :can_edit="true"
+    />
+    <TextEditor
+      :label="$t('caption')"
+      :content="'Sed vestibulum tempor ex, at rutrum orci accumsan eu. Praesent lacus nibh, tempor cursus mollis sit amet, dapibus eu nisi. Aliquam at rhoncus massa. Sed mattis vehicula augue, vitae vestibulum nibh suscipit eget. Integer posuere vehicula justo quis tempor. Nulla lacinia nunc porttitor dolor aliquam, non aliquam felis iaculis. Aliquam consequat pellentesque leo at mollis.'"
+      :path="'/fakepath'"
       :custom_formats="['bold', 'italic', 'link']"
       :is_collaborative="false"
       :can_edit="true"

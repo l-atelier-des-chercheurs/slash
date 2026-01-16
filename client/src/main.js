@@ -241,6 +241,8 @@ import FullscreenView from "@/adc-core/fields/FullscreenView.vue";
 Vue.component("FullscreenView", FullscreenView);
 import CollaborativeEditor3 from "@/adc-core/fields/collaborative-editor/CollaborativeEditor3.vue";
 Vue.component("CollaborativeEditor3", CollaborativeEditor3);
+import TextEditor from "@/adc-core/fields/collaborative-editor/TextEditor.vue";
+Vue.component("TextEditor", TextEditor);
 import TableEditor from "@/adc-core/fields/TableEditor.vue";
 Vue.component("TableEditor", TableEditor);
 import AuthorTag from "@/adc-core/fields/AuthorTag.vue";
