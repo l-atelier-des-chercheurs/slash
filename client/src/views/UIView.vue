@@ -1,5 +1,19 @@
 <template>
   <div class="_uiView">
+    <!-- Floating debug panel -->
+    <div class="_floatingDebug">
+      <div class="_floatingDebug--content">
+        <div class="_floatingDebug--header">
+          <button class="u-button u-button_bleuvert" @click="toggleAllActive">
+            {{ all_active ? "Hide" : "Show" }} All Active States
+          </button>
+        </div>
+        <button class="u-button u-button_small" @click="cycleBackgroundColor">
+          Background: {{ currentBackgroundLabel }}
+        </button>
+      </div>
+    </div>
+
     <div class="u-spacingBottom">
       <h3>Radio Switch</h3>
       <RadioSwitch
@@ -16,51 +30,84 @@
 
     <h3>Standard Buttons</h3>
     <div class="_buttonsDemo">
-      <button class="u-button">Default Button</button>
-      <button class="u-button u-button_floating">Floating</button>
-      <button class="u-button u-button_wide">Wide</button>
-      <button class="u-button u-button_inline">
+      <button class="u-button" :class="{ 'is--active': all_active }">
+        Default Button
+      </button>
+      <button
+        class="u-button u-button_floating"
+        :class="{ 'is--active': all_active }"
+      >
+        Floating
+      </button>
+      <button
+        class="u-button u-button_wide"
+        :class="{ 'is--active': all_active }"
+      >
+        Wide
+      </button>
+      <button
+        class="u-button u-button_inline"
+        :class="{ 'is--active': all_active }"
+      >
         Inline <b-icon icon="arrow-right" />
       </button>
-      <button class="u-button" disabled>Disabled</button>
+      <button class="u-button" disabled :class="{ 'is--active': all_active }">
+        Disabled
+      </button>
+      <button class="u-button" :class="{ 'is--active': all_active }">
+        Toggleable Active
+      </button>
     </div>
 
     <h3>Colored Buttons</h3>
     <div class="_buttonsDemo">
-      <button class="u-button u-button_black">Black</button>
-      <button class="u-button u-button_white">White</button>
-      <button class="u-button u-button_red">Red</button>
-      <button class="u-button u-button_bleuvert">Bleuvert</button>
-      <button class="u-button u-button_bleuvert_fonce">Bleuvert Foncé</button>
-      <button class="u-button u-button_orange">Orange</button>
-      <button class="u-button u-button_bleumarine">Bleumarine</button>
-      <button class="u-button u-button_transparent">Transparent</button>
+      <button
+        class="u-button u-button_black"
+        :class="{ 'is--active': all_active }"
+      >
+        Black
+      </button>
+      <button
+        class="u-button u-button_white"
+        :class="{ 'is--active': all_active }"
+      >
+        White
+      </button>
+      <button
+        class="u-button u-button_red"
+        :class="{ 'is--active': all_active }"
+      >
+        Red
+      </button>
+      <button
+        class="u-button u-button_bleuvert"
+        :class="{ 'is--active': all_active }"
+      >
+        Bleuvert
+      </button>
+      <button
+        class="u-button u-button_bleuvert_fonce"
+        :class="{ 'is--active': all_active }"
+      >
+        Bleuvert Foncé
+      </button>
+      <button
+        class="u-button u-button_orange"
+        :class="{ 'is--active': all_active }"
+      >
+        Orange
+      </button>
+      <button
+        class="u-button u-button_bleumarine"
+        :class="{ 'is--active': all_active }"
+      >
+        Bleumarine
+      </button>
       <button
         class="u-button u-button_transparent"
-        :class="{ 'is--active': true }"
+        :class="{ 'is--active': all_active }"
       >
-        Active Transparent
-      </button>
-    </div>
-
-    <h3>Active Buttons</h3>
-    <div class="_buttonsDemo">
-      <button class="u-button is--active">Default Active</button>
-      <button class="u-button u-button_black is--active">Black Active</button>
-      <button class="u-button u-button_white is--active">White Active</button>
-      <button class="u-button u-button_red is--active">Red Active</button>
-      <button class="u-button u-button_bleuvert is--active">
-        Bleuvert Active
-      </button>
-      <button class="u-button u-button_bleuvert_fonce is--active">
-        Bleuvert Foncé Active
-      </button>
-      <button class="u-button u-button_orange is--active">Orange Active</button>
-      <button class="u-button u-button_bleumarine is--active">
-        Bleumarine Active
-      </button>
-      <button class="u-button u-button_transparent is--active">
-        Transparent Active
+        Transparent
       </button>
     </div>
 
@@ -220,6 +267,64 @@
 
     <hr />
 
+    <h2>Button Link Demo</h2>
+
+    <h3>Standard Button Links</h3>
+    <div class="_buttonsDemo">
+      <button class="u-buttonLink">Default Button Link</button>
+      <button class="u-buttonLink" disabled>Disabled Button Link</button>
+      <button class="u-buttonLink u-buttonLink_white">White Button Link</button>
+      <button class="u-buttonLink u-buttonLink_red">Red Button Link</button>
+      <button class="u-buttonLink has--whitebg">With White Background</button>
+    </div>
+
+    <h3>Active Button Links</h3>
+    <div class="_buttonsDemo">
+      <button class="u-buttonLink" :class="{ 'is--active': all_active }">
+        Active Button Link
+      </button>
+      <button
+        class="u-buttonLink u-buttonLink_white"
+        :class="{ 'is--active': all_active }"
+      >
+        Active White Button Link
+      </button>
+      <button
+        class="u-buttonLink u-buttonLink_red"
+        :class="{ 'is--active': all_active }"
+      >
+        Active Red Button Link
+      </button>
+      <button
+        class="u-buttonLink has--whitebg"
+        :class="{ 'is--active': all_active }"
+      >
+        Active with White Background
+      </button>
+    </div>
+
+    <h3>Button Links with Icons</h3>
+    <div class="_buttonsDemo">
+      <button class="u-buttonLink">
+        <b-icon icon="plus" />
+        Add Link
+      </button>
+      <button class="u-buttonLink">
+        <b-icon icon="trash" />
+        Delete Link
+      </button>
+      <button class="u-buttonLink">
+        <b-icon icon="download" />
+        Download Link
+      </button>
+      <button class="u-buttonLink" :class="{ 'is--active': all_active }">
+        <b-icon icon="star" />
+        Active Link with Icon
+      </button>
+    </div>
+
+    <hr />
+
     <div class="_authors">
       <AuthorTag
         v-for="{ $path } in authors_sublist"
@@ -309,19 +414,169 @@
 
     <hr />
 
-    <select class="u-spacingBottom">
-      <option value="1">Premier</option>
-      <option value="2">Deuxième</option>
-      <option value="3">Troisième</option>
-    </select>
+    <h2>Inputs Demo</h2>
+
+    <h3>Text Inputs</h3>
+    <div class="_inputsDemo">
+      <div>
+        <label>Default Input</label>
+        <input type="text" placeholder="Enter text..." />
+      </div>
+      <div>
+        <label>Input with Value</label>
+        <input type="text" value="Sample text" />
+      </div>
+      <div>
+        <label>Active Input</label>
+        <input
+          type="text"
+          :class="{ 'is--active': all_active }"
+          placeholder="Active state..."
+        />
+      </div>
+      <div>
+        <label>Disabled Input</label>
+        <input type="text" value="Disabled" disabled />
+      </div>
+    </div>
+
+    <h3>Small Inputs</h3>
+    <div class="_inputsDemo">
+      <div>
+        <label>Small Input</label>
+        <input type="text" size="small" placeholder="Small input..." />
+      </div>
+      <div>
+        <label>Small Active Input</label>
+        <input
+          type="text"
+          size="small"
+          :class="{ 'is--active': all_active }"
+          placeholder="Small active..."
+        />
+      </div>
+    </div>
+
+    <h3>Textarea</h3>
+    <div class="_inputsDemo">
+      <div>
+        <label>Textarea</label>
+        <textarea placeholder="Enter multiple lines..."></textarea>
+      </div>
+      <div>
+        <label>Active Textarea</label>
+        <textarea
+          :class="{ 'is--active': all_active }"
+          placeholder="Active textarea..."
+        ></textarea>
+      </div>
+    </div>
 
     <hr />
 
-    <select class="u-spacingBottom" size="small">
-      <option value="1">Premier</option>
-      <option value="2">Deuxième</option>
-      <option value="3">Troisième</option>
-    </select>
+    <h2>Select Demo</h2>
+
+    <h3>Standard Select</h3>
+    <div class="_inputsDemo">
+      <div>
+        <label>Default Select</label>
+        <select>
+          <option value="1">Premier</option>
+          <option value="2">Deuxième</option>
+          <option value="3">Troisième</option>
+        </select>
+      </div>
+      <div>
+        <label>Active Select</label>
+        <select :class="{ 'is--active': all_active }">
+          <option value="1">Premier</option>
+          <option value="2">Deuxième</option>
+          <option value="3">Troisième</option>
+        </select>
+      </div>
+    </div>
+
+    <h3>Small Select</h3>
+    <div class="_inputsDemo">
+      <div>
+        <label>Small Select</label>
+        <select size="small">
+          <option value="1">Premier</option>
+          <option value="2">Deuxième</option>
+          <option value="3">Troisième</option>
+        </select>
+      </div>
+      <div>
+        <label>Small Active Select</label>
+        <select size="small" :class="{ 'is--active': all_active }">
+          <option value="1">Premier</option>
+          <option value="2">Deuxième</option>
+          <option value="3">Troisième</option>
+        </select>
+      </div>
+    </div>
+
+    <hr />
+
+    <h2>Checkbox Demo</h2>
+
+    <h3>Standard Checkboxes</h3>
+    <div class="_inputsDemo">
+      <div>
+        <label>
+          <input type="checkbox" />
+          Unchecked
+        </label>
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" checked />
+          Checked
+        </label>
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" :class="{ 'is--active': all_active }" />
+          Active (unchecked)
+        </label>
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked
+            :class="{ 'is--active': all_active }"
+          />
+          Active (checked)
+        </label>
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" disabled />
+          Disabled
+        </label>
+      </div>
+    </div>
+
+    <hr />
+
+    <h2>Dropzone Demo</h2>
+
+    <h3>Standard Dropzone</h3>
+    <div class="_inputsDemo">
+      <div class="u-dropzone">
+        <p>Drop files here or click to upload</p>
+      </div>
+    </div>
+
+    <h3>Active Dropzone</h3>
+    <div class="_inputsDemo">
+      <div class="u-dropzone" :class="{ 'is--active': all_active }">
+        <p>Active dropzone (drag files here)</p>
+      </div>
+    </div>
+
+    <hr />
 
     <div class="u-spacingBottom"></div>
 
@@ -483,6 +738,10 @@ export default {
       modal_size: "small",
       modal_nopadding: false,
       modal_notitle: false,
+      all_active: true,
+      backgroundIndex: 0,
+      backgrounds: ["white", "var(--c-gris)", "var(--c-noir)"],
+      backgroundLabels: ["White", "Gris", "Noir"],
     };
   },
   created() {},
@@ -490,6 +749,7 @@ export default {
     this.authors = await this.$api.getFolders({
       path: "authors",
     });
+    this.applyBackgroundColor();
   },
   beforeDestroy() {},
   watch: {},
@@ -497,8 +757,25 @@ export default {
     authors_sublist() {
       return this.authors.slice(0, 5);
     },
+    currentBackgroundLabel() {
+      return this.backgroundLabels[this.backgroundIndex];
+    },
   },
-  methods: { dummy() {} },
+  methods: {
+    dummy() {},
+    toggleAllActive() {
+      this.all_active = !this.all_active;
+    },
+    cycleBackgroundColor() {
+      this.backgroundIndex =
+        (this.backgroundIndex + 1) % this.backgrounds.length;
+      this.applyBackgroundColor();
+    },
+    applyBackgroundColor() {
+      const color = this.backgrounds[this.backgroundIndex];
+      document.body.style.backgroundColor = color;
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>
@@ -530,6 +807,24 @@ export default {
   margin-bottom: calc(var(--spacing) / 2);
 }
 
+._inputsDemo {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: calc(var(--spacing) / 2);
+  margin-bottom: calc(var(--spacing) / 2);
+
+  > div {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: calc(var(--spacing) / 4);
+
+    label {
+      font-size: var(--sl-font-size-small);
+      color: var(--label-color);
+    }
+  }
+}
+
 h2 {
   margin-top: calc(var(--spacing) * 2);
   margin-bottom: calc(var(--spacing) / 2);
@@ -540,5 +835,50 @@ h3 {
   margin-bottom: calc(var(--spacing) / 4);
   font-size: var(--sl-font-size-medium);
   color: var(--c-gris_fonce);
+}
+
+._floatingDebug {
+  position: fixed;
+  top: calc(var(--spacing) / 2);
+  left: 0;
+  z-index: 1000;
+  width: 100%;
+  pointer-events: none;
+
+  ._floatingDebug--content {
+    max-width: 200px;
+    margin: 0 auto;
+    background: white;
+    border: 2px solid var(--c-gris);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing) / 2);
+    box-shadow: var(--panel-shadows);
+    pointer-events: auto;
+  }
+
+  ._floatingDebug--header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) / 2);
+    font-size: var(--sl-font-size-small);
+
+    strong {
+      font-weight: 600;
+    }
+
+    span {
+      padding: calc(var(--spacing) / 8) calc(var(--spacing) / 4);
+      border-radius: 4px;
+      background-color: var(--c-gris_clair);
+      color: var(--c-gris_fonce);
+      font-weight: 600;
+
+      &.is--active {
+        background-color: var(--c-bleuvert);
+        color: white;
+      }
+    }
+  }
 }
 </style>

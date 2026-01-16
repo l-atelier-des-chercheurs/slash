@@ -178,6 +178,8 @@ a:focus-visible {
 
   &.is--active {
     color: var(--c-bleuvert);
+    font-weight: 600;
+    text-decoration: none;
   }
   &.has--whitebg {
     background: white;
@@ -255,7 +257,12 @@ button,
     }
   }
   &.is--active {
-    outline-color: var(--active-color);
+    &:not([disabled]) {
+      background-color: var(--active-color);
+      color: white;
+      // outline: 2px solid var(--active-color);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
   }
 }
 
@@ -628,6 +635,7 @@ select {
 
   &.is--active {
     background-color: var(--active-color);
+    color: white;
   }
 }
 
