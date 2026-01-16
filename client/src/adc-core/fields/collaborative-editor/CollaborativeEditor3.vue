@@ -344,7 +344,9 @@ export default {
         },
         bounds: this.$refs.editor,
         theme: "snow",
-        formats: this.custom_formats || default_formats,
+        formats: (this.custom_formats || default_formats).filter(
+          (f) => f !== "emoji"
+        ),
         placeholder: this.capitalize(this.placeholder),
         readOnly: !this.editor_is_enabled,
         scrollingContainer: this.scrollingContainer,
