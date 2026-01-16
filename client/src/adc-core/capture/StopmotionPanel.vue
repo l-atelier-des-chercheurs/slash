@@ -116,13 +116,26 @@
                 previous_photo_to_show = media;
                 $emit('update:show_live_feed', false);
               "
-              class="m_stopmotionpanel--medias--list--items"
+              class="m_stopmotionpanel--medias--list--item"
               :class="{
                 'is--current_single':
                   previous_photo_to_show &&
                   previous_photo_to_show.$path === media.$path &&
                   !show_live_feed,
+                'is--dragging': drag_index === index,
+                'is--drag-over': drag_over_index === index,
+                'is--drag-over-before':
+                  drag_over_index === index && drag_over_side === 'before',
+                'is--drag-over-after':
+                  drag_over_index === index && drag_over_side === 'after',
               }"
+              draggable="true"
+              @dragstart="handleDragStart($event, index)"
+              @dragend="handleDragEnd"
+              @dragover.prevent="handleDragOver($event, index)"
+              @dragenter.prevent="handleDragEnter(index)"
+              @dragleave="handleDragLeave(index)"
+              @drop.prevent="handleDrop($event, index)"
             >
               <MediaContent :file="media" :resolution="240" />
 
@@ -227,7 +240,7 @@
             <!-- <div key="separator" class="_separator" /> -->
 
             <div
-              class="m_stopmotionpanel--medias--list--items"
+              class="m_stopmotionpanel--medias--list--item"
               :class="{ 'is--current_single': show_live_feed }"
               @click="showVideoFeed"
               :key="'live_feed'"
@@ -337,6 +350,10 @@ export default {
       show_duration_menu: false,
 
       status_saving_to_project: false,
+
+      drag_index: null,
+      drag_over_index: null,
+      drag_over_side: null, // 'before' or 'after'
     };
   },
 
@@ -405,7 +422,7 @@ export default {
 
       this.$nextTick(() => {
         const active = document.querySelector(
-          ".m_stopmotionpanel--medias--list--items.is--current_single"
+          ".m_stopmotionpanel--medias--list--item.is--current_single"
         );
         if (active)
           active.scrollIntoView({
@@ -672,6 +689,101 @@ export default {
         path,
       });
     },
+    handleDragStart(event, index) {
+      this.drag_index = index;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", index.toString());
+      // Set opacity on the dragged element
+      const element = event.currentTarget;
+      if (element) {
+        element.style.opacity = "0.5";
+      }
+    },
+    handleDragEnd(event) {
+      const element = event.currentTarget;
+      if (element) {
+        element.style.opacity = "";
+      }
+      this.drag_index = null;
+      this.drag_over_index = null;
+      this.drag_over_side = null;
+    },
+    handleDragOver(event, index) {
+      if (this.drag_index === null || this.drag_index === index) return;
+      event.dataTransfer.dropEffect = "move";
+
+      // Determine if drop should be before or after based on mouse position
+      const rect = event.currentTarget.getBoundingClientRect();
+      const mouseX = event.clientX;
+      const centerX = rect.left + rect.width / 2;
+
+      this.drag_over_side = mouseX < centerX ? "before" : "after";
+    },
+    handleDragEnter(index) {
+      if (this.drag_index === null || this.drag_index === index) return;
+      this.drag_over_index = index;
+    },
+    handleDragLeave(index) {
+      if (this.drag_over_index === index) {
+        this.drag_over_index = null;
+        this.drag_over_side = null;
+      }
+    },
+    async handleDrop(event, dropIndex) {
+      if (this.drag_index === null || this.drag_index === dropIndex) {
+        this.drag_over_index = null;
+        this.drag_over_side = null;
+        return;
+      }
+
+      const dragIndex = this.drag_index;
+      const images_list = this.images_list.slice();
+
+      // Determine the actual insertion index
+      let insertIndex = dropIndex;
+
+      // If dropping after the target item, increment the index
+      if (this.drag_over_side === "after") {
+        insertIndex = dropIndex + 1;
+      }
+
+      // Adjust if dragging from before the insertion point
+      if (dragIndex < insertIndex) {
+        insertIndex -= 1;
+      }
+
+      // Remove the dragged item from its current position
+      const [draggedItem] = images_list.splice(dragIndex, 1);
+      // Insert it at the new position
+      images_list.splice(insertIndex, 0, draggedItem);
+
+      // Update the meta with the new order
+      await this.$api.updateMeta({
+        path: this.current_stopmotion_path,
+        new_meta: { images_list },
+      });
+
+      // Update the currently shown photo if it was affected
+      if (this.previous_photo_to_show) {
+        const newIndex = images_list.findIndex(
+          (item) =>
+            this.getFilename(this.previous_photo_to_show.$path) === item.m
+        );
+        if (newIndex !== -1) {
+          // Find the corresponding media in the updated medias array
+          this.$nextTick(() => {
+            const updatedMedia = this.medias[newIndex];
+            if (updatedMedia) {
+              this.previous_photo_to_show = updatedMedia.media;
+            }
+          });
+        }
+      }
+
+      this.drag_index = null;
+      this.drag_over_index = null;
+      this.drag_over_side = null;
+    },
   },
 };
 </script>
@@ -841,7 +953,7 @@ export default {
     // padding-left: 2px;
   }
 
-  .m_stopmotionpanel--medias--list--items {
+  .m_stopmotionpanel--medias--list--item {
     position: relative;
     // overflow: hidden;
     width: auto;
@@ -851,6 +963,58 @@ export default {
 
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+
+    &[draggable="true"] {
+      cursor: grab;
+      &:active {
+        cursor: grabbing;
+      }
+    }
+
+    &.is--dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    &.is--drag-over {
+      position: relative;
+      z-index: 10;
+
+      // Show insertion indicator line
+      &::after {
+        content: "";
+        position: absolute;
+        top: -4px;
+        bottom: -4px;
+        width: 4px;
+        background: linear-gradient(
+          to bottom,
+          transparent 0%,
+          var(--c-rouge) 20%,
+          var(--c-rouge) 80%,
+          transparent 100%
+        );
+        border-radius: 2px;
+        box-shadow: 0 0 12px rgba(252, 75, 96, 0.8);
+        z-index: 11;
+        pointer-events: none;
+        animation: dragIndicatorPulse 1s ease-in-out infinite;
+      }
+
+      // Position indicator on the left when dropping before
+      &.is--drag-over-before {
+        &::after {
+          left: -3px;
+        }
+      }
+
+      // Position indicator on the right when dropping after
+      &.is--drag-over-after {
+        &::after {
+          right: -3px;
+        }
+      }
+    }
 
     &::before {
       counter-increment: compteListe 1;
@@ -1056,5 +1220,17 @@ export default {
 ._previewImage {
   // border-radius: 2px;
   // overflow: hidden;
+}
+
+@keyframes dragIndicatorPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleX(1.2);
+  }
 }
 </style>
