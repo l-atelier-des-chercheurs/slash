@@ -106,13 +106,10 @@ export default {
     this.authors = await this.$api.getFolders({
       path: this.path,
     });
-    this.$api.join({ room: this.path });
     // if no authors, then switch to register
     if (this.authors.length === 0) this.current_mode = "create";
   },
-  beforeDestroy() {
-    this.$api.leave({ room: this.path });
-  },
+  beforeDestroy() {},
   watch: {
     $route() {
       // if navigating to another route, lets close modal

@@ -44,9 +44,12 @@ export default function () {
         await this._setAuthFromStorage();
         this.setAuthorizationHeader();
 
+        await this.getAllAuthors();
+        this.join({ room: "authors" });
+
         if (this.tokenpath.token_path) {
           await this.getCurrentAuthor().catch(() => {});
-          this.trackCurrentAuthor();
+          this.join({ room: this.tokenpath.token_path });
         }
 
         const sessionID = localStorage.getItem("sessionID");
@@ -221,6 +224,9 @@ export default function () {
           general_password: this.general_password,
         });
       },
+      async getAllAuthors() {
+        await this.getFolders({ path: "authors" }).catch((err) => {});
+      },
       async getCurrentAuthor() {
         await this.getFolder({
           path: this.tokenpath.token_path,
@@ -228,9 +234,6 @@ export default function () {
           throw err;
           // TODO catch folder no existing: author was removed, for example
         });
-      },
-      trackCurrentAuthor() {
-        this.join({ room: this.tokenpath.token_path });
       },
 
       async getAndTrackUsers() {
