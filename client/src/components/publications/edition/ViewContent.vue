@@ -526,7 +526,7 @@ export default {
           return;
         }
 
-        html += `<div class="grid-cell" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">`;
+        html += `<div class="grid-cell" data-grid-area-id="${area.id}" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">`;
 
         if (media?.$content) {
           const text = this.parseMarkdownWithMarkedownIt(
