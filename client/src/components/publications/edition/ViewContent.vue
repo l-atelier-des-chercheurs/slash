@@ -569,13 +569,23 @@ export default {
 
       chapter.grid_areas.forEach((area) => {
         let media;
+        const objectFit = area?.objectFit || "cover";
+        const objectPosition = area?.objectPosition || "center";
+
+        const source_media = area?.source_medias?.[0];
+        if (source_media) {
+          media = this.getSourceMedia({
+            source_media,
+            folder_path: this.publication.$path,
+          });
+        }
 
         const content_meta = area.content_meta || area.main_text_meta;
-        if (content_meta) {
+        if (!media && content_meta) {
           media = this.publication.$files.find((f) =>
             f.$path.endsWith("/" + content_meta)
           );
-        } else {
+        } else if (!media) {
           media = this.publication.$files.find(
             (f) => f.grid_area_id === area.id
           );
@@ -598,7 +608,7 @@ export default {
           html += `<img src="${this.makeMediaFileURL({
             $path: media.$path,
             $media_filename: media.$media_filename,
-          })}" />`;
+          })}" style="width: 100%; height: 100%; object-fit: ${objectFit}; object-position: ${objectPosition};" />`;
         } else if (media?.$type === "video") {
         }
 

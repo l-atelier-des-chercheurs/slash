@@ -96,6 +96,7 @@
                     opt: { objectFit: 'contain' },
                   })
                 "
+                :title="media_with_linked.objectFit === 'contain' ? $t('object_fit_contain') : $t('object_fit_cover')"
               >
                 <!-- v-if="media_with_linked.objectFit !== 'contain'" -->
                 <!-- {{ $t("object_fit_contain") }} -->

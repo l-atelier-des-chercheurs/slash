@@ -1505,4 +1505,5 @@ export default {
   no_notes_to_show: "No notes to show",
   note_content: "Note content…",
   linked_project: "Linked project",
+  object_fit: "Fitting",
 };

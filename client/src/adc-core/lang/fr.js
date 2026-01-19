@@ -1575,4 +1575,5 @@ export default {
   no_notes_to_show: "Aucune note à afficher",
   note_content: "Contenu de la note…",
   linked_project: "Projet en lien",
+  object_fit: "Remplissage",
 };
