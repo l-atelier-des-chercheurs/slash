@@ -210,26 +210,6 @@ export default {
         row_end: row + 1,
       };
 
-      if (this.publication) {
-        const chapter_name = this.chapter.$path.split("/").pop();
-        const filename = `${chapter_name}-${new_area_id}_text.md`;
-
-        try {
-          const { meta_filename } = await this.$api.uploadText({
-            path: this.publication.$path,
-            filename,
-            content: "",
-            additional_meta: {
-              content_type: "markdown",
-              grid_area_id: new_area_id,
-            },
-          });
-          new_area.content_meta = meta_filename;
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
       const grid_areas = [...this.grid_areas, new_area];
       this.updateChapter({ grid_areas });
     },

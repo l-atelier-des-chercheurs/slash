@@ -5,9 +5,8 @@
         v-for="area in sorted_grid_areas"
         :key="area.id"
         :area="area"
-        :area_text_meta="getAreaTextMeta(area)"
+        :chapter="chapter"
         :publication="publication"
-        @createText="createText"
       />
     </div>
   </div>
@@ -33,47 +32,7 @@ export default {
     },
   },
   methods: {
-    async createText(areaId) {
-      const chapter_name = this.chapter.$path.split("/").pop();
-      const filename = `${chapter_name}-${areaId}_text.md`;
 
-      const { meta_filename } = await this.$api.uploadText({
-        path: this.publication.$path,
-        filename,
-        content: "",
-        additional_meta: {
-          content_type: "markdown",
-          grid_area_id: areaId,
-        },
-      });
-
-      // Update grid area with the new file
-      const new_grid_areas = this.chapter.grid_areas.map((area) => {
-        if (area.id === areaId) {
-          return {
-            ...area,
-            content_meta: meta_filename,
-          };
-        }
-        return area;
-      });
-
-      this.$api.updateMeta({
-        path: this.chapter.$path,
-        new_meta: {
-          grid_areas: new_grid_areas,
-        },
-      });
-    },
-    getAreaTextMeta(area) {
-      const content_meta = area.content_meta || area.main_text_meta;
-      if (content_meta) {
-        return this.publication.$files.find((f) =>
-          f.$path.endsWith("/" + content_meta)
-        );
-      }
-      return this.publication.$files.find((f) => f.grid_area_id === area.id);
-    },
   },
 };
 </script>
