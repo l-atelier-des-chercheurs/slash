@@ -99,7 +99,7 @@ export default {
 ._icon {
   font-size: var(--sl-font-size-x-small);
   padding: 0;
-  margin-left: calc(var(--spacing) / 4);
+  margin-left: calc(var(--spacing) / 2);
 }
 ._instr {
   // margin-bottom: calc(var(--spacing) / 2);
