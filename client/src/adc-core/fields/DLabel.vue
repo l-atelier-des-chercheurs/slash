@@ -1,7 +1,9 @@
 <template>
   <div class="_dLabel">
     <div class="_labelLine" @click.stop="toggleInstructions">
-      <b-icon v-if="icon_name" :icon="icon_name" class="_labelIcon" />
+      <span class="_labelIcon">
+        <b-icon v-if="icon_name" :icon="icon_name" />
+      </span>
       <component
         :is="tag"
         :class="tag === 'label' ? 'u-label' : ''"
@@ -93,7 +95,6 @@ export default {
 ._labelIcon {
   margin-right: calc(var(--spacing) / 4);
   flex-shrink: 0;
-  transform: translateY(0.15em);
 }
 ._icon {
   font-size: var(--sl-font-size-x-small);
