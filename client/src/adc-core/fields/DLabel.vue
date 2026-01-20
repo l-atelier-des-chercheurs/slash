@@ -2,7 +2,7 @@
   <div class="_dLabel">
     <div class="_labelLine" @click.stop="toggleInstructions">
       <span v-if="icon_name" class="_labelIcon">
-        <b-icon:icon ="icon_name" />
+        <b-icon :icon="icon_name" />
       </span>
       <component
         :is="tag"
