@@ -65,6 +65,8 @@ export default {
       // - meta_filename_in_project, meaning media belongs to project path
       // - path, meaning media has full path to project or publi media (legacy)
 
+      if(!source_media) return;
+
       let source_path = undefined;
       let meta_filename = undefined;
 

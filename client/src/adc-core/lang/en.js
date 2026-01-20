@@ -455,6 +455,7 @@ export default {
   video: "Video",
   audio: "Audio",
   text: "Text",
+  text_overflow: "Excess text",
   vecto: "Shapes",
   pdf: "PDF",
   stl: "STL",

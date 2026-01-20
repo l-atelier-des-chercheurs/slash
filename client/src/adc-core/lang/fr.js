@@ -800,6 +800,7 @@ export default {
   video: "Vidéo",
   audio: "Son",
   text: "Texte",
+  text_overflow: "texte en excès",
   lines: "Lignes",
   vecto: "Formes",
   pdf: "PDF",
