@@ -1,8 +1,8 @@
 <template>
   <div class="_dLabel">
     <div class="_labelLine" @click.stop="toggleInstructions">
-      <span class="_labelIcon">
-        <b-icon v-if="icon_name" :icon="icon_name" />
+      <span v-if="icon_name" class="_labelIcon">
+        <b-icon:icon ="icon_name" />
       </span>
       <component
         :is="tag"
@@ -81,7 +81,7 @@ export default {
 ._labelLine {
   display: flex;
   align-items: baseline;
-   // align-items: flex-start;
+  // align-items: flex-start;
   font-size: var(--sl-font-size-small);
 
   .u-label {
