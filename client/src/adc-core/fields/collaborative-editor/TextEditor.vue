@@ -205,7 +205,7 @@ export default {
 
     /* Hide edit button by default on devices that support hover */
     @media (hover: hover) {
-      // opacity: 0;
+      opacity: 0;
       transition: opacity 0.2s ease;
     }
 
