@@ -1,6 +1,7 @@
 <template>
   <div class="_dLabel">
     <div class="_labelLine" @click.stop="toggleInstructions">
+      <b-icon v-if="icon_name" :icon="icon_name" class="_labelIcon" />
       <component
         :is="tag"
         :class="tag === 'label' ? 'u-label' : ''"
@@ -39,6 +40,7 @@ export default {
       default: "label",
     },
     for_input: String,
+    icon_name: String,
   },
   components: {},
   data() {
@@ -76,7 +78,8 @@ export default {
 }
 ._labelLine {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+   // align-items: flex-start;
   font-size: var(--sl-font-size-small);
 
   .u-label {
@@ -87,6 +90,11 @@ export default {
   }
 }
 
+._labelIcon {
+  margin-right: calc(var(--spacing) / 4);
+  flex-shrink: 0;
+  transform: translateY(0.15em);
+}
 ._icon {
   font-size: var(--sl-font-size-x-small);
   padding: 0;
