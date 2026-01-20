@@ -195,7 +195,6 @@ export default {
     }
 
     &.is--empty {
-      opacity: 0.5;
       font-style: italic;
     }
   }
