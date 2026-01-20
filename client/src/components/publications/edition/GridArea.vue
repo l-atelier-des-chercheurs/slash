@@ -6,12 +6,7 @@
       '_gridArea--dragging': isDragging,
       '_gridArea--updating': isUpdating,
     }"
-    :style="{
-      gridColumnStart: area.column_start,
-      gridColumnEnd: area.column_end,
-      gridRowStart: area.row_start,
-      gridRowEnd: area.row_end,
-    }"
+    :style="clampedGridStyle"
     @click="$emit('select', area.id)"
     @mousedown="$emit('drag-start', area.id, $event)"
   >
@@ -75,8 +70,30 @@ export default {
       type: Object,
       required: true,
     },
+    columnCount: {
+      type: Number,
+      required: true,
+    },
+    rowCount: {
+      type: Number,
+      required: true,
+    },
   },
   computed: {
+    clampedGridStyle() {
+      // Clamp grid positions to ensure they stay within bounds
+      const column_start = Math.max(1, Math.min(this.area.column_start, this.columnCount));
+      const column_end = Math.min(this.area.column_end, this.columnCount + 1);
+      const row_start = Math.max(1, Math.min(this.area.row_start, this.rowCount));
+      const row_end = Math.min(this.area.row_end, this.rowCount + 1);
+
+      return {
+        gridColumnStart: column_start,
+        gridColumnEnd: column_end,
+        gridRowStart: row_start,
+        gridRowEnd: row_end,
+      };
+    },
     isSelected() {
       return this.selectedAreaId === this.area.id;
     },

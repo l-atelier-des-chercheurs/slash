@@ -44,6 +44,8 @@
           :dragging-area-id="dragging_area_id"
           :updating-area-id="updating_area_id"
           :publication="publication"
+          :column-count="column_count"
+          :row-count="row_count"
           @select="selectArea"
           @drag-start="startDrag"
           @resize-start="startResize"
@@ -99,7 +101,9 @@ export default {
     },
     grid_areas() {
       // Use temporary grid_areas during drag/resize operations
-      return this.temp_grid_areas || this.chapter.grid_areas || [];
+      const areas = this.temp_grid_areas || this.chapter.grid_areas || [];
+      // Clamp all areas to grid bounds
+      return areas.map((area) => this.clampAreaToBounds(area));
     },
   },
   methods: {
@@ -148,6 +152,48 @@ export default {
       const col = ((cellIndex - 1) % this.column_count) + 1;
       return { col, row };
     },
+    clampAreaToBounds(area) {
+      // Ensure area stays within grid bounds
+      const col_span = area.column_end - area.column_start;
+      const row_span = area.row_end - area.row_start;
+
+      // Clamp start positions
+      let column_start = Math.max(1, Math.min(area.column_start, this.column_count));
+      let row_start = Math.max(1, Math.min(area.row_start, this.row_count));
+
+      // Ensure end positions don't exceed grid bounds
+      let column_end = Math.min(
+        column_start + col_span,
+        this.column_count + 1
+      );
+      let row_end = Math.min(row_start + row_span, this.row_count + 1);
+
+      // Ensure minimum size of 1x1
+      if (column_end <= column_start) {
+        column_end = column_start + 1;
+      }
+      if (row_end <= row_start) {
+        row_end = row_start + 1;
+      }
+
+      // Adjust start if end would exceed bounds
+      if (column_end > this.column_count + 1) {
+        column_start = Math.max(1, this.column_count + 1 - col_span);
+        column_end = this.column_count + 1;
+      }
+      if (row_end > this.row_count + 1) {
+        row_start = Math.max(1, this.row_count + 1 - row_span);
+        row_end = this.row_count + 1;
+      }
+
+      return {
+        ...area,
+        column_start,
+        column_end,
+        row_start,
+        row_end,
+      };
+    },
     isCellOccupied(cellIndex) {
       const { col, row } = this.getCellPosition(cellIndex);
       return this.grid_areas.some((area) => {
@@ -163,14 +209,18 @@ export default {
       if (this.isCellOccupied(cellIndex)) return;
 
       const { col, row } = this.getCellPosition(cellIndex);
+      
+      // Ensure the cell is within bounds
+      if (col > this.column_count || row > this.row_count) return;
+
       const new_area_id = this.generateNextLetterId();
 
       const new_area = {
         id: new_area_id,
-        column_start: col,
-        column_end: col + 1,
-        row_start: row,
-        row_end: row + 1,
+        column_start: Math.min(col, this.column_count),
+        column_end: Math.min(col + 1, this.column_count + 1),
+        row_start: Math.min(row, this.row_count),
+        row_end: Math.min(row + 1, this.row_count + 1),
       };
 
       const grid_areas = [...this.grid_areas, new_area];
@@ -219,18 +269,18 @@ export default {
       let new_col_start = this.initial_area_position.column_start + colChange;
       let new_row_start = this.initial_area_position.row_start + rowChange;
 
-      // Constrain to grid bounds
+      // Constrain to grid bounds - ensure area doesn't go outside grid
       new_col_start = Math.max(
         1,
-        Math.min(new_col_start, this.column_count - col_span + 1)
+        Math.min(new_col_start, Math.max(1, this.column_count - col_span + 1))
       );
       new_row_start = Math.max(
         1,
-        Math.min(new_row_start, this.row_count - row_span + 1)
+        Math.min(new_row_start, Math.max(1, this.row_count - row_span + 1))
       );
 
-      const new_col_end = new_col_start + col_span;
-      const new_row_end = new_row_start + row_span;
+      const new_col_end = Math.min(new_col_start + col_span, this.column_count + 1);
+      const new_row_end = Math.min(new_row_start + row_span, this.row_count + 1);
 
       if (
         new_col_start !== area.column_start ||
@@ -325,6 +375,7 @@ export default {
       let new_row_end = this.initial_area_position.row_end + rowChange;
 
       // Constrain to grid bounds and minimum size
+      // Ensure end doesn't exceed grid bounds
       new_col_end = Math.max(
         area.column_start + 1,
         Math.min(new_col_end, this.column_count + 1)
@@ -333,6 +384,14 @@ export default {
         area.row_start + 1,
         Math.min(new_row_end, this.row_count + 1)
       );
+      
+      // If resize would exceed bounds, clamp it
+      if (new_col_end > this.column_count + 1) {
+        new_col_end = this.column_count + 1;
+      }
+      if (new_row_end > this.row_count + 1) {
+        new_row_end = this.row_count + 1;
+      }
 
       if (new_col_end !== area.column_end || new_row_end !== area.row_end) {
         // Update temp_grid_areas instead of calling updateChapter
