@@ -20,7 +20,7 @@
     <DLabel
       str="Donec fait un test.On fait un test.On fait un test.On fait un test.On fait un test."
       icon_name="info-circle"
-    /> 
+    />
 
     <h2>Buttons Demo</h2>
 
@@ -1077,11 +1077,6 @@ export default {
     display: flex;
     flex-flow: column nowrap;
     gap: calc(var(--spacing) / 4);
-
-    label {
-      font-size: var(--sl-font-size-small);
-      color: var(--label-color);
-    }
   }
 }
 
@@ -1093,8 +1088,6 @@ h2 {
 h3 {
   margin-top: calc(var(--spacing) * 1);
   margin-bottom: calc(var(--spacing) / 4);
-  font-size: var(--sl-font-size-medium);
-  color: var(--c-gris_fonce);
 }
 
 ._floatingDebug {
