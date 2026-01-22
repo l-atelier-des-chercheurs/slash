@@ -373,7 +373,6 @@ export default {
       );
 
       gridCells.forEach((cell) => {
-        debugger;
         // Check for overflow: compare scrollHeight (content height) with clientHeight (visible height)
         const cellHeight = cell.clientHeight;
         const cellScrollHeight = cell.scrollHeight;
@@ -381,19 +380,40 @@ export default {
         const hasOverflow = cellScrollHeight > cellHeight + 2;
 
         if (hasOverflow) {
-          cell.classList.add("has--textOverflow");
+          if (cell.getAttribute("data-grid-area-is-chain-index")) {
+            this.handleChainOverflow(cell);
+          } else {
+            cell.classList.add("has--textOverflow");
 
-          const warning = document.createElement("div");
-          warning.className = "_textOverflowWarning";
-
-          const warning_text = document.createElement("span");
-          warning_text.className = "u-warning";
-
-          warning_text.textContent = this.$t("text_overflow");
-          warning.appendChild(warning_text);
-          cell.appendChild(warning);
+            const warning = document.createElement("div");
+            warning.className = "_textOverflowWarning";
+            const warning_text = document.createElement("span");
+            warning_text.className = "u-warning";
+            warning_text.textContent = this.$t("text_overflow");
+            warning.appendChild(warning_text);
+            cell.appendChild(warning);
+          }
         }
       });
+    },
+    handleChainOverflow(cell) {
+      const bookpreview = this.$refs.bookpreview;
+
+      const cell_id = cell.getAttribute("data-grid-area-id");
+      const chain_cells = bookpreview.querySelectorAll(
+        `.grid-cell[data-grid-area-id="${cell_id}"]`
+      );
+      const chain_cells_array = Array.from(chain_cells);
+
+      // sort chain cells by data-grid-area-is-chain-index ascending
+      chain_cells_array.sort((a, b) => {
+        const a_index = a.getAttribute("data-grid-area-is-chain-index");
+        const b_index = b.getAttribute("data-grid-area-is-chain-index");
+        return a_index - b_index;
+      });
+
+      debugger;
+      return;
     },
   },
 };

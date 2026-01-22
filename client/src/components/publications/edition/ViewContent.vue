@@ -571,7 +571,9 @@ export default {
       grid_content.style.setProperty("--col-count", col_count);
       grid_content.style.setProperty("--row-count", row_count);
 
-      chapter.grid_areas.forEach((area) => {
+      const grid_areas = chapter.grid_areas;
+
+      grid_areas.forEach((area) => {
         let media;
         const objectFit = area?.objectFit || "cover";
         const objectPosition = area?.objectPosition || "center";
@@ -584,20 +586,26 @@ export default {
           });
         }
 
-        const cell_type = ["text", "image"].includes(media?.$type)
-          ? media?.$type
-          : "";
-        // cell ID is A, B, C, etc. even if original is A1, B2, C3, etc.
-        const cell_id = area.id.substring(0, 1);
-
         let cell = document.createElement("div");
         cell.className = "grid-cell";
-        cell.setAttribute("data-grid-area-type", cell_type);
+
+        // cell ID is A, B, C, etc. even if original is A1, B2, C3, etc.
+        const cell_id = area.id.substring(0, 1);
         cell.setAttribute("data-grid-area-id", cell_id);
 
-        const is_part_of_chain = area.id.length > 1;
+        if (media && media.$type) {
+          cell.setAttribute("data-grid-area-type", media.$type);
+        }
+
+        // check if the cell is part of a chain (more than 2 areas have the same first character)
+        const is_part_of_chain =
+          grid_areas.filter((a) => a.id.startsWith(cell_id)).length > 1;
         if (is_part_of_chain) {
-          const chain_index = area.id.substring(1, 2);
+          let chain_index = 0;
+          if (area.id.length > 1) {
+            // get everything after the first character
+            chain_index = area.id.substring(1);
+          }
           // item A is cell 0, item A1 is cell 1, item A2 is cell 2, etc.
           cell.setAttribute("data-grid-area-is-chain-index", chain_index);
         }
@@ -623,6 +631,7 @@ export default {
           img.style.height = "100%";
           img.style.objectFit = objectFit;
           img.style.objectPosition = objectPosition;
+          cell.appendChild(document.createTextNode("\n"));
           cell.appendChild(img);
         } else if (media?.$type === "video") {
         }
