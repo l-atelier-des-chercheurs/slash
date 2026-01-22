@@ -196,7 +196,7 @@ export default {
               this.reportChapterPositions();
               // Check for overflow after rendering
               setTimeout(() => {
-                this.detectGridCellOverflow();
+                this.handleCellOverflow();
               }, 200);
             }
             setTimeout(() => {
@@ -363,86 +363,34 @@ export default {
         }
       );
     },
-    detectGridCellOverflow() {
+    handleCellOverflow() {
       const bookpreview = this.$refs.bookpreview;
       if (!bookpreview || !this.can_edit) return;
 
       // Find all grid cells
-      const gridCells = bookpreview.querySelectorAll(".grid-cell");
-      
-      gridCells.forEach((cell) => {
-        // Check if this cell contains text content
-        // A cell has text if it has text nodes (not just whitespace) and no images
-        const hasImage = cell.querySelector("img");
-        const textContent = cell.textContent ? cell.textContent.trim() : "";
-        const hasText = textContent.length > 0;
-        
-        // Only check cells that have text content and no images
-        if (!hasText || hasImage) {
-          // Remove warning if no longer needed
-          const existingWarning = cell.querySelector("._textOverflowWarning");
-          if (existingWarning) {
-            existingWarning.remove();
-          }
-          // Remove overflow class to reset outline color
-          cell.classList.remove("has--textOverflow");
-          return;
-        }
+      const gridCells = bookpreview.querySelectorAll(
+        ".grid-cell[data-grid-area-type='text']"
+      );
 
+      gridCells.forEach((cell) => {
+        debugger;
         // Check for overflow: compare scrollHeight (content height) with clientHeight (visible height)
         const cellHeight = cell.clientHeight;
         const cellScrollHeight = cell.scrollHeight;
         // Use a small tolerance (2px) to account for rounding and sub-pixel rendering
         const hasOverflow = cellScrollHeight > cellHeight + 2;
 
-        // Remove existing warning if present and reset outline color
-        const existingWarning = cell.querySelector("._textOverflowWarning");
-        if (existingWarning) {
-          existingWarning.remove();
-        }
-        // Remove overflow class to reset outline color
-        cell.classList.remove("has--textOverflow");
-
-        // Add warning indicator if overflow detected
         if (hasOverflow) {
-          // Add class to change outline color to red
           cell.classList.add("has--textOverflow");
-          
+
           const warning = document.createElement("div");
           warning.className = "_textOverflowWarning";
-          
-          // Create button with SVG icon and text (similar to page_by_page)
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "u-button u-button_red u-button_small";
-          
-          // Get translation using i18n
-          const overflowText = this.$t("text_overflow");
-          button.title = overflowText;
-          
-          // Create SVG icon for text-paragraph (Bootstrap Icons text-paragraph)
-          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          svg.setAttribute("width", "16");
-          svg.setAttribute("height", "16");
-          svg.setAttribute("viewBox", "0 0 16 16");
-          svg.setAttribute("fill", "currentColor");
-          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-          path.setAttribute("d", "M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0 3a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0 3a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0 3a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11z");
-          svg.appendChild(path);
-          button.appendChild(svg);
-          
-          // Add text label
-          const textSpan = document.createElement("span");
-          textSpan.textContent = overflowText;
-          textSpan.style.marginLeft = "0.5em";
-          button.appendChild(textSpan);
-          
-          warning.appendChild(button);
-          
-          // Ensure cell has relative positioning for absolute warning
-          if (getComputedStyle(cell).position === "static") {
-            cell.style.position = "relative";
-          }
+
+          const warning_text = document.createElement("span");
+          warning_text.className = "u-warning";
+
+          warning_text.textContent = this.$t("text_overflow");
+          warning.appendChild(warning_text);
           cell.appendChild(warning);
         }
       });
@@ -508,9 +456,10 @@ export default {
           outline: 1px solid var(--color-pageBox);
           // outline-offset: -1px;
           position: relative;
-          
+
           /* Change outline to red when text overflows */
           &.has--textOverflow {
+            outline-width: 2px;
             outline-color: var(--c-rouge);
           }
         }
@@ -525,17 +474,15 @@ export default {
     @media screen {
       ._textOverflowWarning {
         position: absolute;
-        left: 0;
-        width: 100%;
-        padding-left: calc(var(--spacing) * 3);
-        bottom: calc(var(--spacing) / -1);
+        inset: calc(var(--spacing) / 2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         z-index: 1;
         pointer-events: none;
 
-        button {
-          pointer-events: auto;
-          display: inline-flex;
-          align-items: center;
+        .u-warning {
+          background-color: white;
         }
       }
     }

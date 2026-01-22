@@ -580,12 +580,16 @@ export default {
           });
         }
 
-        html += `<div class="grid-cell" data-grid-area-id="${area.id}" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">`;
+        const cell_type = ["text", "image"].includes(media?.$type)
+          ? media?.$type
+          : "";
+
+        html += `<div class="grid-cell" data-grid-area-type="${cell_type}" data-grid-area-id="${area.id}" style="grid-column-start: ${area.column_start}; grid-column-end: ${area.column_end}; grid-row-start: ${area.row_start}; grid-row-end: ${area.row_end};">`;
 
         if (media?.$type === "text") {
           const content = media.$content || "";
           const text = this.parseMarkdownWithMarkedownIt(
-            media.$content,
+            content,
             media.source_medias
           );
           html += text;
