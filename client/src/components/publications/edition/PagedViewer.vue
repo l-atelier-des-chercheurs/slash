@@ -28,6 +28,11 @@
 <script>
 import InfiniteViewer from "infinite-viewer";
 import { Handler, Previewer } from "pagedjs";
+import {
+  handleChainOverflow,
+  checkCellOverflow,
+  showOverflowWarning,
+} from "./chainOverflowHandler.js";
 
 export default {
   props: {
@@ -194,10 +199,7 @@ export default {
             if (this.can_edit) {
               this.addChapterShortcuts();
               this.reportChapterPositions();
-              // Check for overflow after rendering
-              setTimeout(() => {
-                this.handleCellOverflow();
-              }, 200);
+              this.handleCellOverflow();
             }
             setTimeout(() => {
               this.is_loading = false;
@@ -373,47 +375,23 @@ export default {
       );
 
       gridCells.forEach((cell) => {
-        // Check for overflow: compare scrollHeight (content height) with clientHeight (visible height)
-        const cellHeight = cell.clientHeight;
-        const cellScrollHeight = cell.scrollHeight;
-        // Use a small tolerance (2px) to account for rounding and sub-pixel rendering
-        const hasOverflow = cellScrollHeight > cellHeight + 2;
+        // Check for overflow
+        const hasOverflow = checkCellOverflow(cell);
 
         if (hasOverflow) {
           if (cell.getAttribute("data-grid-area-is-chain-index")) {
             this.handleChainOverflow(cell);
           } else {
-            cell.classList.add("has--textOverflow");
-
-            const warning = document.createElement("div");
-            warning.className = "_textOverflowWarning";
-            const warning_text = document.createElement("span");
-            warning_text.className = "u-warning";
-            warning_text.textContent = this.$t("text_overflow");
-            warning.appendChild(warning_text);
-            cell.appendChild(warning);
+            showOverflowWarning(cell, this.$t("text_overflow"));
           }
         }
       });
     },
     handleChainOverflow(cell) {
       const bookpreview = this.$refs.bookpreview;
+      if (!bookpreview) return;
 
-      const cell_id = cell.getAttribute("data-grid-area-id");
-      const chain_cells = bookpreview.querySelectorAll(
-        `.grid-cell[data-grid-area-id="${cell_id}"]`
-      );
-      const chain_cells_array = Array.from(chain_cells);
-
-      // sort chain cells by data-grid-area-is-chain-index ascending
-      chain_cells_array.sort((a, b) => {
-        const a_index = a.getAttribute("data-grid-area-is-chain-index");
-        const b_index = b.getAttribute("data-grid-area-is-chain-index");
-        return a_index - b_index;
-      });
-
-      debugger;
-      return;
+      handleChainOverflow(cell, bookpreview, this.$t("text_overflow"));
     },
   },
 };
