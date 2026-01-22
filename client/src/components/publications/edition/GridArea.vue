@@ -18,7 +18,21 @@
     <!-- Area label -->
     <div class="_gridArea--label">
       <strong>{{ area.id }}</strong>
-      <span v-if="area_type" class="_gridArea--type">({{ $t(area_type) }})</span>
+      <span v-if="area_type" class="_gridArea--type"
+        >({{ $t(area_type) }})</span
+      >
+
+      <template v-if="area_type === 'text'">
+        &nbsp;
+        <button
+          type="button"
+          class="u-button u-button_small u-button_icon _chainButtonBtn"
+          :class="{ 'is--active': is_being_chained }"
+          @click="$emit('toggle-chain', area.id)"
+        >
+          <b-icon icon="link" scale="1" />
+        </button>
+      </template>
     </div>
 
     <!-- Resize handle -->
@@ -80,13 +94,23 @@ export default {
       type: Number,
       required: true,
     },
+    is_being_chained: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     clampedGridStyle() {
       // Clamp grid positions to ensure they stay within bounds
-      const column_start = Math.max(1, Math.min(this.area.column_start, this.columnCount));
+      const column_start = Math.max(
+        1,
+        Math.min(this.area.column_start, this.columnCount)
+      );
       const column_end = Math.min(this.area.column_end, this.columnCount + 1);
-      const row_start = Math.max(1, Math.min(this.area.row_start, this.rowCount));
+      const row_start = Math.max(
+        1,
+        Math.min(this.area.row_start, this.rowCount)
+      );
       const row_end = Math.min(this.area.row_end, this.rowCount + 1);
 
       return {
@@ -173,6 +197,10 @@ export default {
   }
 }
 
+._chainButtonBtn {
+  position: relative;
+  pointer-events: auto;
+}
 ._gridArea--type {
   font-size: var(--input-font-size-small);
   color: var(--c-gris_fonce);
@@ -191,7 +219,6 @@ export default {
   justify-content: center;
   z-index: 100;
 }
-
 
 ._spinner {
   width: 20px;

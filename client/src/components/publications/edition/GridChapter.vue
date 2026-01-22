@@ -28,12 +28,15 @@ export default {
   },
   computed: {
     sorted_grid_areas() {
-      return this.chapter.grid_areas?.sort((a, b) => a.id.localeCompare(b.id));
+      const sorted_areas = this.chapter.grid_areas?.sort((a, b) =>
+        a.id.localeCompare(b.id)
+      );
+      // dont show areas that are more than one character long
+      const filtered_areas = sorted_areas.filter((area) => area.id.length <= 1);
+      return filtered_areas;
     },
   },
-  methods: {
-
-  },
+  methods: {},
 };
 </script>
 

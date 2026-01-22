@@ -1,6 +1,7 @@
 <template>
   <div class="_grid">
     <!-- Grid container wrapper -->
+
     <div class="_gridWrapper">
       <!-- Background grid for visual reference -->
       <div
@@ -46,9 +47,11 @@
           :publication="publication"
           :column-count="column_count"
           :row-count="row_count"
+          :is_being_chained="toggle_chain_area_id === area.id"
           @select="selectArea"
           @drag-start="startDrag"
           @resize-start="startResize"
+          @toggle-chain="toggleChain"
           @delete="deleteArea"
         />
       </div>
@@ -90,6 +93,7 @@ export default {
       initial_area_position: null,
       temp_grid_areas: null,
       updating_area_id: null,
+      toggle_chain_area_id: null,
     };
   },
   computed: {
@@ -158,14 +162,14 @@ export default {
       const row_span = area.row_end - area.row_start;
 
       // Clamp start positions
-      let column_start = Math.max(1, Math.min(area.column_start, this.column_count));
+      let column_start = Math.max(
+        1,
+        Math.min(area.column_start, this.column_count)
+      );
       let row_start = Math.max(1, Math.min(area.row_start, this.row_count));
 
       // Ensure end positions don't exceed grid bounds
-      let column_end = Math.min(
-        column_start + col_span,
-        this.column_count + 1
-      );
+      let column_end = Math.min(column_start + col_span, this.column_count + 1);
       let row_end = Math.min(row_start + row_span, this.row_count + 1);
 
       // Ensure minimum size of 1x1
@@ -209,11 +213,18 @@ export default {
       if (this.isCellOccupied(cellIndex)) return;
 
       const { col, row } = this.getCellPosition(cellIndex);
-      
+
       // Ensure the cell is within bounds
       if (col > this.column_count || row > this.row_count) return;
 
-      const new_area_id = this.generateNextLetterId();
+      let new_area_id;
+
+      if (this.toggle_chain_area_id) {
+        new_area_id = this.toggle_chain_area_id + "1";
+        this.toggle_chain_area_id = null;
+      } else {
+        new_area_id = this.generateNextLetterId();
+      }
 
       const new_area = {
         id: new_area_id,
@@ -279,8 +290,14 @@ export default {
         Math.min(new_row_start, Math.max(1, this.row_count - row_span + 1))
       );
 
-      const new_col_end = Math.min(new_col_start + col_span, this.column_count + 1);
-      const new_row_end = Math.min(new_row_start + row_span, this.row_count + 1);
+      const new_col_end = Math.min(
+        new_col_start + col_span,
+        this.column_count + 1
+      );
+      const new_row_end = Math.min(
+        new_row_start + row_span,
+        this.row_count + 1
+      );
 
       if (
         new_col_start !== area.column_start ||
@@ -384,7 +401,7 @@ export default {
         area.row_start + 1,
         Math.min(new_row_end, this.row_count + 1)
       );
-      
+
       // If resize would exceed bounds, clamp it
       if (new_col_end > this.column_count + 1) {
         new_col_end = this.column_count + 1;
@@ -438,6 +455,13 @@ export default {
       this.initial_area_position = null;
       document.removeEventListener("mousemove", this.handleResize);
       document.removeEventListener("mouseup", this.stopResize);
+    },
+    toggleChain(areaId) {
+      if (this.toggle_chain_area_id === areaId) {
+        this.toggle_chain_area_id = null;
+      } else {
+        this.toggle_chain_area_id = areaId;
+      }
     },
   },
   beforeDestroy() {
@@ -512,7 +536,6 @@ export default {
   z-index: 2;
   pointer-events: none;
 }
-
 
 ._addAreaButton {
   margin-top: calc(var(--spacing) * 1);
