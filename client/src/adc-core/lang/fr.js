@@ -1579,4 +1579,5 @@ export default {
   note_content: "Contenu de la note…",
   linked_project: "Projet en lien",
   object_fit: "Remplissage",
+  chain_count: "{count} zone | {count} zones",
 };

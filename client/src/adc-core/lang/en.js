@@ -1509,4 +1509,5 @@ export default {
   note_content: "Note content…",
   linked_project: "Linked project",
   object_fit: "Fitting",
+  chain_count: "{count} area | {count} areas",
 };

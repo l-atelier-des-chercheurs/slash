@@ -1,9 +1,26 @@
 <template>
   <div class="_gridItem">
     <div class="_gridItem--header">
-      <span class="_gridItem--label">
+      <h3 class="_gridItem--label">
         {{ area.id }}
-      </span>
+        <template v-if="area.number_of_areas_in_chain > 1">
+          <span
+            class="_gridItem--chainCount"
+            v-for="i in area.number_of_areas_in_chain - 1"
+            :key="i"
+          >
+            -> {{ area.id }}{{ i }}
+          </span>
+        </template>
+      </h3>
+
+      <!-- <span class="_gridItem--chainCount">
+        {{
+          $tc("chain_count", area.number_of_areas_in_chain, {
+            count: area.number_of_areas_in_chain,
+          })
+        }}
+      </span> -->
 
       <!-- <select class="_gridItem--select" size="small">
         <option value="1">texte (markdown)</option>
@@ -348,14 +365,15 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: calc(var(--spacing) / 2);
-  margin-bottom: calc(var(--spacing) * 1);
+  margin-bottom: calc(var(--spacing) / 2);
 }
 
 ._gridItem--content {
 }
 
 ._gridItem--label {
-  font-weight: bold;
+  padding: calc(var(--spacing) / 4);
+  padding-bottom: 0;
 }
 ._gridItem--select {
   width: 25ch;
