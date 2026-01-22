@@ -222,6 +222,10 @@ export default {
       default: "normal",
     },
     no_padding: Boolean,
+    autofocus: {
+      type: Boolean,
+      default: false,
+    },
     // enabled for page_by_page, this means that the edit button is located in the top right corner in absolute,
     // and that the toolbar moves to the closest parent dedicated container after creation
   },
@@ -559,14 +563,16 @@ export default {
 
       if (this.is_collaborative) await this.startCollaborative();
       this.editor.enable();
-      // this.editor.focus();
 
       // if (this.editor.getLength() <= 1) {
       //   const fontLastUsed = localStorage.getItem("fontLastUsed");
       //   this.editor.format("font", fontLastUsed);
       // }
 
-      this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
+      if (this.autofocus) {
+        this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
+        this.editor.focus();
+      }
 
       this.$emit(`contentIsEdited`, {
         $toolbar: this.toolbar_el,
@@ -869,6 +875,7 @@ export default {
   ::v-deep {
     .ql-editor {
       padding: calc(var(--spacing) * 0.25) calc(var(--spacing) * 0.5);
+      min-height: 10rem;
 
       &.ql-editor.ql-blank::before {
         left: calc(var(--spacing) / 2);

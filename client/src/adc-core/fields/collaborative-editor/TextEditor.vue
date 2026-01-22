@@ -43,6 +43,7 @@
         :content_type="content_type"
         :mode="mode"
         :no_padding="no_padding"
+        :autofocus="true"
         @input="onInput"
         @save="onSave"
         @contentIsEdited="onContentIsEdited"
@@ -72,7 +73,7 @@ export default {
     content: String,
     placeholder: {
       type: String,
-      default: "…",
+      default: "–",
     },
     field_to_edit: {
       type: String,
