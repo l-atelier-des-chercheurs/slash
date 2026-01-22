@@ -31,6 +31,7 @@ export default {
       const sorted_areas = this.chapter.grid_areas?.sort((a, b) =>
         a.id.localeCompare(b.id)
       );
+      if (!sorted_areas) return [];
       // dont show areas that are more than one character long
       const filtered_areas = sorted_areas.filter((area) => area.id.length <= 1);
       return filtered_areas;

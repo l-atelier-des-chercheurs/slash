@@ -369,29 +369,37 @@ export default {
       const bookpreview = this.$refs.bookpreview;
       if (!bookpreview || !this.can_edit) return;
 
-      // Find all grid cells
-      const gridCells = bookpreview.querySelectorAll(
-        ".grid-cell[data-grid-area-type='text']"
-      );
+      // Process each page separately
+      const pages = bookpreview.querySelectorAll(".pagedjs_page");
 
-      gridCells.forEach((cell) => {
-        // Check for overflow
-        const hasOverflow = checkCellOverflow(cell);
+      pages.forEach((page) => {
+        // Find all grid cells within this page
+        const gridCells = page.querySelectorAll(
+          ".grid-cell[data-grid-area-type='text']"
+        );
 
-        if (hasOverflow) {
-          if (cell.getAttribute("data-grid-area-is-chain-index")) {
-            this.handleChainOverflow(cell);
-          } else {
-            showOverflowWarning(cell, this.$t("text_overflow"));
+        gridCells.forEach((cell) => {
+          // Check for overflow
+          const hasOverflow = checkCellOverflow(cell);
+
+          if (hasOverflow) {
+            if (cell.getAttribute("data-grid-area-is-chain-index")) {
+              this.handleChainOverflow(cell, page);
+            } else {
+              showOverflowWarning(cell, this.$t("text_overflow"));
+            }
           }
-        }
+        });
       });
     },
-    handleChainOverflow(cell) {
-      const bookpreview = this.$refs.bookpreview;
-      if (!bookpreview) return;
+    handleChainOverflow(cell, page) {
+      if (!page) {
+        // Fallback: find the page containing the cell
+        page = cell.closest(".pagedjs_page");
+      }
+      if (!page) return;
 
-      handleChainOverflow(cell, bookpreview, this.$t("text_overflow"));
+      handleChainOverflow(cell, page, this.$t("text_overflow"));
     },
   },
 };

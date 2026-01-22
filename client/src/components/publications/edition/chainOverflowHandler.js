@@ -464,12 +464,13 @@ export function showOverflowWarning(cell, warningText) {
 /**
  * Handle overflow in a chain of cells
  * @param {HTMLElement} cell - Starting cell in the chain
- * @param {HTMLElement} bookpreview - Container element to search for chain cells
+ * @param {HTMLElement} page - Page element to search for chain cells within (only cells on this page)
  * @param {string} warningText - Translated warning text to display
  */
-export function handleChainOverflow(cell, bookpreview, warningText) {
+export function handleChainOverflow(cell, page, warningText) {
   const cell_id = cell.getAttribute("data-grid-area-id");
-  const chain_cells = bookpreview.querySelectorAll(
+  // Only search for chain cells within the same page
+  const chain_cells = page.querySelectorAll(
     `.grid-cell[data-grid-area-id="${cell_id}"]`
   );
   const chain_cells_array = Array.from(chain_cells);
