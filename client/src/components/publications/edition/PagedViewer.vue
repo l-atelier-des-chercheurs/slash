@@ -196,10 +196,10 @@ export default {
 
           this.$nextTick(() => {
             this.showOnlyPages();
+            this.handleCellOverflow();
             if (this.can_edit) {
               this.addChapterShortcuts();
               this.reportChapterPositions();
-              this.handleCellOverflow();
             }
             setTimeout(() => {
               this.is_loading = false;
@@ -367,10 +367,11 @@ export default {
     },
     handleCellOverflow() {
       const bookpreview = this.$refs.bookpreview;
-      if (!bookpreview || !this.can_edit) return;
+      if (!bookpreview) return;
 
       // Process each page separately
       const pages = bookpreview.querySelectorAll(".pagedjs_page");
+      console.log("handleCellOverflow");
 
       pages.forEach((page) => {
         // Find all grid cells within this page
@@ -453,11 +454,16 @@ export default {
       display: none;
     }
 
+    ._textOverflowWarning {
+      display: none;
+    }
+
     /* Show grid structure in edit mode */
     @media screen {
       &.is--editable {
         /* Show grid lines on the grid container */
         /* Add visible border to each grid cell */
+
         .grid-cell {
           outline: 1px solid var(--color-pageBox);
           // outline-offset: -1px;
@@ -473,22 +479,19 @@ export default {
           outline: 1px solid var(--color-pageBox);
           // outline-offset: -1px;
         }
-      }
-    }
 
-    /* Text overflow warning in grid cells */
-    @media screen {
-      ._textOverflowWarning {
-        position: absolute;
-        inset: calc(var(--spacing) / 2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1;
-        pointer-events: none;
+        ._textOverflowWarning {
+          position: absolute;
+          inset: calc(var(--spacing) / 2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1;
+          pointer-events: none;
 
-        .u-warning {
-          background-color: white;
+          .u-warning {
+            background-color: white;
+          }
         }
       }
     }

@@ -254,6 +254,7 @@ hr {
 }
 
 .edition .grid-cell {
+  position: relative;
   /* Grid positioning is set via inline styles */
   /* e.g. grid-column-start, grid-column-end, grid-row-start, grid-row-end */
   min-height: 0;
