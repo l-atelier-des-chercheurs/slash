@@ -1,43 +1,41 @@
 <template>
   <div class="_textEditor">
-    <div class="_textEditor--label" :class="{ 'is--empty': is_empty }">
+    <div class="_textEditor--label" v-if="is_empty || is_editing">
       <DLabel
         :str="label"
         :icon="icon"
         :instructions="can_edit ? instructions : ''"
         class=""
       />
-      <EditBtn
-        v-if="can_edit && !is_editing"
-        class="_textEditor--editBtn"
+      <button
+        type="button"
+        v-if="!is_editing"
+        class="u-button u-button_icon u-button_small _textEditor--editBtn"
         :label="$t('edit')"
         @click="startEditing"
-      />
+      >
+        <b-icon icon="pencil-fill" />
+      </button>
     </div>
 
     <!-- Read-only display -->
     <div
-      v-if="!is_editing"
+      v-if="!is_editing && !is_empty"
       class="_textEditor--readOnly"
       :class="{ 'is--noPadding': no_padding }"
       :data-format="save_format"
     >
-      <div
-        class="_textEditor--content"
-        v-if="!is_empty"
-        @click="enableEditMode"
-      >
-        <span v-html="sanitizedContent" />
-        <!-- <EditBtn
-          v-if="can_edit"
-          class="_textEditor--edit"
-          :label="$t('edit')"
-          @click="startEditing"
-        /> -->
+      <div class="_textEditor--content" @click="enableEditMode">
+        <div class="_textEditor--content--icon">
+          <b-icon v-if="icon" :icon="icon" :title="label" />
+        </div>
+        <div class="_textEditor--content--text">
+          <span v-html="sanitizedContent" />
+        </div>
       </div>
     </div>
 
-    <div v-else @click.stop>
+    <div v-else-if="is_editing" @click.stop>
       <CollaborativeEditor3
         ref="collaborativeEditor"
         :instructions="instructions"
@@ -173,7 +171,7 @@ export default {
   position: relative;
   font-size: 100%;
 
-  &--readOnly {
+  ._textEditor--readOnly {
     position: relative;
 
     &.is--noPadding {
@@ -183,22 +181,18 @@ export default {
     }
   }
 
-  &--content {
+  ._textEditor--content {
     padding: 0;
-    padding-bottom: 0.4em;
     color: inherit;
     font-size: inherit;
     font-family: inherit;
     font-weight: normal;
     background-color: transparent;
 
-    > * {
-      padding: 0;
-      margin: 0;
-    }
-
-    > span {
-      display: inline-block;
+    ._textEditor--content--icon {
+      float: left;
+      // margin-top: calc(var(--spacing) / 3);
+      margin-right: calc(var(--spacing) / 4);
     }
 
     > img {
@@ -225,10 +219,7 @@ export default {
     }
   }
 
-  &--edit {
-    margin-top: calc(var(--spacing) / -1);
-    transform: translateY(calc(var(--spacing) / 4));
-
+  ._textEditor--editBtn {
     /* Hide edit button by default on devices that support hover */
     // @media (hover: hover) {
     //   opacity: 0;
@@ -271,6 +262,7 @@ export default {
 
 ._textEditor--editBtn {
   margin-top: calc(var(--spacing) / -1);
-  transform: translateY(4px);
+  transform: translateY(6px);
+  color: var(--active-color);
 }
 </style>
