@@ -1510,4 +1510,8 @@ export default {
   linked_project: "Linked project",
   object_fit: "Fitting",
   chain_count: "{count} area | {count} areas",
+  no_linked_project: "No linked project",
+  no_spaces: "No spaces to show",
+
+  add_cover: "Add cover",
 };

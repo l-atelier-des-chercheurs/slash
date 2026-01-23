@@ -34,39 +34,23 @@
           >
             <button
               type="button"
-              class="u-buttonLink"
-              @click="show_project_link_modal = true"
-            >
-              <b-icon icon="folder-symlink" />
-              {{ $t("linked_project") }}
-            </button>
-            <button
-              type="button"
               class="u-buttonLink u-buttonLink_red"
               @click="show_remove_modal = true"
             >
               <b-icon icon="trash" />
               {{ $t("remove") }}
             </button>
-
-            <ProjectLinkModal
-              v-if="show_project_link_modal"
-              :path="chat.$path"
-              :current_linked_project_path="chat.linked_project_path"
-              @close="show_project_link_modal = false"
-            />
-
-            <RemoveMenu2
-              v-if="show_remove_modal"
-              :modal_title="$t('remove_chat', { name: chat.title })"
-              :success_notification="$t('chat_was_removed')"
-              :path="chat.$path"
-              @removedSuccessfully="$emit('close')"
-              @close="show_remove_modal = false"
-            />
           </DropDown>
           <div v-else />
         </div>
+        <RemoveMenu2
+          v-if="show_remove_modal"
+          :modal_title="$t('remove_chat', { name: chat.title })"
+          :success_notification="$t('chat_was_removed')"
+          :path="chat.$path"
+          @removedSuccessfully="$emit('close')"
+          @close="show_remove_modal = false"
+        />
 
         <!-- <div class="_openedChat--header--row _lastMessageDate">
           <div>
@@ -80,8 +64,38 @@
         <div class="_openedChat--header--row">
           <div>
             <div class="u-label">{{ $t("linked_project") }}</div>
-            <div class="">{{ chat.linked_project_path }}</div>
           </div>
+          <div>
+            <div class="" v-if="chat.linked_project_path">
+              <button
+                type="button"
+                class="u-button u-button_white u-button_small"
+                @click="openLinkedProject"
+              >
+                <b-icon icon="arrow-right-short" />
+                {{ $t("open") }}
+              </button>
+            </div>
+            <div class="" v-else>
+              <div class="u-instructions">{{ $t("no_linked_project") }}</div>
+            </div>
+          </div>
+          <div>
+            <EditBtn
+              :label_position="'left'"
+              :btn_type="chat.linked_project_path === 0 ? 'add' : 'edit'"
+              :is_unfolded="chat.linked_project_path === 0"
+              @click="show_project_link_modal = true"
+            />
+
+            <ProjectLinkModal
+              v-if="show_project_link_modal"
+              :path="chat.$path"
+              :current_linked_project_path="chat.linked_project_path"
+              @close="show_project_link_modal = false"
+            />
+          </div>
+          <div></div>
         </div>
 
         <div class="_openedChat--header--row _adminsAndContributors">
@@ -478,6 +492,10 @@ export default {
       return this.$refs.unreadMessagesNotice?.[0]?.scrollIntoView({
         behavior: "instant",
       });
+    },
+    openLinkedProject() {
+      const url = this.createURLFromPath(this.chat.linked_project_path);
+      this.$router.push(url);
     },
   },
 };

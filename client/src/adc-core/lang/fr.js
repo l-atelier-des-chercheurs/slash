@@ -1580,4 +1580,8 @@ export default {
   linked_project: "Projet en lien",
   object_fit: "Remplissage",
   chain_count: "{count} zone | {count} zones",
+  no_linked_project: "Aucun projet en lien",
+  no_spaces: "Aucun espace à afficher",
+
+  add_cover: "Ajouter une couverture",
 };
