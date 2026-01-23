@@ -11,7 +11,12 @@
     </div> -->
     <div class="_navBtns">
       <div class="_navBtns--content">
-        <div class="" />
+        <div class="">
+          <button type="button" class="u-linkList" @click="$emit('close')">
+            <b-icon icon="x" :label="$t('close')" />
+            {{ $t("close") }}
+          </button>
+        </div>
         <div
           class="_navBtns--content--buttons"
           v-show="next_section || prev_section"
@@ -48,12 +53,7 @@
             <span v-else>–</span>
           </span>
         </div>
-        <div>
-          <button type="button" class="u-linkList" @click="$emit('close')">
-            <b-icon icon="x" :label="$t('close')" />
-            {{ $t("close") }}
-          </button>
-        </div>
+        <div></div>
       </div>
     </div>
     <div class="_openChapter--content">
