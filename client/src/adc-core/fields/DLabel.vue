@@ -1,8 +1,8 @@
 <template>
   <div class="_dLabel">
     <div class="_labelLine" @click.stop="toggleInstructions">
-      <span v-if="icon_name" class="_labelIcon">
-        <b-icon :icon="icon_name" />
+      <span v-if="icon" class="_labelIcon">
+        <b-icon :icon="icon" />
       </span>
       <component
         :is="tag"
@@ -42,7 +42,7 @@ export default {
       default: "label",
     },
     for_input: String,
-    icon_name: String,
+    icon: String,
   },
   components: {},
   data() {

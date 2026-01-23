@@ -19,7 +19,7 @@
 
     <DLabel
       str="Donec fait un test.On fait un test.On fait un test.On fait un test.On fait un test."
-      icon_name="info-circle"
+      icon="info-circle"
     />
 
     <h2>Buttons Demo</h2>
