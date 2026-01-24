@@ -6,7 +6,6 @@
         v-if="!placeholder"
         :str="label"
         :instructions="can_edit ? instructions : ''"
-        class=""
       />
       <span v-else class="u-instructions _placeholder">
         {{ placeholder }}
@@ -97,7 +96,7 @@ export default {
     content: String,
     placeholder: {
       type: String,
-      default: "–",
+      default: "",
     },
     field_to_edit: {
       type: String,
@@ -233,15 +232,23 @@ export default {
 
   ._textEditor--editBtn {
     /* Hide edit button by default on devices that support hover */
-    // @media (hover: hover) {
-    //   opacity: 0;
-    //   transition: opacity 0.2s ease;
-    // }
+    @media (hover: hover) {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
 
-    // /* Always show on touch devices */
-    // @media (hover: none) {
-    //   opacity: 1;
-    // }
+    /* Always show on touch devices */
+    @media (hover: none) {
+      opacity: 1;
+    }
+  }
+
+  &:hover {
+    ._textEditor--editBtn {
+      @media (hover: hover) {
+        opacity: 1;
+      }
+    }
   }
 }
 
