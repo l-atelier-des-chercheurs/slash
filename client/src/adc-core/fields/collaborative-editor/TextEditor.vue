@@ -1,12 +1,16 @@
 <template>
   <div class="_textEditor">
     <div class="_textEditor--label" v-if="is_empty || is_editing">
+      <b-icon :icon="icon" />
       <DLabel
+        v-if="!placeholder"
         :str="label"
-        :icon="icon"
         :instructions="can_edit ? instructions : ''"
         class=""
       />
+      <span v-else class="u-instructions _placeholder">
+        {{ placeholder }}
+      </span>
       <button
         type="button"
         v-if="!is_editing"
@@ -272,5 +276,9 @@ export default {
   margin-top: calc(var(--spacing) / -1);
   transform: translateY(6px);
   color: var(--active-color);
+}
+
+._placeholder {
+  font-size: var(--sl-font-size-small);
 }
 </style>
