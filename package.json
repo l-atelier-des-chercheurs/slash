@@ -1,19 +1,19 @@
 {
-  "name": "dodoc",
-  "productName": "do•doc",
-  "version": "12.0.26",
-  "description": "do•doc is a documentation tool for creativity.",
+  "name": "slash",
+  "productName": "slash",
+  "version": "0.1.0",
+  "description": "",
   "author": "L’Atelier des Chercheurs <https://latelier-des-chercheurs.fr/>",
-  "homepage": "https://github.com/l-atelier-des-chercheurs/dodoc#readme",
+  "homepage": "https://github.com/l-atelier-des-chercheurs/slash#readme",
   "license": "AGPL-3.0-only",
   "main": "index.js",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/l-atelier-des-chercheurs/dodoc.git"
+    "url": "https://github.com/l-atelier-des-chercheurs/slash.git"
   },
   "bugs": {
-    "url": "https://github.com/l-atelier-des-chercheurs/dodoc/issues"
+    "url": "https://github.com/l-atelier-des-chercheurs/slash/issues"
   },
   "scripts": {
     "start": "electron .",

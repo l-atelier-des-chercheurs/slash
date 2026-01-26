@@ -7,27 +7,7 @@ const routes = [
   {
     path: "/",
     name: "Accueil",
-    component: () => import("@/views/HomeView.vue"),
-  },
-  {
-    path: "/+:space_slug",
-    name: "Espace",
-    component: () => import("@/views/SpaceView.vue"),
-  },
-  {
-    path: "/+:space_slug/:project_slug",
-    name: "Projet",
-    component: () => import("@/views/ProjectView.vue"),
-  },
-  {
-    path: "/+:space_slug/:project_slug/publications/:publication_slug",
-    alias: ["*/export.html"],
-    name: "Publication",
-    meta: {
-      /* do not load full UI */
-      static: true,
-    },
-    component: () => import("@/views/PublicationView.vue"),
+    component: () => import("@/views/SlashHomeView.vue"),
   },
   {
     path: "/@",
@@ -40,21 +20,10 @@ const routes = [
     component: () => import("@/views/AuthorView.vue"),
   },
   {
-    path: "/p/:page_slug",
-    name: "Page",
-    component: () => import("@/views/PageView.vue"),
-  },
-  {
     path: "/_ui",
     name: "UI (dev only)",
     component: () => import("@/views/UIView.vue"),
   },
-  // {
-  //   path: "/=:event_slug",
-  //   name: "Événement",
-  //   component: () =>
-  //     import(/* webpackChunkName: "AuthorView" */ "@/views/EventView.vue"),
-  // },
   {
     // route to display a single media with caption/credits and
     // with qr scan option, and to generate preview for PDF and STL server-side
