@@ -27,14 +27,25 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._largeCanvas {
-  background-image: radial-gradient(circle, #000 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
-  
-  // For retina/high-DPI displays
+  position: absolute;
+  inset: 0;
+  // Repeating dot pattern background
+  background-image: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 1) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  background-position: 0 0;
+
+  // For retina/high-DPI displays (2x)
   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    background-size: 20px 20px;
-    background-image: radial-gradient(circle, #000 0.5px, transparent 0.5px);
+    background-image: radial-gradient(
+      circle,
+      rgba(0, 0, 0, 1) 0.5px,
+      transparent 0.5px
+    );
+    background-size: 24px 24px;
   }
 }
 </style>
