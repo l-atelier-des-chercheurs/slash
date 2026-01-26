@@ -271,7 +271,7 @@ body {
 html {
   height: 100%;
 
-  font-family: "Fira Sans", sans-serif;
+  font-family: "Rubik", sans-serif;
   font-style: normal;
   font-weight: 400;
 

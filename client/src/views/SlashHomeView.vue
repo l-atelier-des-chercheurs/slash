@@ -1,13 +1,17 @@
 <template>
   <div class="_homeView">
-    <h1>Hello World</h1>
+    <FolderView />
   </div>
 </template>
 
 <script>
+import FolderView from "@/components/slash/FolderView.vue";
+
 export default {
   props: {},
-  components: {},
+  components: {
+    FolderView,
+  },
   data() {
     return {};
   },
