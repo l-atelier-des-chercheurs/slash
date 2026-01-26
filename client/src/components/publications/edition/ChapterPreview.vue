@@ -61,9 +61,16 @@
       <div class="_item--content">
         <div
           class="_item--content--text"
-          v-if="section.section_type === 'text' && previewContent(section)"
+          v-if="section.section_type === 'text'"
         >
-          <CollaborativeEditor3 :content="previewContent(section)" />
+          <template v-if="previewContent(section)">
+            <CollaborativeEditor3 :content="previewContent(section)" />
+          </template>
+          <template v-else>
+            <span class="u-instructions">
+              {{ $t("no_content") }}
+            </span>
+          </template>
         </div>
         <div
           v-else-if="
@@ -75,7 +82,14 @@
             <MediaContent :file="media" />
           </div>
         </div>
-        <div v-else class="u-instructions">{{ $t("no_content") }}</div>
+        <div v-else-if="section.section_type === 'grid'" class="_item--content--grid">
+          <span class="u-instructions" v-if="section.grid_areas && section.grid_areas.length > 0">
+            {{ $t("areas_used", { count: section.grid_areas.length }) }}
+          </span>
+          <span v-else class="u-instructions">
+            {{ $t("no_areas_defined") }}
+          </span>
+        </div>
       </div>
 
       <button

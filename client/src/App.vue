@@ -143,9 +143,17 @@ export default {
   --c-bleu: hsl(211, 63%, 47%);
   --c-bleu_clair: hsl(211, 63%, 77%);
   --c-noir: hsl(0, 0%, 15%);
-  --c-gris: hsl(195, 0%, 83%);
-  --c-gris_clair: hsl(195, 0%, 96%);
-  --c-gris_fonce: hsl(195, 0%, 45%);
+  --c-gris: hsl(0, 0%, 83%);
+  --c-gris_clair: hsl(0, 0%, 96%);
+  --c-gris_fonce: hsl(0, 0%, 45%);
+
+  --g-100: hsl(0, 0%, 96%);
+  --g-200: hsl(0, 0%, 90%);
+  --g-300: hsl(0, 0%, 83%);
+  --g-400: hsl(0, 0%, 75%);
+  --g-500: hsl(0, 0%, 60%);
+  --g-600: hsl(0, 0%, 45%);
+
   --c-vert: hsl(143, 69%, 55%);
   --c-vert_fonce: hsl(143, 69%, 40%);
 
@@ -180,21 +188,20 @@ export default {
   --border-radius: 6px;
 
   --input-font-family: inherit;
-  --input-font-size: 1rem;
-  --input-font-size-x-small: 0.6rem;
-  --input-font-size-small: 0.8rem;
-  --input-font-size-big: 1.2rem;
+  --input-font-size: var(--sl-font-size-normal);
+  --input-font-size-x-small: var(--sl-font-size-x-small);
+  --input-font-size-small: var(--sl-font-size-small);
   --input-font-weight: inherit;
   --input-height: 2.5em;
   --input-height-large: 3em;
   // --input-height-big: 3em;
-  --input-height-small: 1.6rem;
+  --input-height-small: 1.85rem;
 
   --input-color: var(--body-color);
   --input-border-color: var(--c-gris_fonce);
   --input-border-color-focus: var(--active-color);
   --input-border-width: 3px;
-  --input-border-radius: 6px;
+  --input-border-radius: 8px;
   --input-bg-color: var(--color-white);
   --input-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.05);
   --input-readonly-bg-color: var(--component-bg-color);
@@ -210,6 +217,8 @@ export default {
 
   --color-capture: var(--c-rouge);
   --color-collect: var(--c-orange);
+  --color-notes_todo: var(--c-bleumarine);
+  --color-chats: var(--c-rouge);
   --color-make: var(--c-bleumarine);
   --color-publish: var(--c-bleuvert);
 
@@ -323,14 +332,14 @@ strong {
 h1 {
   margin: 0;
   font-size: var(--sl-font-size-xx-large);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
 }
 h2 {
   margin: 0;
   font-size: var(--sl-font-size-x-large);
   // font-style: italic;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
 }
 h3 {

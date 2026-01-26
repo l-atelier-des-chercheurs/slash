@@ -11,7 +11,7 @@
       :str="label"
       :instructions="can_edit ? instructions : ''"
     />
-    <div>
+    <div class="_previewContainer">
       <slot name="preview" v-if="input_type === 'radio'" :item="current_option">
         <template v-if="current_option && current_option.hasOwnProperty('key')">
           <img
@@ -33,8 +33,12 @@
           {{ option.label }}
         </div>
       </slot>
+      <EditBtn
+        v-if="can_edit && !edit_mode"
+        class="_edit"
+        @click="enableEditMode"
+      />
     </div>
-    <EditBtn v-if="can_edit && !edit_mode" @click="enableEditMode" />
 
     <BaseModal2 v-if="edit_mode" @close="cancel" :title="label">
       <div class="u-spacingBottom u-instructions" v-if="instructions">
@@ -171,6 +175,12 @@ export default {
   }
 }
 
+._previewContainer {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
+}
+
 ._option_preview {
   display: inline-block;
   vertical-align: middle;
@@ -180,5 +190,25 @@ export default {
 }
 ._emptyOption {
   font-size: var(--sl-font-size-small);
+}
+
+._edit {
+  /* Hide edit button by default on devices that support hover */
+  @media (hover: hover) {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  /* Always show on touch devices */
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+/* Show edit button on hover for devices that support hover */
+._radioCheckboxField:hover ._edit {
+  @media (hover: hover) {
+    opacity: 1;
+  }
 }
 </style>

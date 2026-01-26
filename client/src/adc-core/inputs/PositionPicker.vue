@@ -41,7 +41,8 @@
       <div v-if="!edit_mode && can_edit" class="_editBtn">
         <EditBtn
           :label_position="'left'"
-          :is_unfolded="true"
+          :btn_type="pins.length === 0 ? 'add' : 'edit'"
+          :is_unfolded="pins.length === 0"
           @click="enableEditMode"
         />
       </div>
@@ -214,6 +215,7 @@ export default {
 <style lang="scss" scoped>
 ._positionPicker {
   position: relative;
+  min-height: 3rem;
 }
 ._editBtn {
   position: absolute;

@@ -12,7 +12,8 @@ const folder = require("./folder"),
   auth = require("./auth"),
   users = require("./users"),
   journal = require("./journal"),
-  recoverPassword = require("./recover-password");
+  recoverPassword = require("./recover-password"),
+  dev = require("./dev-log");
 
 module.exports = (function () {
   const API = {
@@ -186,7 +187,6 @@ module.exports = (function () {
         "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/:subsub_folder_slug/:meta_filename/_copy",
       ],
       _generalPasswordCheck,
-      _restrictToContributors,
       _copyFile
     );
 
@@ -329,10 +329,20 @@ module.exports = (function () {
     app.get("/robots.txt", _loadRobots);
     app.get("/{*index}", loadIndex);
     notifier.on("fileCreated", async (room, { path_to_folder }) => {
-      _updateFolderCountAndBroadcast("fileCreated", path_to_folder);
+      _updateFileCountAndBroadcast("fileCreated", path_to_folder);
     });
     notifier.on("fileRemoved", async (room, { path_to_folder }) => {
-      _updateFolderCountAndBroadcast("fileRemoved", path_to_folder);
+      _updateFileCountAndBroadcast("fileRemoved", path_to_folder);
+    });
+    notifier.on(
+      "folderCreated",
+      async (room, { path_to_folder, path_to_type }) => {
+        _updateParentFoldersCountAndBroadcast(path_to_folder, path_to_type);
+      }
+    );
+    notifier.on("folderRemoved", async (room, { path_to_folder }) => {
+      const path_to_type = utils.getContainingFolder(path_to_folder);
+      _updateParentFoldersCountAndBroadcast(path_to_folder, path_to_type);
     });
   }
 
@@ -382,7 +392,7 @@ module.exports = (function () {
   async function _checkGeneralPassword(req, res, next) {
     dev.logapi();
     await _generalPasswordCheck(req, res);
-    return res.status(200).send();
+    return res.status(200).json({ code: "success" });
   }
   async function _checkToken(req, res, next) {
     dev.logapi();
@@ -398,7 +408,7 @@ module.exports = (function () {
     } catch (err) {
       return res.status(401).send({ code: err.code });
     }
-    return res.status(200).send();
+    return res.status(200).json({ code: "success" });
   }
 
   async function _canContributeToFolder({ path_to_type, path_to_folder, req }) {
@@ -765,7 +775,8 @@ module.exports = (function () {
       });
 
       notifier.emit("folderCreated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_type),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
+        path_to_type: utils.convertToSlashPath(path_to_type),
         meta: new_folder_meta,
       });
     } catch (err) {
@@ -823,7 +834,8 @@ module.exports = (function () {
 
       // 7. Notify subscribers (after response)
       notifier.emit("folderCreated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_type),
+        path_to_folder: utils.convertToSlashPath(path_to_new_folder),
+        path_to_type: utils.convertToSlashPath(path_to_type),
         meta: new_folder_meta,
       });
     } catch (err) {
@@ -1326,6 +1338,11 @@ module.exports = (function () {
       dev.logpackets(
         `Successfully copied folder ${path_to_source_folder} to ${copy_folder_path}`
       );
+
+      const new_folder_meta = await folder.getFolder({
+        path_to_folder: copy_folder_path,
+      });
+
       journal.log({
         from: "api2",
         event: "copy_folder",
@@ -1340,18 +1357,22 @@ module.exports = (function () {
       });
       res.status(200).json({ copy_folder_path });
 
-      const new_folder_meta = await folder.getFolder({
-        path_to_folder: copy_folder_path,
-      });
-
-      notifier.emit(
-        "folderCreated",
-        utils.convertToSlashPath(path_to_destination_type),
-        {
-          path: utils.convertToSlashPath(path_to_destination_type),
-          meta: new_folder_meta,
-        }
-      );
+      // Post-response operations (non-critical)
+      try {
+        notifier.emit(
+          "folderCreated",
+          utils.convertToSlashPath(path_to_destination_type),
+          {
+            path_to_folder: utils.convertToSlashPath(copy_folder_path),
+            path_to_type: utils.convertToSlashPath(path_to_destination_type),
+            meta: new_folder_meta,
+          }
+        );
+      } catch (err) {
+        dev.error(
+          "Post-response operation failed in _copyFolder: " + err.message
+        );
+      }
     } catch (err) {
       const { message, code, err_infos } = err;
       dev.error("Failed to copy content: " + message);
@@ -1529,7 +1550,8 @@ module.exports = (function () {
       });
 
       notifier.emit("folderCreated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_type),
+        path_to_folder: utils.convertToSlashPath(restored_folder_path),
+        path_to_type: utils.convertToSlashPath(path_to_type),
         meta: new_folder_meta,
       });
     } catch (err) {
@@ -1749,20 +1771,18 @@ module.exports = (function () {
     dev.logapi({ path_to_type, path_to_folder, data });
 
     try {
+      // Check if folder can be remixed (applies to all remix operations)
+      const folder_meta = await folder.getFolder({
+        path_to_folder,
+      });
+      if (folder_meta.$can_be_remixed !== true) {
+        const err = new Error("Folder is not open to remix");
+        err.code = "source_folder_not_open_to_remix";
+        throw err;
+      }
+
       let { path_to_destination_type, new_meta } = data;
       if (!path_to_destination_type) path_to_destination_type = path_to_type;
-      else if (path_to_destination_type !== path_to_type) {
-        // todo check for auth to copy folder
-        // todo check if $can_be_remixed is true
-        const folder_meta = await folder.getFolder({
-          path_to_folder,
-        });
-        if (!folder_meta.$can_be_remixed) {
-          const err = new Error("Folder is not open to remix");
-          err.code = "source_folder_not_open_to_remix";
-          throw err;
-        }
-      }
 
       const path_to_parent_folder = utils.getContainingFolder(
         path_to_destination_type
@@ -1791,6 +1811,11 @@ module.exports = (function () {
       dev.logpackets(
         `Successfully remixed folder ${path_to_source_folder} to ${remix_folder_path}`
       );
+
+      const new_folder_meta = await folder.getFolder({
+        path_to_folder: remix_folder_path,
+      });
+
       journal.log({
         from: "api2",
         event: "remix_folder",
@@ -1804,24 +1829,28 @@ module.exports = (function () {
       });
       res.status(200).json({ remix_folder_path });
 
-      await _updateFolderListOfRemixes({
-        path_to_type,
-        path_to_folder,
-        new_remix_path: remix_folder_path,
-      });
+      // Post-response operations (non-critical)
+      try {
+        await _updateFolderListOfRemixes({
+          path_to_type,
+          path_to_folder,
+          new_remix_path: remix_folder_path,
+        });
 
-      const new_folder_meta = await folder.getFolder({
-        path_to_folder: remix_folder_path,
-      });
-
-      notifier.emit(
-        "folderCreated",
-        utils.convertToSlashPath(path_to_destination_type),
-        {
-          path: utils.convertToSlashPath(path_to_destination_type),
-          meta: new_folder_meta,
-        }
-      );
+        notifier.emit(
+          "folderCreated",
+          utils.convertToSlashPath(path_to_destination_type),
+          {
+            path_to_folder: utils.convertToSlashPath(remix_folder_path),
+            path_to_type: utils.convertToSlashPath(path_to_destination_type),
+            meta: new_folder_meta,
+          }
+        );
+      } catch (err) {
+        dev.error(
+          "Post-response operation failed in _remixFolder: " + err.message
+        );
+      }
     } catch (err) {
       const { message, code, err_infos } = err;
       dev.error("Failed to remix folder: " + message);
@@ -1865,13 +1894,13 @@ module.exports = (function () {
     });
 
     notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_folder), {
-      path: utils.convertToSlashPath(path_to_folder),
+      path_to_folder: utils.convertToSlashPath(path_to_folder),
       changed_data,
     });
 
     if (path_to_type)
       notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_folder),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
         changed_data,
       });
   }
@@ -1923,11 +1952,11 @@ module.exports = (function () {
         },
       });
       notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_folder), {
-        path: utils.convertToSlashPath(path_to_folder),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
         changed_data,
       });
       notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_folder),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
         changed_data,
       });
     } catch (err) {
@@ -2339,7 +2368,7 @@ module.exports = (function () {
     }, []);
   }
 
-  async function _updateFolderCountAndBroadcast(event, path_to_folder) {
+  async function _updateFileCountAndBroadcast(event, path_to_folder) {
     dev.logfunction({ path_to_folder });
     const path_to_type = utils.getContainingFolder(path_to_folder);
     const $files_count = await file.getFilesCount({ path_to_folder });
@@ -2356,14 +2385,61 @@ module.exports = (function () {
       admin_meta,
     });
     notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_folder), {
-      path: utils.convertToSlashPath(path_to_folder),
+      path_to_folder: utils.convertToSlashPath(path_to_folder),
       changed_data,
     });
     if (path_to_type)
       notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_folder),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
         changed_data,
       });
+  }
+
+  async function _updateParentFoldersCountAndBroadcast(
+    path_to_folder,
+    path_to_type
+  ) {
+    dev.logfunction({ path_to_folder, path_to_type });
+
+    // Get the parent folder (the one containing the type folder)
+    // E.g., for path_to_type "spaces/espace-de-test/projects", parent is "spaces/espace-de-test"
+    const path_to_parent_folder = utils.getContainingFolder(path_to_type);
+    if (!path_to_parent_folder) return; // No parent to update
+
+    const $folders_count = await folder.getFoldersCount({
+      path_to_folder: path_to_parent_folder,
+    });
+
+    const admin_meta = {
+      $folders_count,
+    };
+
+    const path_to_parent_type = utils.getContainingFolder(
+      path_to_parent_folder
+    );
+    const changed_data = await folder.updateFolder({
+      path_to_type: path_to_parent_type,
+      path_to_folder: path_to_parent_folder,
+      admin_meta,
+    });
+
+    notifier.emit(
+      "folderUpdated",
+      utils.convertToSlashPath(path_to_parent_folder),
+      {
+        path_to_folder: utils.convertToSlashPath(path_to_parent_folder),
+        changed_data,
+      }
+    );
+    if (path_to_parent_type)
+      notifier.emit(
+        "folderUpdated",
+        utils.convertToSlashPath(path_to_parent_type),
+        {
+          path_to_folder: utils.convertToSlashPath(path_to_parent_folder),
+          changed_data,
+        }
+      );
   }
 
   async function _recoverPassword(req, res) {
@@ -2429,12 +2505,12 @@ module.exports = (function () {
       res.status(200).json(result);
 
       notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_folder), {
-        path: utils.convertToSlashPath(path_to_folder),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
         changed_data: result.changed_data,
       });
       if (path_to_type)
         notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_type), {
-          path: utils.convertToSlashPath(path_to_folder),
+          path_to_folder: utils.convertToSlashPath(path_to_folder),
           changed_data: result.changed_data,
         });
     } catch (err) {
@@ -2456,12 +2532,12 @@ module.exports = (function () {
   // Helper function for folder update notifications
   function _notifyFolderUpdated(path_to_type, path_to_folder, changed_data) {
     notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_folder), {
-      path: utils.convertToSlashPath(path_to_folder),
+      path_to_folder: utils.convertToSlashPath(path_to_folder),
       changed_data,
     });
     if (path_to_type)
       notifier.emit("folderUpdated", utils.convertToSlashPath(path_to_type), {
-        path: utils.convertToSlashPath(path_to_folder),
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
         changed_data,
       });
   }
@@ -2489,10 +2565,10 @@ module.exports = (function () {
   // Helper function for folder removal notifications
   function _notifyFolderRemoved(path_to_type, path_to_folder) {
     notifier.emit("folderRemoved", utils.convertToSlashPath(path_to_folder), {
-      path: utils.convertToSlashPath(path_to_folder),
+      path_to_folder: utils.convertToSlashPath(path_to_folder),
     });
     notifier.emit("folderRemoved", utils.convertToSlashPath(path_to_type), {
-      path: utils.convertToSlashPath(path_to_folder),
+      path_to_folder: utils.convertToSlashPath(path_to_folder),
     });
   }
 

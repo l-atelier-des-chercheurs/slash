@@ -5,7 +5,7 @@
       {{ cancel_text ? cancel_text : $t("cancel") }}
     </button>
     <button
-      class="u-button u-button_bleuvert"
+      :class="['u-button', save_is_destructive ? 'u-button_red' : 'u-button_bleuvert']"
       :loading="is_saving"
       :disabled="!allow_save"
       @click="$emit('save')"
@@ -29,15 +29,17 @@ export default {
       type: Boolean,
       default: true,
     },
+    save_is_destructive: {
+      type: Boolean,
+      default: false,
+    },
   },
   components: {},
   data() {
     return {};
   },
   created() {},
-  mounted() {
-    // if (this.autofocus_save && this.$refs.save) this.$refs.save.focus();
-  },
+  mounted() {},
   beforeDestroy() {},
   watch: {},
   computed: {},
@@ -49,6 +51,7 @@ export default {
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;
+  align-items: center;
   gap: calc(var(--spacing) / 4);
   flex-grow: 1;
 }

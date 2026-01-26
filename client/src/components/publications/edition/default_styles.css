@@ -145,11 +145,15 @@
 }
 
 @page {
+  margin: 0;
+}
+
+@page chapter {
   margin-top: 18mm;
   margin-bottom: 24mm;
 }
 
-@page:left {
+@page chapter:left {
   margin-left: 13mm;
   margin-right: 20mm;
   @bottom-left {
@@ -170,7 +174,7 @@
   }
 }
 
-@page:right {
+@page chapter:right {
   margin-left: 20mm;
   margin-right: 13mm;
   @right-middle {
@@ -196,15 +200,16 @@
   Note: string-set and page should not be in a specific selector such as .book .chapter or body .chapter
   looks like a bug in paged.js
 */
-.chapter {
+.chapter[data-chapter-type="text"] {
   string-set: title attr(data-chapter-title);
-  page: chapters;
+  page: chapter;
 }
 .chapter {
   > *:first-child {
     margin-top: 0;
   }
 }
+
 
 /* --------------------------------------------------- */
 

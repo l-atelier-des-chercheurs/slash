@@ -352,14 +352,14 @@ export default {
   position: absolute;
   inset: 0;
   width: 100%;
-  background: transparent;
-  opacity: 0.3;
+  background: rgba(255, 255, 255, 0.35);
+  opacity: 0;
   transition: all 0.1s linear;
 
   &:hover {
-    background: white;
-    // background: rgba(255, 255, 255, 0.35);
-    transition: none;
+    opacity: 1;
+    // background: white;
+    // transition: none;
   }
 }
 

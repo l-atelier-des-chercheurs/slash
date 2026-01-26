@@ -33,7 +33,7 @@
           :key="edit_mode"
           :content="media_with_linked._linked_media.$content"
           :path="media_with_linked._linked_media.$path"
-          :mode="edit_mode ? 'always_active' : 'normal'"
+          :mode="'edit_on_mounted'"
           :can_edit="edit_mode"
         />
         <TableEditor
@@ -96,6 +96,7 @@
                     opt: { objectFit: 'contain' },
                   })
                 "
+                :title="media_with_linked.objectFit === 'contain' ? $t('object_fit_contain') : $t('object_fit_cover')"
               >
                 <!-- v-if="media_with_linked.objectFit !== 'contain'" -->
                 <!-- {{ $t("object_fit_contain") }} -->
@@ -394,5 +395,11 @@ export default {
 
 ._dzAfter {
   z-index: 1000;
+}
+
+._mediaContent--collabEditor {
+  ::v-deep ._editText {
+    margin-right: calc(var(--spacing) * 3);
+  }
 }
 </style>

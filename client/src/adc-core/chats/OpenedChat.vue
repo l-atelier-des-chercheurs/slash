@@ -26,7 +26,12 @@
             :can_edit="can_edit_chat"
           />
 
-          <DropDown v-if="can_edit_chat" :show_label="false" :right="true">
+          <DropDown
+            v-if="can_edit_chat"
+            class="_actions"
+            :show_label="false"
+            :right="true"
+          >
             <button
               type="button"
               class="u-buttonLink u-buttonLink_red"
@@ -35,18 +40,17 @@
               <b-icon icon="trash" />
               {{ $t("remove") }}
             </button>
-
-            <RemoveMenu2
-              v-if="show_remove_modal"
-              :modal_title="$t('remove_chat', { name: chat.title })"
-              :success_notification="$t('chat_was_removed')"
-              :path="chat.$path"
-              @removedSuccessfully="$emit('close')"
-              @close="show_remove_modal = false"
-            />
           </DropDown>
           <div v-else />
         </div>
+        <RemoveMenu2
+          v-if="show_remove_modal"
+          :modal_title="$t('remove_chat', { name: chat.title })"
+          :success_notification="$t('chat_was_removed')"
+          :path="chat.$path"
+          @removedSuccessfully="$emit('close')"
+          @close="show_remove_modal = false"
+        />
 
         <!-- <div class="_openedChat--header--row _lastMessageDate">
           <div>
@@ -57,6 +61,42 @@
             }}
           </div>
         </div> -->
+        <div class="_openedChat--header--row">
+          <div>
+            <div class="u-label">{{ $t("linked_project") }}</div>
+          </div>
+          <div>
+            <div class="" v-if="chat.linked_project_path">
+              <button
+                type="button"
+                class="u-button u-button_white u-button_small"
+                @click="openLinkedProject"
+              >
+                <b-icon icon="arrow-right-short" />
+                {{ $t("open") }}
+              </button>
+            </div>
+            <div class="" v-else>
+              <div class="u-instructions">{{ $t("no_linked_project") }}</div>
+            </div>
+          </div>
+          <div>
+            <EditBtn
+              :label_position="'left'"
+              :btn_type="chat.linked_project_path === 0 ? 'add' : 'edit'"
+              :is_unfolded="chat.linked_project_path === 0"
+              @click="show_project_link_modal = true"
+            />
+
+            <ProjectLinkModal
+              v-if="show_project_link_modal"
+              :path="chat.$path"
+              :current_linked_project_path="chat.linked_project_path"
+              @close="show_project_link_modal = false"
+            />
+          </div>
+          <div></div>
+        </div>
 
         <div class="_openedChat--header--row _adminsAndContributors">
           <AdminsAndContributorsField
@@ -214,6 +254,7 @@
 <script>
 import Message from "./Message.vue";
 import authorMessageMixin from "./mixins/authorMessageMixin";
+import ProjectLinkModal from "../modals/ProjectLinkModal.vue";
 
 export default {
   props: {
@@ -224,6 +265,7 @@ export default {
   },
   components: {
     Message,
+    ProjectLinkModal,
   },
   mixins: [authorMessageMixin],
   data() {
@@ -235,6 +277,7 @@ export default {
       max_messages_to_display: 50,
       load_all_messages: false,
       show_remove_modal: false,
+      show_project_link_modal: false,
       pane_scroll_until_end: 0,
 
       is_posting_message: false,
@@ -374,6 +417,10 @@ export default {
     closeChat() {
       this.$emit("close");
     },
+    onProjectSelected(projectPath) {
+      // Handle project selection if needed
+      // For now, the path is displayed in the modal
+    },
     async postMessage() {
       if (!this.new_message) return;
 
@@ -417,6 +464,7 @@ export default {
 
       const last_message_date = new Date().toISOString();
       const last_message_count = this.messages.length;
+      this.last_message_read_index += 1;
 
       this.$nextTick(() => {
         try {
@@ -445,6 +493,10 @@ export default {
         behavior: "instant",
       });
     },
+    openLinkedProject() {
+      const url = this.createURLFromPath(this.chat.linked_project_path);
+      this.$router.push(url);
+    },
   },
 };
 </script>
@@ -468,7 +520,7 @@ export default {
   justify-content: space-between;
   overflow: hidden;
   border-radius: var(--border-radius);
-  border: 2px solid var(--c-rouge_fonce);
+  border: 2px solid var(--c-rouge);
 
   > ._openedChat--header {
     flex: 0 0 auto;
@@ -486,12 +538,18 @@ export default {
 ._openedChat--header {
   padding: calc(var(--spacing) / 2);
   color: white;
+
+  :deep(.u-label),
+  :deep(._icon),
+  :deep(.u-instructions) {
+    color: white !important;
+  }
 }
 ._openedChat--header--row {
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 
   &:not(:last-child) {
     border-bottom: 2px solid var(--c-rouge_fonce);
@@ -508,6 +566,9 @@ export default {
   > ._status {
     flex: 0 0 9ch;
   }
+}
+._actions {
+  color: var(--c-noir);
 }
 
 ._openedChat--header--title {
@@ -568,16 +629,11 @@ export default {
 }
 
 ._adminsAndContributors {
-  :deep(.u-label),
-  :deep(._icon),
-  :deep(.u-instructions) {
-    color: white !important;
-  }
 }
 
 ._backBtn {
-  padding: calc(var(--spacing) / 2);
-  padding-left: 0;
+  // padding: calc(var(--spacing) / 2);
+  // padding-left: 0;
 }
 
 ._scrollToEndBtn {

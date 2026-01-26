@@ -12,7 +12,8 @@
     <template
       v-if="
         export_mode === 'pdf' &&
-        ['page_by_page', 'edition'].includes(publication.template)
+        ['page_by_page', 'edition'].includes(publication.template) &&
+        page_count > 1
       "
     >
       <DLabel
@@ -50,7 +51,7 @@
 
       <div
         class="u-instructions"
-        v-if="pdf_pages_to_export_mode === 'custom' && total_number_of_pages"
+        v-if="pdf_pages_to_export_mode === 'custom' && page_count"
       >
         <template v-if="is_spread">
           {{
@@ -62,14 +63,14 @@
         <template v-else>
           {{
             $t("total_number_of_pages_in_publication", {
-              total: total_number_of_pages,
+              total: page_count,
             })
           }}
         </template>
       </div>
     </template>
 
-    <template v-if="export_mode === 'png'">
+    <template v-if="export_mode === 'png' && page_count > 1">
       <template v-if="publication.template === 'page_by_page'">
         <div class="u-spacingBottom" />
 
@@ -155,7 +156,7 @@ export default {
   watch: {},
   computed: {
     page_count() {
-      return this.publication.pages.length;
+      return this.publication.pages?.length || 0;
     },
     is_spread() {
       return this.publication.page_spreads === true;
@@ -175,13 +176,9 @@ export default {
       }
       return false;
     },
-    total_number_of_pages() {
-      if (!this.publication.pages) return false;
-      return this.publication.pages.length;
-    },
     total_number_of_spreads() {
-      if (!this.total_number_of_pages) return false;
-      return Math.floor(this.total_number_of_pages / 2) + 1;
+      if (!this.page_count) return false;
+      return Math.floor(this.page_count / 2) + 1;
     },
     current_spread_number() {
       if (this.pane_infos?.page_id && this.publication.page_spreads) {
@@ -264,7 +261,7 @@ export default {
             : this.current_spread_number;
         else if (this.pdf_pages_to_export_mode === "custom")
           instructions.page = this.specific_pdf_page_or_spread_to_export;
-        // else instructions.page = "1-" + this.total_number_of_pages;
+        // else instructions.page = "1-" + this.page_count;
       }
 
       if (this.is_spread) instructions.page_width *= 2;

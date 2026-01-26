@@ -1,93 +1,95 @@
 <template>
-  <div class="_cropAdjustMedia">
-    <BaseModal2
-      :title="$t('crop_adjust')"
-      :size="'full'"
-      @close="$emit('close')"
-    >
-      <div class="_cont">
-        <div class="_steps">
-          <span
-            class="_step"
-            v-for="(step, index) in ['crop', 'adjust', 'export']"
-            :key="step"
-          >
-            <component :is="step === current_step ? 'strong' : 'span'">
-              {{ $t(step) }}
-            </component>
-            <b-icon
-              v-if="index !== 2"
-              icon="chevron-right"
-              aria-role="presentation"
-            />
-          </span>
-        </div>
-
-        <div class="_panes">
-          <CropMedia
-            v-if="current_step === 'crop'"
-            :media="media"
-            @updateCrop="updateCrop"
+  <BaseModal2 :title="$t('crop_adjust')" :size="'full'" @close="$emit('close')">
+    <div class="_cont">
+      <div class="_steps">
+        <span
+          class="_step"
+          v-for="(step, index) in ['crop', 'adjust', 'export']"
+          :key="step"
+        >
+          <component :is="step === current_step ? 'strong' : 'span'">
+            {{ $t(step) }}
+          </component>
+          <b-icon
+            v-if="index !== 2"
+            icon="chevron-right"
+            aria-role="presentation"
           />
-          <AdjustMedia
-            v-if="current_step === 'adjust'"
-            :image="cropped_image"
-            @back="current_step = 'crop'"
-            @updateAdjust="updateAdjust"
-          />
-          <div v-if="current_step === 'export'" class="_exportPane">
-            <img :src="final_image" />
-            <div class="_btnRow">
-              <button
-                type="button"
-                class="u-button u-button_white"
-                @click="goBack"
-              >
-                <b-icon icon="arrow-left-short" />
-                {{ $t("previous") }}
-              </button>
+        </span>
+      </div>
 
-              <button
-                type="button"
-                class="u-button u-button_bleuvert"
-                @click="buttonSaveAsNew"
-              >
-                <b-icon icon="file-plus" />
-                {{ $t("save_as_new_media") }}
-              </button>
-              <button
-                type="button"
-                class="u-button u-button_red"
-                @click="replaceOriginal"
-              >
-                <b-icon icon="save2-fill" />
-                {{ $t("replace_original") }}
-              </button>
-              <div class="_download_media_without_validation">
-                <small>
-                  <a
-                    ref=""
-                    :href="final_image_blob"
-                    :download="final_image_filename"
-                    target="_blank"
-                  >
-                    {{ $t("or_download_media_on_device") }}
-                    <template v-if="final_image_blob">
-                      — {{ formatBytes(final_image_blob.size) }}
-                    </template>
-                  </a>
-                </small>
-              </div>
+      <div class="_panes">
+        <CropMedia
+          v-if="current_step === 'crop'"
+          :media="media"
+          @updateCrop="updateCrop"
+        />
+        <AdjustMedia
+          v-if="current_step === 'adjust'"
+          :image="cropped_image"
+          @back="current_step = 'crop'"
+          @updateAdjust="updateAdjust"
+        />
+        <div v-if="current_step === 'export'" class="_exportPane">
+          <img :src="final_image" />
+          <div class="_btnRow">
+            <button
+              type="button"
+              class="u-button u-button_white"
+              @click="goBack"
+            >
+              <b-icon icon="arrow-left-short" />
+              {{ $t("previous") }}
+            </button>
 
-              <div class="_spinner" v-if="is_saving" key="loader">
-                <AnimatedCounter :value="media_being_sent_percent" />
-              </div>
+            <button
+              v-if="available_save_actions.includes('saveAsNew')"
+              type="button"
+              class="u-button u-button_bleuvert"
+              data-action="saveAsNew"
+              @click="buttonSaveAsNew"
+            >
+              <b-icon icon="file-plus" />
+              {{ $t("save_as_new_media") }}
+            </button>
+            <button
+              v-if="available_save_actions.includes('replaceOriginal')"
+              type="button"
+              class="u-button u-button_red"
+              data-action="replaceOriginal"
+              @click="replaceOriginal"
+            >
+              <b-icon icon="save2-fill" />
+              {{ $t("replace_original") }}
+            </button>
+            <div
+              v-if="available_save_actions.includes('download')"
+              data-action="download"
+              class="_download_media_without_validation"
+            >
+              <small>
+                <a
+                  ref=""
+                  :href="final_image_blob"
+                  :download="final_image_filename"
+                  target="_blank"
+                >
+                  {{ $t("or_download_media_on_device") }}
+                  <template v-if="final_image_blob">
+                    — {{ formatBytes(final_image_blob.size) }}
+                  </template>
+                </a>
+              </small>
+            </div>
+
+            <div class="_spinner" v-if="is_saving" key="loader">
+              <AnimatedCounter :value="media_being_sent_percent" />
             </div>
           </div>
         </div>
       </div>
-    </BaseModal2>
-  </div>
+    </div>
+  </BaseModal2>
 </template>
 <script>
 import CropMedia from "./CropMedia.vue";
@@ -97,6 +99,10 @@ export default {
   props: {
     media: Object,
     project_path: String,
+    available_save_actions: {
+      type: Array,
+      default: () => ["saveAsNew", "replaceOriginal", "download"],
+    },
   },
   components: {
     CropMedia,

@@ -86,6 +86,7 @@ export default {
         folder.$contributors.includes(this.connected_as.$path)
       )
         return true;
+
       return false;
     },
     canPublicSeeFolder({ folder }) {

@@ -20,7 +20,7 @@
       <template v-else>
         <img
           v-if="!zoom_on_click"
-          :src="file_full_path"
+          :src="full_thumb"
           class="_mediaContent--image"
           :loading="img_loading"
         />

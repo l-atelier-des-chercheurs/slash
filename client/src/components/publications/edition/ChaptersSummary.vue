@@ -20,34 +20,41 @@
           :pages_positions="getPagesPositions(section.$path)"
           @open="openSection(section.$path)"
           @moveSection="moveSection"
-          @remove="$emit('removeChapter', section)"
         />
 
         <div key="'add'" class="_addSection">
           <button
             type="button"
-            class="u-button u-button_bleuvert u-button_small"
+            class="u-button u-button_small u-button_white"
             @click="createSection({ type: 'text' })"
           >
-            <b-icon icon="plus" />
+            <b-icon icon="fonts" />
             {{ $t("text") }}
           </button>
-          <button
+          <!-- <button
             type="button"
             class="u-button u-button_bleuvert u-button_small"
             @click="createSection({ type: 'gallery' })"
           >
             <b-icon icon="plus" />
             {{ $t("gallery") }}
-          </button>
+          </button> -->
           <button
+            type="button"
+            class="u-button u-button_small u-button_white"
+            @click="createSection({ type: 'grid' })"
+          >
+            <b-icon icon="grid-3x2-gap-fill" />
+            {{ $t("grid") }}
+          </button>
+          <!-- <button
             type="button"
             class="u-button u-button_bleuvert u-button_small"
             @click="createSection({ type: 'story' })"
           >
             <b-icon icon="plus" />
             {{ $t("story") }}
-          </button>
+          </button> -->
         </div>
       </transition-group>
     </div>
@@ -113,7 +120,7 @@ export default {
     // },
     async createSection({ type = "text" } = {}) {
       let additional_meta = {
-        section_starts_on_page: "right",
+        section_starts_on_page: "page",
       };
 
       if (type === "text") {
@@ -134,6 +141,10 @@ export default {
         additional_meta.section_title =
           this.$t("gallery") + " " + this.new_section_index;
         additional_meta.section_type = "gallery";
+      } else if (type === "grid") {
+        additional_meta.section_title =
+          this.$t("grid") + " " + this.new_section_index;
+        additional_meta.section_type = "grid";
       } else if (type === "story") {
         additional_meta.section_title =
           this.$t("story") + " " + this.new_section_index;

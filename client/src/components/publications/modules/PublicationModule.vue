@@ -437,9 +437,8 @@
                 caption: first_media.caption,
               })
             "
-          >
-            {{ first_media.caption }}
-          </button>
+            v-html="$sanitize(first_media.caption)"
+          />
         </div>
       </div>
     </div>
@@ -536,9 +535,9 @@ export default {
     edit_mode() {
       // if text bloc in text bloc module
       if (this.$refs.textBloc)
-        if (this.edit_mode) {
+        if (this.edit_mode)
           this.$nextTick(() => this.$refs.textBloc.enableEditor());
-        } else this.$refs.textBloc.disableEditor();
+        else this.$refs.textBloc.disableEditor();
       else {
         // this.$nextTick(() => {
         //   const edit_btn = this.$el.querySelector(
@@ -889,7 +888,8 @@ export default {
 
     padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
     background: var(--active-color);
-    box-shadow: var(--panel-shadows);
+    // border: 2px solid var(--active-color);
+    // box-shadow: var(--panel-shadows);
 
     border-radius: 12px;
     gap: calc(var(--spacing) / 2);

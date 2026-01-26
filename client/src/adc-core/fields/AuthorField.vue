@@ -6,7 +6,6 @@
       :tag="tag"
       :instructions="instructions"
     />
-
     <transition-group tag="div" class="_authors" name="listComplete" appear>
       <div v-if="authors_paths === 'everyone'" class="t-500" key="everyone">
         {{ $t("everyone") }}
@@ -18,7 +17,7 @@
           v-for="author_path in authors_paths"
           :path="author_path"
           :key="author_path"
-          :mode="'link'"
+          :mode="disable_links ? undefined : 'link'"
           :show_image_only="show_image_only"
         />
       </template>
@@ -129,6 +128,10 @@ export default {
       default: false,
     },
     show_image_only: {
+      type: Boolean,
+      default: false,
+    },
+    disable_links: {
       type: Boolean,
       default: false,
     },

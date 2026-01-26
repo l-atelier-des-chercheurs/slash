@@ -1,5 +1,5 @@
 <template>
-  <div class="_publicationPreview">
+  <div class="_publicationPreview" :class="{ 'is--list': context === 'list' }">
     <div class="_publicationPreview--cover">
       <template v-if="cover_thumb">
         <img :src="cover_thumb" />
@@ -46,7 +46,6 @@
         <EditBtn
           v-if="can_edit && !is_making_preview"
           :btn_type="'regenerate_thumbs'"
-          :style_type="'black'"
           :label_position="'left'"
           @click="generatePreview"
         />
@@ -74,6 +73,7 @@ export default {
     publication: Object,
     template_options: Array,
     can_edit: Boolean,
+    context: String,
   },
   components: {},
   data() {
@@ -240,6 +240,47 @@ export default {
 
   &:focus-visible {
     outline: 2px solid var(--active-color);
+  }
+}
+
+._publicationPreview.is--list {
+  flex-flow: row nowrap;
+  align-items: center;
+  background: white;
+  padding: calc(var(--spacing) / 4);
+
+  ._publicationPreview--cover {
+    width: 60px;
+    flex-shrink: 0;
+    box-shadow: none;
+    border: 1px solid var(--c-gris);
+
+    ._noPreview {
+      aspect-ratio: 1/1;
+      padding: 0;
+      min-height: auto;
+    }
+  }
+
+  ._header {
+    flex: 1;
+    min-width: 0;
+    padding-left: calc(var(--spacing) / 2);
+
+    h3 {
+      font-size: 1rem;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  ._generatePreviewBtn {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    margin: 0;
   }
 }
 </style>

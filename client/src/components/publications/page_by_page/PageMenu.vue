@@ -1,48 +1,24 @@
 <template>
   <div class="_pageMenu">
     <div class="_pageMenu--pane">
-      <button type="button" class="u-buttonLink" @click="$emit('close')">
-        <b-icon icon="grid-fill" />
+      <!-- <button
+        type="button"
+        class="u-button u-button_bleuvert"
+        @click="$emit('close')"
+      >
+        <b-icon icon="chevron-left" />
         <template v-if="!is_spread">{{ $t("list_of_pages") }}</template>
         <template v-else>{{ $t("list_of_spreads") }}</template>
-      </button>
+      </button> -->
       <div class="_titleRow">
-        <button
-          type="button"
-          class="u-button u-button_transparent u-button_icon"
-          @click="$emit('prevPage')"
-          :disabled="active_page_number <= 0"
-        >
-          <b-icon icon="arrow-left-square" />
-        </button>
-        <div class="_name">
-          <transition name="slideupFade" mode="out-in">
-            <div :key="active_page_number">
-              <b>{{ $t("page") }} {{ active_page_number + 1 }}</b>
-            </div>
-          </transition>
-          <transition name="slideupFade" mode="out-in">
-            <span
-              v-if="active_spread_index !== false"
-              :key="active_spread_index"
-            >
-              <template v-if="active_spread_index === 0">
-                ({{ $t("cover") }})
-              </template>
-              <template v-else>
-                ({{ $t("spread").toLowerCase() }} {{ active_spread_index + 1 }})
-              </template>
-            </span>
-          </transition>
-        </div>
-        <button
-          type="button"
-          class="u-button u-button_transparent u-button_icon"
-          @click="$emit('nextPage')"
-          :disabled="is_last_page"
-        >
-          <b-icon icon="arrow-right-square" />
-        </button>
+        <SelectField2
+          :value="active_page_number"
+          :options="page_options"
+          :can_edit="true"
+          :hide_validation="true"
+          :with_arrows="true"
+          @change="changePage"
+        />
       </div>
 
       <div v-if="is_last_page" class="u-spacingBottom">
@@ -52,6 +28,7 @@
 
         <button
           type="button"
+          v-if="can_edit"
           class="u-button u-button_bleuvert u-button_small"
           @click="createPageAndOpen"
         >
@@ -371,8 +348,6 @@
             :can_edit="can_edit"
           />
 
-          <div class="u-spacingBottom" />
-
           <div
             class=""
             v-if="
@@ -392,9 +367,8 @@
                   caption: active_module_first_media.caption,
                 })
               "
-            >
-              {{ active_module_first_media.caption }}
-            </button>
+              v-html="$sanitize(active_module_first_media.caption)"
+            />
           </div>
 
           <div class="u-spacingBottom" />
@@ -613,6 +587,19 @@
           @save="updateMediaPubliMeta({ opacity: $event / 100 })"
         />
 
+        <RangeValueInput
+          class="u-spacingBottom"
+          :label="$t('blur')"
+          :value="active_module.blur || 0"
+          :min="0"
+          :max="10"
+          :step="0.5"
+          :ticks="[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+          :default_value="0"
+          :suffix="unit"
+          @save="updateMediaPubliMeta({ blur: $event })"
+        />
+
         <ColorInput
           class="u-spacingBottom"
           :label="$t('background_color')"
@@ -711,6 +698,7 @@ export default {
   props: {
     can_edit: Boolean,
     pages: Array,
+    spreads: [Boolean, Array],
     active_page_number: Number,
     active_spread_index: [Boolean, Number],
     is_spread: Boolean,
@@ -855,8 +843,34 @@ export default {
         z_index,
       };
     },
+    page_options() {
+      return this.pages.map((page, index) => {
+        let text = `${this.$t("page")} ${index + 1}`;
+        if (this.is_spread && this.spreads) {
+          const spread_index = this.spreads.findIndex((pages) =>
+            pages.find((p) => p && p.id === page.id)
+          );
+          if (spread_index !== -1) {
+            const spread_label =
+              spread_index === 0
+                ? this.$t("cover")
+                : `${this.$t("spread").toLowerCase()} ${spread_index + 1}`;
+            text += ` (${spread_label})`;
+          }
+        }
+        return {
+          key: index,
+          text,
+        };
+      });
+    },
   },
   methods: {
+    changePage(index) {
+      if (this.pages[index]) {
+        this.$emit("goToPage", this.pages[index].id);
+      }
+    },
     createPageAndOpen() {
       this.$emit("createPage");
       setTimeout(() => {
@@ -991,6 +1005,9 @@ export default {
     margin-top: calc(var(--spacing) / 2);
     border-top: 2px solid var(--c-gris_clair);
   }
+  &:first-child {
+    padding-top: 0;
+  }
 }
 
 // ::v-deep ._moduleCreator {
@@ -1060,20 +1077,10 @@ export default {
 }
 
 ._titleRow {
-  display: flex;
-  flex-flow: row wrap;
-  align-items: center;
-  justify-content: space-between;
-
-  margin: calc(var(--spacing) / 2) calc(var(--spacing) / -2);
-
-  ._name {
-    display: flex;
-    gap: calc(var(--spacing) / 2);
-  }
+  margin: calc(var(--spacing) / 2) 0;
 
   button {
-    font-size: var(--sl-font-size-medium);
+    font-size: var(--sl-font-size-normal);
   }
 }
 

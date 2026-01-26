@@ -28,6 +28,9 @@ export default {
   image_url_instr:
     "Enter the URL of an image (in .jpg, .jpeg, .png, .gif, .webp, .svg, .bmp or .tiff).",
   import_from_url: "Import from URL",
+  file_url: "URL of a file",
+  file_url_instr:
+    "Enter the URL of a file (images, videos, audio, PDF documents, text files, etc.).",
   example_image_url: "Example image URL",
   importing_from_url: "Importing from URL...",
   preview_of_image: "Preview of the image",
@@ -84,7 +87,9 @@ export default {
   submit: "Submit",
   search_in_title_desc_kw:
     "Search in titles, descriptions, keywords, machines and materials.",
-  search_by_name: "Search in names or nicknames",
+  search_in_title: "Search in titles.",
+  search_by_name: "Search by name",
+  search_by_author_name: "Search in names or nicknames",
   search_by_title_or_subtitle: "Search in titles and subtitles",
 
   search: "Search",
@@ -136,6 +141,7 @@ export default {
 
   login: "Login",
   logout: "Logout",
+  logging_out: "Logging out…",
   name_or_pseudonym: "Name or nickname",
   email: "Email",
   email_instr: "Contact email, only visible to admins.",
@@ -172,6 +178,8 @@ export default {
   in_another_section: "In another chapter",
   change_section: "Move to another chapter",
   remove_section: "Remove this chapter",
+  remove_area: "Remove this area",
+  remove_area_confirm: "Are you sure you want to remove this area?",
 
   status: "Status",
   origin: "Origin",
@@ -213,6 +221,7 @@ export default {
   login_no_account_matches: "No accounts match",
 
   add_accounts: "Add accounts",
+  add_by_group: "Add by group",
   show: "Show",
   show_title: "Show title",
   hide: "Hide",
@@ -357,6 +366,7 @@ export default {
   collect: "Collect",
   make: "Make",
   publish: "Publish",
+  notes_todo: "Notes/todo",
 
   projects_you_edited_last: "Projects you edited last",
 
@@ -445,6 +455,7 @@ export default {
   video: "Video",
   audio: "Audio",
   text: "Text",
+  text_overflow: "Excess text",
   vecto: "Shapes",
   pdf: "PDF",
   stl: "STL",
@@ -458,7 +469,7 @@ export default {
   all_accounts: "All accounts",
 
   or_download_media_on_device: "or download this media to your device",
-  or_paste_an_image: "Or drop a picture",
+  or_paste_an_image: "Or paste an image",
 
   drop_here: "Drop here",
   or_drag_drop_file_here: "Or drag and drop file here",
@@ -723,10 +734,8 @@ export default {
   transparent: "Transparent",
   couldnt_load_getusermedia: "Impossible to load camera or microphone",
   failed_listing_devices: "Impossible to list devices",
-  failed_to_start_stream_sharing: "Impossible to start stream sharing",
   failed_to_start_recording: "Failed to start recording",
   new_user_connected_to_stream: "New user connected to the stream",
-  no_stream_found_while_sharing: "No stream found while sharing",
   media_couldnt_be_sent: "Media couldn't be sent",
 
   watermark: "Dressing",
@@ -897,12 +906,9 @@ export default {
   name_of_stream: "Stream name",
   failed_to_start_streams_change_source_or_res:
     "The video or audio stream could not be started.<br>Try changing the source or resolution in the settings.",
-  failed_to_share_stream: "The stream could not be shared",
   stream_local_mode: "on this device",
   stream_remote_mode: "remote do•doc",
   "stream_shown:": "Stream used:",
-  share_stream: "Share this stream",
-  "stream_currently_shared_with_name:": "Video/audio stream shared under name:",
   remote_access: "Remote Sources",
   hangup: "hang up",
   connect: "Connect",
@@ -918,8 +924,12 @@ export default {
   thirds: "Thirds",
   fourths: "Quarters",
   reload: "Reload",
+  add_image: "Add image",
+  add_medias: "Add medias",
   add_media: "Add media",
-  add_medias: "Add media",
+  add_grid_area: "Add grid area",
+  areas_used: "{count} areas used",
+  click_empty_cell_to_add_area: "Click on an empty cell to add an area",
   add_link: "Add link",
   add_text: "Add text",
   share_link_to_page: "Share a link to this page",
@@ -976,6 +986,8 @@ export default {
     "You do not have rights to create projects in the destination space",
   not_allowed_to_copy_to_project:
     "You do not have rights to add media to this project.",
+  not_allowed_to_remix_folder:
+    "This project does not allow remixing. Contact its referents if necessary.",
   name_taken: "This name is already in use",
   action_not_allowed: "This action is not allowed",
   account_created: "Your account has been created",
@@ -1187,6 +1199,9 @@ export default {
 
   confirm_save_changes:
     "Some changes have been made, do you want to save them?",
+  confirm_cancel_changes:
+    "Some changes have been made, are you sure you want to abandon them?",
+  continue_editing: "Continue editing",
   close_without_saving: "Close without saving",
 
   keep_existing_keywords: "Keep existing keywords",
@@ -1240,6 +1255,8 @@ export default {
   text_top_image_down: "Text top, image down",
   image_top_text_down: "Image top, text down",
   in_flow: "In the flow",
+  toggle_sidebar: "Toggle sidebar",
+  previous_page: "Previous page",
   next_page: "Next page",
   next_left_page: "Next left page",
   next_right_page: "Next right page",
@@ -1268,6 +1285,19 @@ export default {
   multisupport_embed_img_instr:
     "To add media from the internet, you can also copy and paste the following tags:",
   attributes_for_embeds: "Attributes for the tags:",
+  embed_example_image: "Embed an image",
+  embed_example_video: "Embed a video",
+  embed_example_audio: "Embed an audio",
+  embed_example_pdf: "Embed a PDF",
+  embed_example_peertube: "Embed a PeerTube video",
+  embed_example_youtube: "Embed a YouTube video",
+  embed_example_scratch: "Embed a Scratch project",
+  embed_attr_caption: "Add a caption to the media",
+  embed_attr_class: "Add a custom CSS class",
+  embed_attr_float_left: "Float the media to the left",
+  embed_attr_float_right: "Float the media to the right",
+  embed_attr_size_full: "Display the media at full width",
+  embed_attr_size_full_cover: "Display the media at full width with cover",
   show_source_html: "Show source HTML",
   forgot_password: "Forgot password?",
   current_f: "Current",
@@ -1276,6 +1306,8 @@ export default {
   restore_projects: "Restore projects",
   bin: "Trash",
   items_in_bin: "Items in the trash",
+  bin_removal_notice:
+    "Items in the trash are automatically removed after 30 days.",
   all_pages: "All pages",
   all_spreads: "All spreads",
   spreads_to_export: "Spreads to export",
@@ -1308,7 +1340,7 @@ export default {
   add_row: "Add row",
   remove_column: "Remove column",
   remove_row: "Remove row",
-  chats: "Discussion topics",
+  chats: "Discussions",
   enable_chats: "Enable the discussion feature",
   enable_chats_instructions:
     "The discussion feature allows you to create topics where selected users can exchange messages. Once enabled, click on the bubble in the top right of the screen to access it.",
@@ -1357,6 +1389,10 @@ export default {
   looking_for_gps_coordinates: "Looking for GPS coordinates...",
   gps_coordinates_found: "GPS coordinates found.",
   column_count: "Column count",
+  row_count: "Row count",
+  columns: "columns",
+  rows: "rows",
+  grid_dimensions: "Grid dimensions",
   restore_publications: "Restore deleted publications",
 
   debug_logs: "Debug logs",
@@ -1396,8 +1432,6 @@ export default {
   all_content: "All content",
   all_publications: "All publications",
   anonymous: "Anonymous",
-  bandwidth_very_low_for_stream_sharing:
-    "Very low bandwidth for stream sharing",
   camera_access_refused: "Camera access refused",
   change_base_media: "Change base media",
   change_page: "Change page",
@@ -1406,7 +1440,19 @@ export default {
   failed_to_find_block_line: "Failed to find block line",
   folder_copied: "Folder copied",
   import_image_from_url_failed: "Failed to import image from URL",
-  "importer depuis un site": "Import from a site",
+  from_website: "From a website",
+  resources: "Resources",
+  free_resources: "Free resources",
+  free_resources_description: "Access free media from online collections",
+  import_from_project: "Import from project",
+  import_from_project_description:
+    "Use media from this project or another from the same space",
+  resources_picker: "Resources Picker",
+  loading_resources: "Loading resources…",
+  downloading: "Downloading…",
+  failed_to_load_resources: "Failed to load resources",
+  resource_imported_successfully: "Resource imported successfully",
+  failed_to_import_resource: "Failed to import resource",
   layout: "Layout",
   level: "Level",
   media_type_not_handled: "Media type not handled",
@@ -1427,7 +1473,6 @@ export default {
   restore_medias: "Restore medias",
   show_cursor: "Show cursor",
   starts_on_page: "Starts on page",
-  stream_sharing_media_error: "Stream sharing media error",
   today: "Today",
   type: "Type",
   side_by_side: "Side by side",
@@ -1444,4 +1489,32 @@ export default {
     "You are running a newer version than the latest version available ({version}).",
   radius: "Radius",
   area: "Area",
+  no_areas_defined: "No areas defined",
+  non_contributor: "Non contributor",
+  space_title: "Space title",
+
+  video_options: "Video options",
+  autoplay: "Autoplay",
+  loop: "Loop",
+  muted: "Muted",
+  show_controls: "Show controls",
+
+  new_note_todo: "Nouvelle note/tâche",
+  list_of_notes_todo: "No note/task | {count} note/task | {count} notes/tasks",
+  archived:
+    "No note/task archived | {count} note/task archived | {count} notes/tasks archived",
+  done_on: "Done on",
+
+  create_list: "Create list",
+  create_list_instructions:
+    "Create a new list to organize your notes and tasks.",
+  no_notes_to_show: "No notes to show",
+  note_content: "Note content…",
+  linked_project: "Linked project",
+  object_fit: "Fitting",
+  chain_count: "{count} area | {count} areas",
+  no_linked_project: "No linked project",
+  no_spaces: "No spaces to show",
+
+  add_cover: "Add cover",
 };

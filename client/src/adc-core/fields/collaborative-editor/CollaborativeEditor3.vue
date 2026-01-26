@@ -37,7 +37,7 @@
         @click="show_markdown_help = !show_markdown_help"
       >
         <b-icon icon="patch-question" />
-        <span>{{ $t("markdown_help") }}</span>
+        {{ $t("markdown_help") }}
       </button>
       <MarkdownHelpModal
         v-if="show_markdown_help"
@@ -82,12 +82,12 @@
               </span> -->
             <button
               type="button"
-              class="u-button _archivesBtn"
+              class="u-button u-button_white _archivesBtn"
               v-else-if="field_to_edit === '$content' && path"
               @click="show_archives = !show_archives"
             >
               <b-icon icon="archive" />
-              <span>{{ $t("history") }}</span>
+              {{ $t("history") }}
             </button>
           </transition>
           <EditBtn
@@ -197,6 +197,10 @@ export default {
     path: String,
     sharedb_id: String,
     content: String,
+    placeholder: {
+      type: String,
+      default: "…",
+    },
     field_to_edit: {
       type: String,
       default: "$content",
@@ -218,6 +222,10 @@ export default {
       default: "normal",
     },
     no_padding: Boolean,
+    autofocus: {
+      type: Boolean,
+      default: false,
+    },
     // enabled for page_by_page, this means that the edit button is located in the top right corner in absolute,
     // and that the toolbar moves to the closest parent dedicated container after creation
   },
@@ -340,8 +348,10 @@ export default {
         },
         bounds: this.$refs.editor,
         theme: "snow",
-        formats: this.custom_formats || default_formats,
-        placeholder: "",
+        formats: (this.custom_formats || default_formats).filter(
+          (f) => f !== "emoji"
+        ),
+        placeholder: this.capitalize(this.placeholder),
         readOnly: !this.editor_is_enabled,
         scrollingContainer: this.scrollingContainer,
       });
@@ -522,6 +532,9 @@ export default {
         .forEach((el) => el.classList && el.classList.remove("is--selected"));
       return t.innerHTML;
     },
+    capitalize(text) {
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+    },
     insertAtCursor(text) {
       var index = this.editor.getSelection(true)?.index;
       if (index !== undefined) {
@@ -550,14 +563,16 @@ export default {
 
       if (this.is_collaborative) await this.startCollaborative();
       this.editor.enable();
-      this.editor.focus();
 
       // if (this.editor.getLength() <= 1) {
       //   const fontLastUsed = localStorage.getItem("fontLastUsed");
       //   this.editor.format("font", fontLastUsed);
       // }
 
-      this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
+      if (this.autofocus) {
+        this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
+        this.editor.focus();
+      }
 
       this.$emit(`contentIsEdited`, {
         $toolbar: this.toolbar_el,
@@ -813,11 +828,21 @@ export default {
         max-width: 30ch;
       }
 
-      blockquote {
+      blockquote,
+      .ql-code-block-container {
         padding: calc(var(--spacing) / 2) calc(var(--spacing) * 1);
         margin: calc(var(--spacing) * 1) 0;
         border: none;
         border-left: 2px solid var(--c-gris);
+      }
+
+      .ql-code-block-container {
+        border-color: transparent;
+        font-family: "Fira Code", monospace;
+
+        ::selection {
+          background-color: var(--c-gris_fonce);
+        }
       }
 
       pre.ql-syntax {
@@ -850,6 +875,11 @@ export default {
   ::v-deep {
     .ql-editor {
       padding: calc(var(--spacing) * 0.25) calc(var(--spacing) * 0.5);
+      min-height: 10rem;
+
+      &.ql-editor.ql-blank::before {
+        left: calc(var(--spacing) / 2);
+      }
     }
   }
 }
@@ -862,6 +892,9 @@ export default {
     }
     .ql-formats {
       display: none;
+    }
+    .ql-editor.ql-blank::before {
+      left: 0;
     }
   }
 }
@@ -932,10 +965,35 @@ export default {
   &::after {
     display: none;
   }
-  button,
+  button:not(.u-button),
   svg {
     display: inherit;
     color: currentColor;
+  }
+
+  .u-button {
+    color: currentColor;
+
+    &:hover,
+    &:focus-visible,
+    &.is--active {
+      &:not([disabled]) {
+        color: black;
+      }
+    }
+  }
+
+  .u-button_orange {
+    color: white;
+    background-color: var(--c-orange);
+
+    &:hover,
+    &:focus-visible,
+    &.is--active {
+      &:not([disabled]) {
+        background-color: var(--c-orange_fonce);
+      }
+    }
   }
 
   button,
@@ -951,7 +1009,8 @@ export default {
   ._savingStatus,
   ._savedStatus,
   ._archivesBtn {
-    min-width: 9.5rem;
+    // min-width: 8.5rem;
+    background-color: inherit;
   }
   ._savedStatus {
     background-color: var(--c-vert);
@@ -1225,16 +1284,20 @@ select.ql-ui {
     border: 2px solid var(--toolbar-bg);
     border-radius: var(--input-border-radius);
     overflow: hidden;
-    background: #fff;
+    // background: #fff;
     display: flex;
     flex-flow: row wrap;
     justify-content: space-between;
     align-items: center;
 
-    ._editBtn {
-      background-color: var(--c-bleuvert) !important;
-      border-radius: 0 !important;
-    }
+    // ._editBtn {
+    //   background-color: var(--c-bleuvert) !important;
+    //   border-radius: 0 !important;
+    // }
+  }
+
+  ._editBtn {
+    background-color: var(--c-bleuvert);
   }
 
   ._markdownHelpBtn {

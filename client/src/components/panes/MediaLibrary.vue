@@ -21,20 +21,22 @@
             class="u-button u-button_bleumarine"
             @click="show_url_picker = true"
           >
-            <b-icon icon="globe" />
-            {{ $t("importer depuis un site") }}
+            <b-icon icon="globe" />{{ $t("from_website") }}
           </button>
           <UrlPicker
             v-if="show_url_picker"
             :path="project.$path"
-            @importedURL="mediasJustImported"
+            @importedURL="importedURL"
             @close="show_url_picker = false"
           />
         </div>
-        <div class="_importCreateTextButtons--createText">
+        <!-- only show inside collect pane -->
+        <div
+          v-if="!show_only_media_of_types"
+          class="_importCreateTextButtons--createText"
+        >
           <button class="u-button u-button_bleuvert" @click="createText">
-            <b-icon icon="fonts" />
-            {{ $t("add_text") }}
+            <b-icon icon="fonts" />{{ $t("add_text") }}
           </button>
         </div>
       </div>
@@ -49,7 +51,7 @@
               <template v-else>
                 <button
                   type="button"
-                  class="u-button u-button_transparent is--active _mediaCount--filtered"
+                  class="u-button u-button_orange is--active _mediaCount--filtered"
                   @click="resetFilters"
                 >
                   {{ filtered_medias.length }}
@@ -62,7 +64,7 @@
 
             <button
               type="button"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               :class="{ 'is--active': filters_opened }"
               @click="toggleFilters"
             >
@@ -72,7 +74,7 @@
 
             <button
               type="button"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               v-if="!batch_mode && select_mode !== 'single'"
               @click="batch_mode = !batch_mode"
             >
@@ -82,7 +84,7 @@
             <button
               type="button"
               v-if="batch_mode"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               :class="{ 'is--active': batch_mode }"
               @click="cancelSelect"
             >
@@ -91,9 +93,9 @@
             </button>
             <button
               type="button"
-              class="u-button u-button_transparent"
+              class="u-button u-button_orange"
               v-if="batch_mode"
-              :disabled="filtered_medias.length === 0"
+              :disabled="filtered_medias.length === 0 || all_medias_selected"
               @click="selectAllVisibleMedias"
             >
               <b-icon icon="plus-square" />
@@ -112,44 +114,19 @@
 
             <div class="_tileMode">
               <button
-                class="u-button u-button_transparent"
+                v-for="mode in ['table', 'tiny', 'medium', 'map']"
+                :key="mode"
+                class="u-button u-button_orange u-button_icon"
                 type="button"
                 :class="{
-                  'is--active': tile_mode === 'table',
+                  'is--active': tile_mode === mode,
                 }"
-                @click="tile_mode = 'table'"
+                @click="tile_mode = mode"
               >
-                <b-icon icon="list-ol" />
-              </button>
-              <button
-                class="u-button u-button_transparent"
-                type="button"
-                :class="{
-                  'is--active': tile_mode === 'tiny',
-                }"
-                @click="tile_mode = 'tiny'"
-              >
-                <b-icon icon="grid-3x2-gap-fill" />
-              </button>
-              <button
-                class="u-button u-button_transparent"
-                type="button"
-                :class="{
-                  'is--active': tile_mode === 'medium',
-                }"
-                @click="tile_mode = 'medium'"
-              >
-                <b-icon icon="grid-fill" />
-              </button>
-              <button
-                class="u-button u-button_transparent"
-                type="button"
-                :class="{
-                  'is--active': tile_mode === 'map',
-                }"
-                @click="tile_mode = 'map'"
-              >
-                <b-icon icon="map-fill" />
+                <b-icon v-if="mode === 'table'" icon="list-ol" />
+                <b-icon v-if="mode === 'tiny'" icon="grid-3x2-gap-fill" />
+                <b-icon v-if="mode === 'medium'" icon="grid-fill" />
+                <b-icon v-if="mode === 'map'" icon="map-fill" />
               </button>
             </div>
           </div>
@@ -284,98 +261,100 @@
         {{ $t("no_media_in_project") }}
       </div>
 
-      <transition name="pagechange" mode="out-in">
-        <MediaMap
-          v-if="tile_mode === 'map'"
-          key="mediaMap"
-          :medias="filtered_medias"
-          @toggleMediaFocus="toggleMediaFocus"
-        />
-        <div v-else :key="group_mode" class="_gridSection">
-          <div
-            class="_dayFileSection"
-            v-for="{ label, files } in grouped_medias"
-            :key="label"
-          >
+      <template v-else>
+        <transition name="pagechange" mode="out-in">
+          <MediaMap
+            v-if="tile_mode === 'map'"
+            key="mediaMap"
+            :medias="filtered_medias"
+            @toggleMediaFocus="toggleMediaFocus"
+          />
+          <div v-else :key="group_mode" class="_gridSection">
             <div
-              class="_mediaLibrary--lib--label"
-              :class="{
-                'is--clickable': select_mode !== 'single' && batch_mode,
-              }"
+              class="_dayFileSection"
+              v-for="{ label, files } in grouped_medias"
+              :key="label"
             >
-              <input
-                v-if="batch_mode"
-                type="checkbox"
-                class="_groupSelectCheckbox"
-                :id="'select_btn_' + label"
-                :checked="groupAllSelected(files)"
-                @click="handleGroupLabelClick(files)"
-              />
-              <label :for="'select_btn_' + label">{{ label }}</label>
-              <!-- <div class="u-nut" data-isfilled>
+              <div
+                class="_mediaLibrary--lib--label"
+                :class="{
+                  'is--clickable': select_mode !== 'single' && batch_mode,
+                }"
+              >
+                <input
+                  v-if="batch_mode"
+                  type="checkbox"
+                  class="_groupSelectCheckbox"
+                  :id="'select_btn_' + label"
+                  :checked="groupAllSelected(files)"
+                  @click="handleGroupLabelClick(files)"
+                />
+                <label :for="'select_btn_' + label">{{ label }}</label>
+                <!-- <div class="u-nut" data-isfilled>
                 {{ files.length }}
               </div> -->
+              </div>
+              <transition-group
+                tag="div"
+                class="_mediaLibrary--lib--grid"
+                :data-tilemode="tile_mode"
+                name="StoryModules"
+                ref="mediaTiles"
+                appear
+              >
+                <MediaTile
+                  v-for="file of files"
+                  :key="file.$path"
+                  :project_path="project.$path"
+                  :index="file._index"
+                  :file="file"
+                  :was_focused="media_just_focused === getFilename(file.$path)"
+                  :was_imported="
+                    recently_imported_meta_filenames.includes(
+                      getFilename(file.$path)
+                    )
+                  "
+                  :is_selectable="mediaTileIsSelectable(file.$path)"
+                  :is_selected="selected_medias_paths.includes(file.$path)"
+                  :data-filepath="file.$path"
+                  :tile_mode="tile_mode"
+                  :is_already_selected="mediaTileAlreadySelected(file.$path)"
+                  @toggleMediaFocus="toggleMediaFocus(file.$path)"
+                  @setSelected="(present) => setSelected(present, file.$path)"
+                />
+              </transition-group>
             </div>
-            <transition-group
-              tag="div"
-              class="_mediaLibrary--lib--grid"
-              :data-tilemode="tile_mode"
-              name="StoryModules"
-              ref="mediaTiles"
-              appear
-            >
-              <MediaTile
-                v-for="file of files"
-                :key="file.$path"
-                :project_path="project.$path"
-                :index="file._index"
-                :file="file"
-                :was_focused="media_just_focused === getFilename(file.$path)"
-                :was_imported="
-                  recently_imported_meta_filenames.includes(
-                    getFilename(file.$path)
-                  )
-                "
-                :is_selectable="mediaTileIsSelectable(file.$path)"
-                :is_selected="selected_medias_paths.includes(file.$path)"
-                :data-filepath="file.$path"
-                :tile_mode="tile_mode"
-                :is_already_selected="mediaTileAlreadySelected(file.$path)"
-                @toggleMediaFocus="toggleMediaFocus(file.$path)"
-                @setSelected="(present) => setSelected(present, file.$path)"
-              />
-            </transition-group>
-          </div>
 
-          <div class="_binButton" v-if="can_edit_project">
-            <button
-              type="button"
-              class="u-buttonLink"
-              @click="show_bin_modal = true"
+            <div class="_binButton" v-if="can_edit_project">
+              <button
+                type="button"
+                class="u-buttonLink"
+                @click="show_bin_modal = true"
+              >
+                <b-icon icon="recycle" />
+                {{ $t("bin") }}
+              </button>
+            </div>
+            <BinFolder
+              v-if="show_bin_modal"
+              :modal_title="$t('restore_medias')"
+              :path="project.$path"
+              @close="show_bin_modal = false"
             >
-              <b-icon icon="recycle" />
-              {{ $t("bin") }}
-            </button>
+              <template v-slot="slotProps">
+                <MediaTile
+                  :file="slotProps.project"
+                  :index="0"
+                  :project_path="project.$path"
+                  :tile_mode="tile_mode"
+                  :is_selectable="false"
+                  :is_selected="false"
+                />
+              </template>
+            </BinFolder>
           </div>
-          <BinFolder
-            v-if="show_bin_modal"
-            :modal_title="$t('restore_medias')"
-            :path="project.$path"
-            @close="show_bin_modal = false"
-          >
-            <template v-slot="slotProps">
-              <MediaTile
-                :file="slotProps.project"
-                :index="0"
-                :project_path="project.$path"
-                :tile_mode="tile_mode"
-                :is_selectable="false"
-                :is_selected="false"
-              />
-            </template>
-          </BinFolder>
-        </div>
-      </transition>
+        </transition>
+      </template>
 
       <transition name="slideup">
         <div v-if="selected_medias_paths.length > 0" class="_selectBtn">
@@ -738,6 +717,13 @@ export default {
         this.medias.find((m) => m.$path === p)
       );
     },
+    all_medias_selected() {
+      return (
+        this.filtered_medias.some(
+          (m) => !this.selected_medias_paths.includes(m.$path)
+        ) === false
+      );
+    },
   },
   methods: {
     scrollToMediaTile(path) {
@@ -877,9 +863,10 @@ export default {
       const { meta_filename } = await this.$api.uploadText({
         path: this.project.$path,
         filename,
-        content: "…",
+        content: "",
         additional_meta: {
           $origin: "collect",
+          $authors: [this.connected_as.$path],
         },
       });
       const path = this.project.$path + "/" + meta_filename;
@@ -888,6 +875,11 @@ export default {
       setTimeout(() => {
         this.$eventHub.$emit("media.enableEditor." + path);
       }, 500);
+    },
+    importedURL(meta) {
+      const meta_filename = this.getFilename(meta.$path);
+      this.mediasJustImported([meta_filename]);
+      this.show_url_picker = false;
     },
     mediasJustImported(list_of_added_metas) {
       if (this.select_mode === "multiple") {
@@ -1061,8 +1053,8 @@ export default {
 }
 
 ._topSection {
-  border-bottom: 2px solid var(--c-orange_clair);
-  padding: calc(var(--spacing) / 8) 0;
+  border-bottom: 2px solid var(--c-orange_fonce);
+  padding: calc(var(--spacing) / 8) 0 0;
 
   > ._row {
     display: flex;
@@ -1075,8 +1067,10 @@ export default {
     z-index: 1;
 
     &._filters {
-      justify-content: center;
-      border-top: 2px solid var(--c-orange_clair);
+      // justify-content: center;
+      padding: calc(var(--spacing) / 2);
+      margin-bottom: -2px;
+      background: var(--c-orange_fonce);
     }
   }
 }
@@ -1203,12 +1197,16 @@ export default {
   flex-flow: row nowrap;
   align-items: stretch;
   justify-content: stretch;
-  gap: calc(var(--spacing) / 2);
+  gap: calc(var(--spacing) / 4);
   padding: calc(var(--spacing) / 2);
   padding-bottom: 0;
 
   > * {
     // flex: 1 1 0;
+  }
+
+  @media (max-width: 480px) {
+    flex-flow: column nowrap;
   }
 }
 
@@ -1230,7 +1228,7 @@ export default {
 
   border: 3px dotted var(--c-bleumarine);
   border-radius: 10px;
-  padding: calc(var(--spacing) / 2);
+  padding: calc(var(--spacing) / 4);
 
   &._importCreateTextButtons--createText {
     border-color: var(--c-bleuvert);

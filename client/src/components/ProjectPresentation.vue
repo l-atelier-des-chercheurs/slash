@@ -2,7 +2,7 @@
   <div
     class="_projectInfos"
     :class="{
-      'is--list': ['list', 'tiny'].includes(context),
+      'is--list': ['list', 'tiny', 'medium'].includes(context),
       'is--own': is_own_project,
       'u-card2': context !== 'full',
       'is--mobileView': $root.is_mobile_view,
@@ -27,11 +27,18 @@
               project.$status === 'finished' || project.$status === 'private'
             "
             class="_icon"
+            :class="{
+              'is--list': ['list', 'tiny', 'medium'].includes(context),
+            }"
             :key="project.$status"
             :show_label="false"
             :status="project.$status"
             :can_edit="false"
-            :mode="context === 'list' ? 'active' : 'inactive'"
+            :mode="
+              ['list', 'tiny', 'medium'].includes(context)
+                ? 'active'
+                : 'inactive'
+            "
             @click="
               $emit('toggleFilter', {
                 filter_type: '$status',
@@ -48,7 +55,6 @@
           +&thinsp;{{ original_space_name }}
         </div>
       </div>
-
       <div
         class="_projectInfos--infos"
         :class="{
@@ -123,7 +129,13 @@
           :path="project.$path"
           :required="true"
           :maxlength="40"
-          :tag="context === 'full' ? 'h1' : context === 'list' ? 'h3' : 'h5'"
+          :tag="
+            context === 'full'
+              ? 'h1'
+              : ['list', 'medium'].includes(context)
+              ? 'h3'
+              : 'h5'
+          "
           :can_edit="can_edit"
           :instructions="
             can_edit ? $t('project_title_instructions') : undefined
@@ -132,7 +144,7 @@
 
         <TitleField
           v-if="
-            (context === 'list' && project.description) ||
+            (['list', 'medium'].includes(context) && project.description) ||
             (context === 'full' && (project.description || can_edit))
           "
           :field_name="'description'"
@@ -169,7 +181,7 @@
 
         <div
           class="_allTags"
-          v-if="context !== 'tiny' && context !== 'full' && all_tags.length > 0"
+          v-if="!['tiny', 'full'].includes(context) && all_tags.length > 0"
         >
           <template v-for="tags in all_tags">
             <SingleTag
@@ -186,11 +198,17 @@
         </div>
 
         <div
-          v-if="is_compacted"
           class="_compactExpandButton"
+          v-if="['medium'].includes(context)"
+          :class="{ 'is--active': !short_project_view }"
           @click="toggleCompacted"
         >
-          <button type="button" class="u-button u-button_icon" tabindex="-1">
+          <button
+            type="button"
+            class="u-button u-button_icon u-button_white"
+            :class="{ 'is--active': !short_project_view }"
+            tabindex="-1"
+          >
             <b-icon v-if="short_project_view" icon="arrow-down-short" />
             <b-icon v-else icon="arrow-up-short" />
           </button>
@@ -221,7 +239,7 @@
 
     <router-link
       class="js--showCursor _projectInfos--open"
-      v-if="['list', 'tiny'].includes(context)"
+      v-if="['tiny', 'medium'].includes(context)"
       :to="{ path: createURLFromPath(project.$path) }"
       :title="$t('open') + ' ' + project.title"
     />
@@ -288,7 +306,7 @@ export default {
       return space.title;
     },
     is_compacted() {
-      return this.context === "list" && this.short_project_view;
+      return ["medium"].includes(this.context) && this.short_project_view;
     },
     is_own_project() {
       return this.isOwnItem({ folder: this.project });
@@ -348,6 +366,15 @@ export default {
   &.is--linkToProject {
   }
 
+  &.is--medium {
+    // background: white;
+    // border-radius: 4px;
+
+    ._title {
+      // font-size: var(--sl-font-size-small);
+    }
+  }
+
   &.is--list {
     background-color: #fff;
     border-radius: 4px;
@@ -355,7 +382,7 @@ export default {
     transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
 
     &.is--own {
-      border-bottom-color: var(--c-bleumarine);
+      // border-bottom-color: var(--c-bleumarine);
     }
 
     ._projectInfos--topContent {
@@ -367,7 +394,7 @@ export default {
 
     ._title {
       h3 {
-        font-size: var(--sl-font-size-medium);
+        font-size: var(--sl-font-size-normal);
       }
     }
   }
@@ -385,6 +412,11 @@ export default {
   &[data-context="tiny"] {
     ._projectInfos--infos {
       padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
+    }
+  }
+  &[data-context="medium"] {
+    ._projectInfos--infos {
+      padding: calc(var(--spacing) / 2) calc(var(--spacing) / 2);
     }
   }
 
@@ -540,6 +572,10 @@ export default {
     top: 0;
     right: 0;
     margin: calc(var(--spacing) / 1);
+
+    &.is--list {
+      margin: calc(var(--spacing) / 2);
+    }
     // font-size: 125%;
   }
 
@@ -671,9 +707,12 @@ export default {
 
   padding: calc(var(--spacing) / 4);
 
-  background: linear-gradient(transparent, white);
   text-align: right;
   pointer-events: none;
+
+  &:not(.is--active) {
+    background: linear-gradient(to bottom, transparent, white);
+  }
 
   > button {
     pointer-events: auto;

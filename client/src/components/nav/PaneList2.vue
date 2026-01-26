@@ -6,7 +6,7 @@
       'has--noPanes': project_panes.length === 0,
     }"
   >
-    <span label="Panneaux" class="_paneList2">
+    <div label="Panneaux" class="_paneList2">
       <button
         type="button"
         class="_projectTitle"
@@ -77,7 +77,7 @@
                   class="_inlineBtn _removePaneBtn"
                 >
                   <b-icon
-                    icon="x-circle-fill"
+                    icon="x"
                     :label="$t('close')"
                     @click.stop="removePane(pane.type)"
                   />
@@ -87,7 +87,7 @@
                   class="_inlineBtn _addPaneBtn"
                 >
                   <b-icon
-                    icon="plus-circle-fill"
+                    icon="plus-circle"
                     :label="$t('add')"
                     @click.stop="addPane(pane)"
                   />
@@ -97,8 +97,20 @@
           </SlickItem>
         </SlickList>
       </span>
-      <span v-if="!$root.is_mobile_view" />
-    </span>
+      <div>
+        <button
+          type="button"
+          class="u-button u-button_icon"
+          :title="$t('options')"
+        >
+          <b-icon
+            icon="three-dots"
+            style="flex: 0 0 auto"
+            :aria-label="$t('options')"
+          />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -121,20 +133,6 @@ export default {
       is_stickied_to_top: false,
 
       project_panes: [],
-      possible_project_panes: [
-        {
-          type: "capture",
-        },
-        {
-          type: "collect",
-        },
-        {
-          type: "make",
-        },
-        {
-          type: "publish",
-        },
-      ],
 
       animate_pane: false,
       animate_pane_timeout: null,
@@ -185,6 +183,36 @@ export default {
     },
   },
   computed: {
+    possible_project_panes() {
+      const all_panes = [
+        {
+          type: "capture",
+        },
+        {
+          type: "collect",
+        },
+        {
+          type: "notes_todo",
+        },
+        {
+          type: "chats",
+        },
+        {
+          type: "make",
+        },
+        {
+          type: "publish",
+        },
+      ];
+
+      // Filter out chats pane if enable_chats is not enabled
+      return all_panes.filter((pane) => {
+        if (pane.type === "chats") {
+          return this.$root.app_infos?.instance_meta?.enable_chats === true;
+        }
+        return true;
+      });
+    },
     cover_thumb() {
       return this.makeRelativeURLFromThumbs({
         $thumbs: this.project.$cover,
@@ -251,6 +279,8 @@ export default {
       else if (type === "collect") return this.dodoc_icon_collect;
       else if (type === "make") return this.dodoc_icon_make;
       else if (type === "publish") return this.dodoc_icon_publish;
+      else if (type === "notes_todo") return this.dodoc_icon_todo;
+      else if (type === "chats") return this.dodoc_icon_chats;
       return false;
     },
     animatePane(pane) {
@@ -296,7 +326,7 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
-  overflow: hidden;
+  overflow: auto;
 
   min-height: 44px;
 
@@ -374,7 +404,7 @@ export default {
   &.is--enabled {
     &:hover,
     &:focus {
-      color: var(--c-noir);
+      // color: var(--c-noir);
     }
   }
 }

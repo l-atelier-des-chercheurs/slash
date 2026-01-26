@@ -202,6 +202,9 @@
               },
               "publications_pinned": {
                 "type": "array"
+              },
+              "todos_pinned": {
+                "type": "array"
               }
             },
             "$files": {
@@ -221,6 +224,36 @@
               }
             },
             "$folders": {
+              "notes_todo": {
+                "fields": {
+                  "title": {
+                    "type": "string",
+                    "unique": true
+                  },
+                  "notes_list": {
+                    "type": "array"
+                  }
+                },
+                "$files": {
+                  "thumbs": {
+                    "resolutions": [50, 220, 440, 1600]
+                  },
+                  "fields": {
+                    "title": {
+                      "type": "string",
+                      "unique": true
+                    },
+                    "state": {
+                      "type": "string",
+                      "options": ["todo", "done", "canceled"],
+                      "default": "todo"
+                    },
+                    "done_date": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
               "stopmotions": {
                 "fields": {
                   "images_list": {
@@ -467,6 +500,12 @@
                     "column_count": {
                       "type": "number"
                     },
+                    "row_count": {
+                      "type": "number"
+                    },
+                    "grid_areas": {
+                      "type": "array"
+                    },
                     "main_text_meta": {
                       "type": "string"
                     },
@@ -537,6 +576,9 @@
                       "type": "number"
                     },
                     "drop_shadow": {
+                      "type": "number"
+                    },
+                    "blur": {
                       "type": "number"
                     },
                     "locked": {
@@ -622,6 +664,9 @@
           },
           "last_message_count": {
             "type": "number"
+          },
+          "linked_project_path": {
+            "type": "string"
           }
         },
         "$files": {

@@ -31,6 +31,7 @@
           class="u-button u-button_small u-button_red"
           @click="removeForGood"
         >
+          <b-icon icon="trash" />
           {{ $t("remove_for_good") }}
         </button>
         <button
@@ -38,6 +39,7 @@
           class="u-button u-button u-button_bleuvert"
           @click="restoreItem"
         >
+          <b-icon icon="arrow-counterclockwise" />
           {{ $t("restore") }}
         </button>
       </div>

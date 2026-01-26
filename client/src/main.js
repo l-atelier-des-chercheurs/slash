@@ -178,6 +178,8 @@ import SingleTag from "@/adc-core/ui/SingleTag.vue";
 Vue.component("SingleTag", SingleTag);
 import ReorderedList from "@/adc-core/ui/ReorderedList.vue";
 Vue.component("ReorderedList", ReorderedList);
+import NavOverlay from "@/adc-core/ui/NavOverlay.vue";
+Vue.component("NavOverlay", NavOverlay);
 import CustomResolutionInput from "@/adc-core/fields/CustomResolutionInput.vue";
 Vue.component("CustomResolutionInput", CustomResolutionInput);
 
@@ -237,10 +239,10 @@ import MediaContent from "@/adc-core/fields/MediaContent.vue";
 Vue.component("MediaContent", MediaContent);
 import FullscreenView from "@/adc-core/fields/FullscreenView.vue";
 Vue.component("FullscreenView", FullscreenView);
-import CollaborativeEditor2 from "@/adc-core/fields/collaborative-editor/CollaborativeEditor2.vue";
-Vue.component("CollaborativeEditor2", CollaborativeEditor2);
 import CollaborativeEditor3 from "@/adc-core/fields/collaborative-editor/CollaborativeEditor3.vue";
 Vue.component("CollaborativeEditor3", CollaborativeEditor3);
+import TextEditor from "@/adc-core/fields/collaborative-editor/TextEditor.vue";
+Vue.component("TextEditor", TextEditor);
 import TableEditor from "@/adc-core/fields/TableEditor.vue";
 Vue.component("TableEditor", TableEditor);
 import AuthorTag from "@/adc-core/fields/AuthorTag.vue";
@@ -312,7 +314,6 @@ Array.prototype.move = function (from, to) {
   this.splice(to, 0, this.splice(from, 1)[0]);
 };
 
-import "axios-debug-log/enable";
 import axios from "axios";
 const instance = axios.create({
   baseURL: window.location.origin + "/_api2",

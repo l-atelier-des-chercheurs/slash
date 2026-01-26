@@ -1,13 +1,47 @@
-p:empty {
-  display: none;
-}
-
 .media {
   display: block;
   position: relative;
   width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: 0;
+
+  /* Prevent page breaks inside figure to keep media and caption together */
+  break-inside: avoid;
+  page-break-inside: avoid;
+
+  /* When width is specified via CSS variable, use it */
+  &[style*="--media-width"] {
+    width: var(--media-width, 100%);
+    max-width: var(--media-width, 100%);
+    flex: 0 0 var(--media-width, auto);
+  }
+
+  /* When height is specified via CSS variable, use it */
+  &[style*="--media-height"] {
+    height: var(--media-height, auto);
+  }
+
+  /* Ensure images inside respect the container width when explicitly set */
+  &[style*="--media-width"] img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* When image has explicit width via CSS variable, don't constrain it */
+  img[style*="--media-width"] {
+    width: var(--media-width, 100%);
+    max-width: var(--media-width, none);
+  }
+
+  img[style*="--media-height"] {
+    height: var(--media-height, auto);
+  }
+
+  figcaption {
+    break-before: avoid;
+  }
 
   &._isqrcode {
     display: flex;
@@ -42,34 +76,17 @@ p:empty {
     }
   }
 
-  &._isFullPage {
-    break-before: page;
-    break-after: page;
-    margin: 0;
-    /* complex calculation because otherwise a p is pushed onto the next page */
-    width: var(--pagedjs-width);
-    height: calc(
-      var(--pagedjs-height) - var(--pagedjs-margin-top) -
-        var(--pagedjs-margin-bottom) - 5mm
-    );
-
-    z-index: 1000;
-
+  &.full-page {
     img {
-      position: absolute;
-      top: calc(var(--pagedjs-margin-top) * -1);
-      left: calc(var(--pagedjs-margin-left) * -1);
-      width: var(--pagedjs-width);
-      height: var(--pagedjs-height);
-      object-fit: contain;
-
-      background-color: white;
+      object-fit: scale-down;
+      object-position: center;
+      max-width: none;
     }
-    &._isFullPageCover img {
+    &.full-page-cover img {
       object-fit: cover;
     }
 
-    .mediaCaption {
+    figcaption {
       position: absolute;
       bottom: 0;
       left: calc(var(--pagedjs-margin-left) * -1);
@@ -92,14 +109,16 @@ p:empty {
     margin-bottom: 1rem;
     width: 50%;
   }
-  &.float-left {  
+  &.float-left {
     float: left;
     margin-right: 1rem;
     margin-bottom: 1rem;
     width: 50%;
   }
 
-  video, audio, iframe {
+  video,
+  audio,
+  iframe {
     width: 100%;
     min-height: 54px;
   }
@@ -150,7 +169,6 @@ hr {
   &[data-number-of-medias="2"] {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
- 
   }
   &[data-number-of-medias="3"] {
     grid-template-columns: 1fr 1fr;
@@ -165,10 +183,10 @@ hr {
     grid-template-rows: 1fr 1fr;
   }
   &[data-number-of-medias="5"] {
-    grid-template-columns: 1fr 1fr ;
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
   }
-  
+
   /* break-after: page; */
   .media {
     position: relative;
@@ -184,26 +202,71 @@ hr {
   }
 }
 
-.book .gallery {
-  height: var(--pagedjs-height);
+.book .grid,
+.book .gallery,
+.book .full-page {
+  height: calc(var(--pagedjs-height));
+  break-inside: avoid;
 }
-.book .gallery-content {
+
+.book .gallery-content,
+.book .grid-content,
+.book .full-page img {
   position: absolute;
   top: calc(var(--pagedjs-margin-top) * -1);
   left: calc(var(--pagedjs-margin-left) * -1);
-  width: var(--pagedjs-width);
-  height: var(--pagedjs-height);
+  width: calc(var(--pagedjs-width));
+  height: calc(
+    var(--pagedjs-height) - 1px
+  ); /* -1px permet de régler le petit bug de pagedjs */
+  overflow: hidden;
 
-  &:after {
-    content: "";
-    display: block;
-    clear: both;
-    break-after: page;
-  }
+  page: grid;
 }
 
-.web .gallery-content {
+.book .gallery-content,
+.book .grid-content {
+  padding: calc(var(--spacing) * 1) !important;
+}
+.book .grid-cell {
+  overflow: hidden;
+}
+
+.web .gallery-content,
+.web .grid-content {
   height: 80vh;
+}
+.web .grid-cell {
+  overflow: auto;
+}
+
+/* GRID LAYOUT */
+.edition .grid,
+.edition .gallery {
+  position: relative;
+}
+
+.edition .grid-content {
+  display: grid;
+  grid-template-columns: repeat(var(--col-count, 12), 1fr);
+  grid-template-rows: repeat(var(--row-count, 1), 1fr);
+  gap: var(--spacing);
+}
+
+.edition .grid-cell {
+  position: relative;
+  /* Grid positioning is set via inline styles */
+  /* e.g. grid-column-start, grid-column-end, grid-row-start, grid-row-end */
+  min-height: 0;
+  min-width: 0;
+}
+
+.edition .grid-cell > *:first-child {
+  margin-top: 0;
+}
+
+.edition .grid-cell > *:last-child {
+  margin-bottom: 0;
 }
 
 .media-container {
@@ -218,6 +281,12 @@ hr {
 
 /* SET CHAPTER START OPTION */
 
+.chapter[data-chapter-type="grid"],
+.chapter[data-chapter-type="gallery"] {
+  break-before: page;
+  break-after: page;
+}
+
 .chapter[data-starts-on-page="in_flow"]:not(:first-child) {
   margin-top: 3rem;
 }
@@ -230,17 +299,11 @@ hr {
 .chapter[data-starts-on-page="right"] {
   break-before: right;
 }
-.chapter[data-column-count="2"] .chapterContent {
-  column-count: 2;
+.chapter[data-chapter-type="text"] .chapterContent {
+  column-count: var(--column-count, 1);
   column-fill: auto;
   column-gap: 1rem;
 }
-.chapter[data-column-count="3"] .chapterContent {
-  column-count: 3;
-  column-fill: auto;
-  column-gap: 1rem;
-}
-
 /* SET COVER OPTIONS */
 .book {
   .cover {

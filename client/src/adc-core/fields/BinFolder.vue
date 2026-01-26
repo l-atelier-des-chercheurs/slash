@@ -9,6 +9,10 @@
           <p class="u-instructions">{{ $t("bin_is_empty") }}</p>
         </div>
         <div v-else key="content">
+          <div class="u-notice u-spacingBottom">
+            <b-icon icon="info-circle" />
+            {{ $t("bin_removal_notice") }}
+          </div>
           <div class="_infos">
             <div class="u-metaField">
               <DLabel :str="$t('items_in_bin')" />

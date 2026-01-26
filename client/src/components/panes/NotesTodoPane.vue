@@ -1,0 +1,149 @@
+<template>
+  <div class="_notesTodoPane">
+    <div class="_topTabs" v-if="notes_folders.length > 0">
+      <button
+        type="button"
+        v-for="folder in notes_folders"
+        :key="folder.$path"
+        class="u-button u-button_small"
+        :class="{
+          'is--active': folder.$path === opened_notes_path,
+        }"
+        @click="toggleList(folder.$path)"
+      >
+        <template v-if="folder.$path === opened_notes_path"> • </template>
+        {{ folder.title }}
+      </button>
+      <button
+        type="button"
+        class="u-button u-button_small u-button_icon u-button_bleumarine"
+        @click="show_create_notes_modal = true"
+      >
+        <b-icon icon="plus-circle-fill" />
+      </button>
+    </div>
+
+    <div class="_content">
+      <transition name="fade" mode="out-in">
+        <OpenedList
+          v-if="!!opened_notes_path"
+          :key="opened_notes_path"
+          :path="opened_notes_path"
+        />
+      </transition>
+    </div>
+
+    <CreateNotesList
+      v-if="show_create_notes_modal"
+      :path="path"
+      @close="show_create_notes_modal = false"
+      @openNew="handleFolderCreated"
+    >
+      <template #instructions>
+        <div class="u-instructions">
+          {{ $t("create_list_instructions") }}
+        </div>
+      </template>
+    </CreateNotesList>
+  </div>
+</template>
+<script>
+import OpenedList from "@/components/notes/OpenedList.vue";
+import CreateNotesList from "@/components/notes/CreateNotesList.vue";
+
+export default {
+  props: {
+    project: Object,
+  },
+  components: {
+    OpenedList,
+    CreateNotesList,
+  },
+  data() {
+    return {
+      notes_folders: [],
+      path: `${this.project.$path}/notes_todo`,
+      opened_notes_path: null,
+      show_create_notes_modal: false,
+    };
+  },
+  async mounted() {
+    this.notes_folders = await this.getNotes();
+    this.$api.join({ room: this.path });
+
+    if (this.notes_folders.length === 0) {
+      await this.createDefaultNotesFolder();
+    } else {
+      this.opened_notes_path = this.notes_folders[0]?.$path;
+    }
+  },
+  beforeDestroy() {
+    this.$api.leave({ room: this.path });
+  },
+  computed: {},
+  methods: {
+    async getNotes() {
+      const notes_folders = await this.$api.getFolders({
+        path: this.path,
+      });
+      return notes_folders;
+    },
+    async createDefaultNotesFolder() {
+      const slug = await this.$api.createFolder({
+        path: this.path,
+        additional_meta: {
+          title: this.$t("default_value"),
+        },
+      });
+      this.notes_folders = await this.getNotes();
+      this.opened_notes_path = `${this.path}/${slug}`;
+    },
+    async handleFolderCreated(slug) {
+      this.notes_folders = await this.getNotes();
+      this.opened_notes_path = `${this.path}/${slug}`;
+      this.show_create_notes_modal = false;
+    },
+    async removeNote(path) {
+      await this.$api.deleteItem({ path });
+      this.notes_folders = await this.getNotes();
+      if (this.opened_notes_path === path) {
+        this.opened_notes_path = false;
+      }
+    },
+    toggleList(path) {
+      // if (this.opened_notes_path === path) {
+      //   this.opened_notes_path = null;
+      //   return;
+      // } else {
+      this.opened_notes_path = path;
+      // }
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+._notesTodoPane {
+  position: relative;
+  height: 100%;
+  background-color: var(--color-notes_todo);
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+._topTabs {
+  flex: 0 0 auto;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
+  overflow-x: auto;
+  padding: calc(var(--spacing) / 2);
+  border-bottom: 2px dotted white;
+}
+
+._content {
+  flex: 1 1 0;
+  height: 100%;
+  overflow: auto;
+}
+</style>

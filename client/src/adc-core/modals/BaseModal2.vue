@@ -41,19 +41,36 @@
           </transition>
         </div>
 
-        <BaseModal2
-          v-if="show_confirm_before_closing_modal"
-          :title="$t('confirm_save_changes')"
-          @close="show_confirm_before_closing_modal = false"
-        >
-          <template slot="footer">
-            <SaveCancelButtons
-              :cancel_text="$t('close_without_saving')"
-              @save="saveContent"
-              @cancel="closeModal"
-            />
-          </template>
-        </BaseModal2>
+        <template v-if="show_confirm_before_closing_modal">
+          <BaseModal2
+            v-if="$listeners.save"
+            :title="$t('confirm_save_changes')"
+            @close="show_confirm_before_closing_modal = false"
+          >
+            <template slot="footer">
+              <SaveCancelButtons
+                :cancel_text="$t('close_without_saving')"
+                @save="saveContent"
+                @cancel="closeModal"
+              />
+            </template>
+          </BaseModal2>
+          <BaseModal2
+            v-else
+            :title="$t('confirm_cancel_changes')"
+            @close="show_confirm_before_closing_modal = false"
+          >
+            <template slot="footer">
+              <SaveCancelButtons
+                :cancel_text="$t('continue_editing')"
+                :save_text="$t('close_without_saving')"
+                :save_is_destructive="true"
+                @save="closeModal"
+                @cancel="cancelCloseModal"
+              />
+            </template>
+          </BaseModal2>
+        </template>
       </div>
     </transition>
   </portal>
@@ -141,6 +158,9 @@ export default {
       this.show_confirm_before_closing_modal = false;
       this.$emit("save");
     },
+    cancelCloseModal() {
+      this.show_confirm_before_closing_modal = false;
+    },
   },
 };
 </script>
@@ -215,7 +235,7 @@ export default {
   top: 0;
   right: 0;
   margin: var(--spacing);
-  padding: calc(var(--spacing) / 3);
+  // padding: calc(var(--spacing) / 3);
   z-index: 1;
 }
 
