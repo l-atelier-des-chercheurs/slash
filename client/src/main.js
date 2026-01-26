@@ -352,6 +352,64 @@ new Vue({
 
     current_time: "",
 
+    slash_contributors_list: [
+      {
+        category: "Artists",
+        authors: [
+          {
+            name: "Conny",
+            path: "authors/conny",
+          },
+          {
+            name: "Louis",
+            path: "authors/louis",
+          },
+          {
+            name: "Oussama",
+            path: "authors/oussama",
+          },
+          {
+            name: "Pedro",
+            path: "authors/pedro",
+          },
+          {
+            name: "Tiko",
+            path: "authors/tiko",
+          },
+        ],
+      },
+      {
+        category: "Partners",
+        authors: [
+          {
+            name: "Casa De Capitão",
+            path: "authors/casa-de-capitao",
+          },
+          {
+            name: "École de Design Nantes Atlantique",
+            path: "authors/ecole-de-design-nantes-atlantique",
+          },
+          {
+            name: "L’Art Rue",
+            path: "authors/l-art-rue",
+          },
+          {
+            name: "Mutant Radio",
+            path: "authors/mutant-radio",
+          },
+          {
+            name: "OpenSpace",
+            path: "authors/openspace",
+          },
+          {
+            name: "Trempo",
+            path: "authors/trempo",
+          },
+        ],
+      },
+    ],
+    slash_logged_in_as: localStorage.getItem("slash_logged_in_as") || null,
+
     default_new_module_width: 200,
     default_new_module_height: 200,
     default_new_module_left: 15,

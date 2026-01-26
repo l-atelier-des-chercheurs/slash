@@ -1,11 +1,26 @@
 <template>
-  <div class="_largeCanvas">
-    <div v-for="file in files" :key="file.$path">
-      <MediaContent :file="file" :resolution="320" />
+  <vue-infinite-viewer
+    class="_largeCanvas"
+    ref="viewer"
+    v-bind="viewerOptions"
+    @scroll="onScroll"
+    @dragStart="onDragStart"
+  >
+    <div class="_canvasContent" :style="canvasContentStyle">
+      <CanvasItem
+        v-for="file in files"
+        :key="file.$path"
+        :file="file"
+        :canvas-scroll-left="canvasScrollLeft"
+        :canvas-scroll-top="canvasScrollTop"
+        @position-update="handlePositionUpdate"
+      />
     </div>
-  </div>
+  </vue-infinite-viewer>
 </template>
 <script>
+import { VueInfiniteViewer } from "vue-infinite-viewer";
+import CanvasItem from "@/components/slash/CanvasItem.vue";
 export default {
   props: {
     files: {
@@ -13,22 +28,117 @@ export default {
       required: true,
     },
   },
-  components: {},
-  data() {
-    return {};
+  components: {
+    VueInfiniteViewer,
+    CanvasItem,
   },
-  created() {},
-  mounted() {},
-  beforeDestroy() {},
-  watch: {},
-  computed: {},
-  methods: {},
+  data() {
+    return {
+      canvasScrollLeft: 0,
+      canvasScrollTop: 0,
+      canvasSize: 10000,
+      nextGridX: 0,
+      nextGridY: 0,
+      viewerOptions: {},
+    };
+  },
+  computed: {
+    canvasContentStyle() {
+      return {
+        width: `${this.canvasSize}px`,
+        height: `${this.canvasSize}px`,
+      };
+    },
+  },
+  watch: {
+    files: {
+      handler() {
+        this.$nextTick(() => {
+          this.initializeItemPositions();
+        });
+      },
+      deep: true,
+    },
+  },
+  mounted() {
+    this.updateViewerOptions();
+    this.initializeItemPositions();
+    this.updateScrollPosition();
+  },
+  methods: {
+    updateViewerOptions() {
+      const padding = 200;
+      const maxRangeX = Math.max(0, this.canvasSize);
+      const maxRangeY = Math.max(0, this.canvasSize);
+
+      this.viewerOptions = {
+        useMouseDrag: true,
+        useWheelScroll: true,
+        useAutoZoom: false,
+        rangeX: [-padding, maxRangeX + padding],
+        rangeY: [-padding, maxRangeY + padding],
+        displayVerticalScroll: false,
+        displayHorizontalScroll: false,
+      };
+    },
+    updateScrollPosition() {
+      if (this.$refs.viewer) {
+        this.canvasScrollLeft = this.$refs.viewer.getScrollLeft();
+        this.canvasScrollTop = this.$refs.viewer.getScrollTop();
+      }
+    },
+    onScroll() {
+      this.updateScrollPosition();
+    },
+    onDragStart(event) {
+      // Prevent panning when clicking on canvas items
+      if (event.inputEvent.target.closest(".panzoom-exclude")) {
+        event.stop();
+      }
+    },
+    initializeItemPositions() {
+      // Initialize positions for items without x/y coordinates
+      let gridX = this.nextGridX;
+      let gridY = this.nextGridY;
+      const gridSpacing = 200;
+
+      this.files.forEach((file) => {
+        if (file.x === undefined || file.y === undefined) {
+          // Use grid layout for initial positioning
+          const x = gridX;
+          const y = gridY;
+
+          // Update file object locally (will be saved when dragged)
+          this.$set(file, "x", x);
+          this.$set(file, "y", y);
+
+          // Update grid position for next item
+          gridX += gridSpacing;
+          if (gridX > this.canvasSize - 200) {
+            gridX = 0;
+            gridY += gridSpacing;
+          }
+        }
+      });
+
+      // Update next grid position
+      this.nextGridX = gridX;
+      this.nextGridY = gridY;
+    },
+    handlePositionUpdate({ file, x, y }) {
+      // Update file position locally
+      this.$set(file, "x", x);
+      this.$set(file, "y", y);
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>
 ._largeCanvas {
   position: absolute;
   inset: 0;
+  cursor: move;
+
   // Repeating dot pattern background
   background-image: radial-gradient(
     circle,
@@ -47,5 +157,9 @@ export default {
     );
     background-size: 24px 24px;
   }
+}
+
+._canvasContent {
+  position: relative;
 }
 </style>

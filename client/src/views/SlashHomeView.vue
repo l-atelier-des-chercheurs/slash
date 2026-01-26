@@ -1,28 +1,43 @@
 <template>
   <div class="_homeView">
-    <FolderView />
+    <LoginModal
+      v-if="!$root.slash_logged_in_as || show_login_modal"
+      @close="show_login_modal = false"
+    />
+    <FolderView v-else />
   </div>
 </template>
 
 <script>
 import FolderView from "@/components/slash/FolderView.vue";
-
+import LoginModal from "@/components/slash/LoginModal.vue";
 export default {
   props: {},
   components: {
     FolderView,
+    LoginModal,
   },
   data() {
-    return {};
+    return {
+      show_login_modal: false,
+    };
   },
-  created() {},
+  created() {
+    this.$eventHub.$on("login.openModal", this.openLoginModal);
+  },
   mounted() {},
-  beforeDestroy() {},
+  beforeDestroy() {
+    this.$eventHub.$off("login.openModal", this.openLoginModal);
+  },
 
   watch: {},
 
   computed: {},
-  methods: {},
+  methods: {
+    openLoginModal() {
+      this.show_login_modal = true;
+    },
+  },
 };
 </script>
 <style lang="scss" scoped></style>

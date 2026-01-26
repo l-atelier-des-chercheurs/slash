@@ -130,9 +130,9 @@ export default {
   --c-bleumarine: hsl(227, 63%, 41%);
   --c-bleumarine_clair: hsl(227, 63%, 81%);
   --c-bleumarine_fonce: hsl(227, 63%, 21%);
-  --c-bleuvert: #52c5b9;
-  --c-bleuvert_clair: hsl(174, 50%, 81%);
-  --c-bleuvert_fonce: hsl(174, 50%, 41%);
+  --c-bleuvert: hsl(214, 54%, 54%);
+  --c-bleuvert_clair: hsl(214, 54%, 64%);
+  --c-bleuvert_fonce: hsl(214, 54%, 41%);
   --c-orange: hsl(41, 100%, 60%);
   --c-orange_clair: #ffd892;
   --c-orange_fonce: hsl(41, 100%, 45%);
@@ -185,7 +185,7 @@ export default {
   --c-barbgcolor: rgba(255, 255, 255, 0);
   --c-thumbcolor: black;
   --label-color: var(--c-gris_fonce);
-  --border-radius: 6px;
+  --border-radius: 4px;
 
   --input-font-family: inherit;
   --input-font-size: var(--sl-font-size-normal);
@@ -201,7 +201,7 @@ export default {
   --input-border-color: var(--c-gris_fonce);
   --input-border-color-focus: var(--active-color);
   --input-border-width: 3px;
-  --input-border-radius: 8px;
+  --input-border-radius: 4px;
   --input-bg-color: var(--color-white);
   --input-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.05);
   --input-readonly-bg-color: var(--component-bg-color);
