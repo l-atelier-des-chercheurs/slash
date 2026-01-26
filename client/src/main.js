@@ -322,15 +322,13 @@ const instance = axios.create({
   // },
 });
 
-instance.interceptors.request.use((request) => {
-  // if (debug_mode)
-  //   alertify.delay(4000).log(
-  //     `⤒ — ${request.method} + ${request.url}
-  //     ${request.data ? `+ ` + JSON.stringify(request.data).slice(0, 30) : ""}
-  //     `
-  //   );
-  return request;
-});
+// Conditionally load axios debug logger only when debug_mode is enabled
+if (debug_mode) {
+  import("@/utils/axios-debug-logger.js").then(({ setupAxiosDebugLogger }) => {
+    setupAxiosDebugLogger(instance);
+  });
+}
+
 Vue.prototype.$axios = instance;
 
 new Vue({
