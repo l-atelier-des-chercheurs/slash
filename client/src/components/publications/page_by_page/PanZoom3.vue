@@ -73,6 +73,14 @@ export default {
     this.initInfiniteViewer();
     this.$nextTick(() => {
       this.scrollToCorner({ animate: false });
+      // Handle wheel zoom with Cmd/Ctrl modifier after initialization
+      // Use capture phase to intercept before InfiniteViewer processes it
+      if (this.$refs.infiniteviewer) {
+        this.$refs.infiniteviewer.addEventListener("wheel", this.onWheel, {
+          passive: false,
+          capture: true, // Capture phase - runs before InfiniteViewer's handler
+        });
+      }
     });
 
     this.$eventHub.$on(`panzoom.panTo`, this.panTo);
@@ -101,6 +109,9 @@ export default {
       clearTimeout(this.debounce_content_visibility);
     }
     window.removeEventListener("resize", this.onWindowResize);
+    if (this.$refs.infiniteviewer) {
+      this.$refs.infiniteviewer.removeEventListener("wheel", this.onWheel);
+    }
     this.$eventHub.$off(`panzoom.panTo`, this.panTo);
     this.$root.set_new_module_offset_left = 0;
     this.$root.set_new_module_offset_top = 0;
@@ -678,6 +689,71 @@ export default {
         this.updateGuidesScroll();
         this.checkContentVisibility();
       });
+    },
+    onWheel(event) {
+      // Check if Command (Mac) or Ctrl (Windows/Linux) is pressed
+      const isModifierPressed = event.metaKey || event.ctrlKey;
+
+      if (!isModifierPressed) {
+        // Normal scroll behavior - let InfiniteViewer handle it
+        return;
+      }
+
+      // Prevent default scroll and stop propagation to prevent InfiniteViewer from scrolling
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation(); // Stop all other handlers on this element
+
+      if (!this.infiniteviewer) return;
+
+      // Get current zoom
+      const currentZoom = this.infiniteviewer.getZoom() || this.scale || 1;
+      const zoomRange = [0.4, 10]; // From getViewerOptions
+
+      // Calculate zoom delta based on wheel delta
+      // Negative deltaY (scrolling up) = zoom in, positive deltaY (scrolling down) = zoom out
+      // Use exponential scaling for smoother zoom feel
+      const zoomSpeed = 0.15; // Adjust this to control zoom sensitivity
+      const zoomDelta = -event.deltaY * zoomSpeed * 0.01 * currentZoom;
+
+      // Calculate new zoom
+      let newZoom = currentZoom + zoomDelta;
+
+      // Clamp zoom to range
+      newZoom = Math.max(zoomRange[0], Math.min(zoomRange[1], newZoom));
+
+      // Skip if zoom didn't change significantly
+      if (Math.abs(newZoom - currentZoom) < 0.01) {
+        return;
+      }
+
+      // Get mouse position relative to viewer for zoom center
+      const viewerRect = this.$refs.infiniteviewer.getBoundingClientRect();
+      const mouseX = event.clientX - viewerRect.left;
+      const mouseY = event.clientY - viewerRect.top;
+
+      // Set new zoom with the mouse position as center
+      this.is_zooming = true;
+      this.infiniteviewer.setZoom(newZoom, {
+        duration: 0, // Instant zoom for smooth feel
+        zoomBase: "viewport",
+        zoomOffsetX: mouseX,
+        zoomOffsetY: mouseY,
+      });
+
+      // Update guides zoom
+      this.updateGuidesZoom();
+
+      // Emit zoom change
+      if (newZoom !== this.scale) {
+        this.$emit("update:scale", newZoom);
+      }
+
+      // Reset zooming flag
+      setTimeout(() => {
+        this.is_zooming = false;
+        this.checkContentVisibility();
+      }, 100);
     },
   },
 };
