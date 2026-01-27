@@ -5,10 +5,14 @@
     :style="itemStyle"
     @mousedown="handleMouseDown"
   >
-    <span class="_canvasItem--debug"
+    <!-- <span class="_canvasItem--debug"
       >{{ file.x }} {{ file.y }} {{ optimalResolution }}</span
-    >
-    <MediaContent :file="file" :resolution="optimalResolution" />
+    > -->
+    <MediaContent
+      :file="file"
+      :context="'full'"
+      :resolution="optimalResolution"
+    />
     <div
       v-if="showResizeHandle"
       class="_resizeHandle"
@@ -331,7 +335,8 @@ export default {
 ._canvasItem {
   position: absolute;
   width: 160px;
-  height: 120px;
+  height: auto;
+  overflow: hidden;
 
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.12);
   border-radius: var(--border-radius);
@@ -364,12 +369,12 @@ export default {
 
   ._resizeHandle {
     position: absolute;
-    right: 0;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    width: 8px;
+    width: 6px;
     height: 16px;
-    background-color: red;
+    background-color: white;
     border-radius: 4px;
     cursor: ew-resize;
     z-index: 10;
@@ -377,7 +382,7 @@ export default {
     pointer-events: auto;
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.7);
+      transform: translateY(-50%) scale(1.2);
     }
   }
 }
