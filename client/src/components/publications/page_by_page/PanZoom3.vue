@@ -19,7 +19,7 @@
       @click="scrollToOrigin"
       :title="$t('show_origin') || 'Show origin'"
     >
-      {{ $t("show_origin") || "Show origin" }}
+      <b-icon icon="house" />
     </button>
   </div>
 </template>
