@@ -13,15 +13,18 @@
     <div class="_pzViewport" ref="viewport">
       <slot />
     </div>
-    <button
-      v-if="!isContentVisible"
-      class="u-button u-button_bleuvert _showOriginBtn"
-      type="button"
-      @click="scrollToOrigin"
-      :title="$t('back_to_content')"
-    >
-      <b-icon icon="house" />
-    </button>
+
+    <transition name="fade">
+      <button
+        v-if="!isContentVisible"
+        class="u-button u-button_bleuvert _showOriginBtn"
+        type="button"
+        @click="scrollToOrigin"
+      >
+        <b-icon icon="house" />
+        {{ $t("back_to_content") }}
+      </button>
+    </transition>
   </div>
 </template>
 <script>
@@ -42,6 +45,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    margin_around_content: {
+      type: Number,
+      default: 100,
+    },
   },
   data() {
     return {
@@ -55,6 +62,7 @@ export default {
       debounce_zoom: undefined,
       debounce_scroll: undefined,
       debounce_content_visibility: undefined,
+      is_zooming: false,
 
       contentOffset: { x: 0, y: 0 },
       isContentVisible: true,
@@ -231,7 +239,7 @@ export default {
         lineColor: "hsl(0, 0%, 83%)",
         textColor: "hsl(0, 0%, 83%)",
         textBackgroundColor: "transparent",
-        segment: 5, // Reduce subticks: 5 subticks per unit instead of default 10
+        segment: 2,
       });
 
       // Initialize vertical guides (X axis)
@@ -243,7 +251,7 @@ export default {
         lineColor: "hsl(0, 0%, 83%)",
         textColor: "hsl(0, 0%, 83%)",
         textBackgroundColor: "transparent",
-        segment: 5, // Reduce subticks: 5 subticks per unit instead of default 10
+        segment: 2,
       });
 
       // Sync guides with scroll
@@ -368,10 +376,17 @@ export default {
     },
     pinch() {
       // console.log("pinch");
+      this.is_zooming = true;
       if (this.debounce_zoom) clearTimeout(this.debounce_zoom);
       this.debounce_zoom = setTimeout(async () => {
         const zoom = this.infiniteviewer.getZoom();
         if (zoom !== this.scale) this.$emit("update:scale", zoom);
+        // Reset zooming flag (clamp disabled)
+        setTimeout(() => {
+          this.is_zooming = false;
+          // Clamp disabled
+          // this.clampScrollToContent();
+        }, 200);
       }, 500);
     },
     panTo({ x, y }) {
@@ -389,8 +404,10 @@ export default {
       this.scrollToCorner({
         x: offset.x || 0,
         y: offset.y || 0,
-        animate: true,
+        animate: false,
       });
+      // Clamp disabled - allow scrolling after going to origin
+      // this.clampScrollToContent();
     },
     scrollToCorner({ x, y, animate }) {
       if (!this.infiniteviewer) return;
@@ -409,6 +426,7 @@ export default {
     updateScale(scale) {
       if (!this.infiniteviewer) return;
       if (scale !== this.infiniteviewer.getZoom()) {
+        this.is_zooming = true;
         this.infiniteviewer.setZoom(scale, {
           duration: 200,
           zoomBase: "viewport",
@@ -420,6 +438,12 @@ export default {
           this.updateGuidesZoom();
           // Check content visibility after zoom (debounced internally)
           this.checkContentVisibility();
+          // Reset zooming flag (clamp disabled)
+          setTimeout(() => {
+            this.is_zooming = false;
+            // Clamp disabled
+            // this.clampScrollToContent();
+          }, 300);
         }, 250);
       }
     },
@@ -428,6 +452,10 @@ export default {
     },
     onScroll() {
       // console.log("onScroll");
+
+      // Clamp scroll disabled
+      // this.clampScrollToContent();
+
       // Update guides scroll position (only if show_rules is true)
       if (this.show_rules) {
         this.updateGuidesScroll();
@@ -447,6 +475,78 @@ export default {
           this.infiniteviewer.getScrollTop()
         );
       }, 500);
+    },
+    getContentBounds() {
+      // Get content bounds from viewport's scroll dimensions
+      if (!this.$refs.viewport) {
+        return { width: 0, height: 0 };
+      }
+
+      const viewport = this.$refs.viewport;
+      const width = viewport.scrollWidth || viewport.offsetWidth || 0;
+      const height = viewport.scrollHeight || viewport.offsetHeight || 0;
+
+      return {
+        width: Math.max(0, width),
+        height: Math.max(0, height),
+      };
+    },
+    clampScrollToContent() {
+      if (!this.infiniteviewer || !this.$refs.viewport) return;
+
+      const contentBounds = this.getContentBounds();
+      // If no content, don't clamp
+      if (contentBounds.width === 0 && contentBounds.height === 0) return;
+
+      const padding = this.margin_around_content;
+      const zoom = this.infiniteviewer.getZoom() || this.scale || 1;
+
+      // Get viewer dimensions
+      const viewer = this.$refs.infiniteviewer;
+      const viewerWidth = viewer.offsetWidth || 0;
+      const viewerHeight = viewer.offsetHeight || 0;
+
+      // Calculate scaled content dimensions
+      const scaledContentWidth = contentBounds.width * zoom;
+      const scaledContentHeight = contentBounds.height * zoom;
+
+      // Calculate max scroll positions
+      // If content is smaller than viewer, max scroll should be at least 0
+      // If content is larger, max scroll is content size - viewer size + padding
+      const maxScrollX =
+        scaledContentWidth <= viewerWidth
+          ? padding
+          : Math.max(padding, scaledContentWidth - viewerWidth + padding);
+      const maxScrollY =
+        scaledContentHeight <= viewerHeight
+          ? padding
+          : Math.max(padding, scaledContentHeight - viewerHeight + padding);
+
+      const minScrollX = -padding;
+      const minScrollY = -padding;
+
+      // Get current scroll position
+      const currentScrollX = this.infiniteviewer.getScrollLeft() || 0;
+      const currentScrollY = this.infiniteviewer.getScrollTop() || 0;
+
+      // Clamp scroll position
+      const clampedX = Math.max(
+        minScrollX,
+        Math.min(maxScrollX, currentScrollX)
+      );
+      const clampedY = Math.max(
+        minScrollY,
+        Math.min(maxScrollY, currentScrollY)
+      );
+
+      // If scroll was clamped, update it instantly (no animation)
+      if (clampedX !== currentScrollX || clampedY !== currentScrollY) {
+        // Use scrollTo with no duration for instant correction
+        this.infiniteviewer.scrollTo(clampedX, clampedY, {
+          absolute: true,
+          duration: 0, // Instant - no animation
+        });
+      }
     },
     checkContentVisibility() {
       // Debounce: only execute once every 500ms
