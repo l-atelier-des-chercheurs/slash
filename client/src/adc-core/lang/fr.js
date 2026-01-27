@@ -1587,4 +1587,6 @@ export default {
   no_spaces: "Aucun espace à afficher",
 
   add_cover: "Ajouter une couverture",
+
+  back_to_content: "Revenir au contenu",
 };

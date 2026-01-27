@@ -55,11 +55,12 @@
             @next="nextPage"
             @close="setPageActive(false)"
           >
-            <PanZoom2
+            <PanZoom3
               :scale.sync="scale"
               :content-width="page_width"
               :content-height="page_height"
               :magnification="current_page_magnification"
+              :layout_mode="layout_mode"
             >
               <transition name="pagechange" mode="out-in">
                 <div
@@ -149,7 +150,7 @@
                   </template>
                 </div>
               </transition>
-            </PanZoom2>
+            </PanZoom3>
           </NavOverlay>
         </div>
       </div>
@@ -159,7 +160,7 @@
 <script>
 import PageMenu from "@/components/publications/page_by_page/PageMenu.vue";
 import SinglePage from "@/components/publications/page_by_page/SinglePage.vue";
-import PanZoom2 from "@/components/publications/page_by_page/PanZoom2.vue";
+import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
 
 export default {
   props: {
@@ -180,7 +181,7 @@ export default {
   components: {
     PageMenu,
     SinglePage,
-    PanZoom2,
+    PanZoom3,
   },
   data() {
     return {

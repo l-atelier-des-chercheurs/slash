@@ -55,11 +55,6 @@
 
       <div class="_archiveSaveContainer">
         <template v-if="editor_is_enabled && !is_disabling_editor">
-          <!-- <button type="button" class="u-button _editBtn" @click="toggleEdit">
-            <b-icon icon="check-circle-fill" :aria-label="$t('stop_edit')" />
-            <span>{{ $t("stop_edit") }}</span>
-          </button> -->
-
           <transition name="pagechange" mode="out-in">
             <div
               class="u-button _savingStatus"
@@ -113,7 +108,7 @@
         <EditBtn
           v-if="can_edit && !editor_is_enabled"
           :label_position="'left'"
-          @click="enableEditor"
+          @click="startEditorFromButton"
         />
       </div>
       <div
@@ -277,7 +272,12 @@ export default {
       this.can_edit &&
       (this.mode === "always_active" || this.mode === "edit_on_mounted")
     )
-      this.enableEditor();
+      await this.enableEditor();
+
+    if (this.autofocus) {
+      this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
+      this.editor.focus();
+    }
 
     this.$eventHub.$on("media.enableEditor." + this.path, this.enableEditor);
     this.$eventHub.$on("media.disableEditor." + this.path, this.disableEditor);
@@ -550,10 +550,13 @@ export default {
       if (this.$refs.editBtn)
         this.$el.querySelector(".ql-toolbar").appendChild(this.$refs.editBtn);
     },
-    toggleEdit() {
-      if (!this.editor_is_enabled) this.enableEditor();
-      else this.disableEditor();
+    async startEditorFromButton() {
+      if (this.editor_is_enabled || !this.can_edit) return false;
+      await this.enableEditor();
+      this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
+      this.editor.focus();
     },
+
     async enableEditor() {
       if (this.editor_is_enabled || !this.can_edit) return false;
 
@@ -568,11 +571,6 @@ export default {
       //   const fontLastUsed = localStorage.getItem("fontLastUsed");
       //   this.editor.format("font", fontLastUsed);
       // }
-
-      if (this.autofocus) {
-        this.editor.setSelection(this.editor.getLength(), Quill.sources.SILENT);
-        this.editor.focus();
-      }
 
       this.$emit(`contentIsEdited`, {
         $toolbar: this.toolbar_el,
