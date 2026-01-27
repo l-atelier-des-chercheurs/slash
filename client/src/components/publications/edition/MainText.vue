@@ -9,7 +9,6 @@
       :save_format="save_format"
       :content_type="'markdown'"
       :can_edit="can_edit"
-      :mode="'always_active'"
       ref="collaborativeEditor"
     >
       <template #custom_buttons>
