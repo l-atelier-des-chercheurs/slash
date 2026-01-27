@@ -10,6 +10,7 @@
     @update:scale="handleZoomUpdate"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
+      <div class="_originDot"></div>
       <CanvasItem
         v-for="file in files"
         :key="file.$path"
@@ -196,5 +197,18 @@ export default {
     );
     background-size: 24px 24px;
   }
+}
+
+._originDot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
 }
 </style>
