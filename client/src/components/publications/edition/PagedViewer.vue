@@ -12,13 +12,14 @@
       ref="bookrender"
       style="opacity: 0; visibility: hidden; pointer-events: none"
     />
-    <div
+    <PanZoom3
       v-if="viewer_type === 'infinite-viewer'"
-      ref="infiniteviewer"
-      class="_infiniteViewer"
+      ref="panzoom3"
+      :scale="current_zoom"
+      @update:scale="current_zoom = $event"
     >
       <div class="" ref="bookpreview" />
-    </div>
+    </PanZoom3>
     <template v-else>
       <div ref="bookpreview" />
     </template>
@@ -26,13 +27,13 @@
   </div>
 </template>
 <script>
-import InfiniteViewer from "infinite-viewer";
 import { Handler, Previewer } from "pagedjs";
 import {
   handleChainOverflow,
   checkCellOverflow,
   showOverflowWarning,
 } from "./chainOverflowHandler.js";
+import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
 
 export default {
   props: {
@@ -60,41 +61,25 @@ export default {
     opened_chapter_meta_filename: String,
   },
   components: {
-    InfiniteViewer,
+    PanZoom3,
   },
   data() {
     return {
       is_loading: true,
-      infiniteviewer: null,
       is_generating_book: false,
+      current_zoom: 0.6,
     };
   },
   created() {},
   async mounted() {
     await this.generateBook();
 
-    if (this.$refs.infiniteviewer) {
-      this.infiniteviewer = new InfiniteViewer(
-        this.$refs.infiniteviewer,
-        this.$refs.bookpreview,
-        {
-          useMouseDrag: true,
-          useWheelScroll: true,
-          useAutoZoom: true,
-
-          margin: 0,
-          zoomRange: [0.4, 10],
-          maxPinchWheel: 10,
-          displayVerticalScroll: true,
-          displayHorizontalScroll: true,
-        }
-      );
-
+    if (this.viewer_type === "infinite-viewer" && this.$refs.panzoom3) {
       this.$nextTick(() => {
         if (this.opened_chapter_meta_filename)
           this.zoomToSection(this.opened_chapter_meta_filename);
         else {
-          this.infiniteviewer.setZoom(0.6);
+          this.current_zoom = 0.6;
           this.$nextTick(() => {
             this.zoomToSection("first page");
           });
@@ -345,6 +330,8 @@ export default {
       this.zoomToPage(page);
     },
     zoomToPage(page) {
+      if (!this.$refs.panzoom3) return;
+
       const pages_container = this.$refs.bookpreview;
       const container_scrollLeft = pages_container.getBoundingClientRect().left;
       const container_scrollTop = pages_container.getBoundingClientRect().top;
@@ -356,7 +343,7 @@ export default {
       console.log(page_scrollLeft, page_scrollTop);
 
       const padding = 200;
-      this.infiniteviewer.scrollTo(
+      this.$refs.panzoom3.scrollTo(
         page_scrollLeft - container_scrollLeft - padding,
         page_scrollTop - container_scrollTop - padding,
         {
@@ -402,6 +389,10 @@ export default {
 
       handleChainOverflow(cell, page, this.$t("text_overflow"));
     },
+    beforePrint() {
+      // Handler for beforeprint event
+      // Can be extended if needed for print-specific behavior
+    },
   },
 };
 </script>
@@ -424,14 +415,7 @@ export default {
     height: 100%;
     background-color: var(--c-gris_fonce);
   }
-  ._infiniteViewer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    cursor: move;
-  }
+  // Panzoom3 handles its own styling through .viewer class
 
   &.is--editable {
     --color-pageContent: #ff00ff;
