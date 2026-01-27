@@ -1,9 +1,6 @@
 <template>
   <div class="_homeView">
-    <LoginModal
-      v-if="!$root.slash_logged_in_as || show_login_modal"
-      @close="show_login_modal = false"
-    />
+    <LoginModal v-if="show_login_modal" @close="show_login_modal = false" />
     <FolderView v-else />
   </div>
 </template>

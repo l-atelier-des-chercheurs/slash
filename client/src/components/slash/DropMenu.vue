@@ -1,27 +1,30 @@
 <template>
   <div class="_dropMenu">
     <button
-      class="u-button u-button_bleuvert u-spacingBottom"
-      v-if="$root.slash_logged_in_as"
+      class="u-button u-button_white u-spacingBottom _loginButton"
       @click="openLoginModal()"
       style="margin-bottom: 12px; margin-right: 8px"
     >
-      {{
-        typeof $root.slash_logged_in_as === "object"
-          ? $root.slash_logged_in_as.name
-          : $root.slash_logged_in_as
-      }}
+      <template v-if="$root.slash_logged_in_as?.name">
+        {{ $root.slash_logged_in_as.name }}
+      </template>
+      <template v-else>Login</template>
     </button>
 
-    <ImportFileZone :multiple="true" :files_to_import.sync="files_to_import" />
-    <UploadFiles
-      v-if="files_to_import.length > 0"
-      :files_to_import="files_to_import"
-      :path="folder_path"
-      :allow_caption_edition="false"
-      @importedMedias="mediasJustImported($event)"
-      @close="files_to_import = []"
-    />
+    <template v-if="$root.slash_logged_in_as">
+      <ImportFileZone
+        :multiple="true"
+        :files_to_import.sync="files_to_import"
+      />
+      <UploadFiles
+        v-if="files_to_import.length > 0"
+        :files_to_import="files_to_import"
+        :path="folder_path"
+        :allow_caption_edition="false"
+        @importedMedias="mediasJustImported($event)"
+        @close="files_to_import = []"
+      />
+    </template>
   </div>
 </template>
 <script>
@@ -60,8 +63,12 @@ export default {
   bottom: calc(var(--spacing) * 2);
   right: calc(var(--spacing) * 2);
   border: 2px solid var(--c-gris_clair);
+  background-color: var(--c-bleuvert);
 
-  padding: calc(var(--spacing) / 2);
-  border: 2px solid var(--c-gri);
+  padding: calc(var(--spacing) / 1);
+}
+
+._loginButton {
+  width: 100%;
 }
 </style>
