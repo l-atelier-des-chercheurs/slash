@@ -1,7 +1,7 @@
 <template>
   <div v-if="default_folder">
-    <h1>{{ default_folder.title }}</h1>
-    <hr />
+    <!-- <h1>{{ default_folder.title }}</h1> -->
+    <!-- <hr /> -->
     <LargeCanvas :files="default_folder.$files" />
     <DropMenu class="_dropMenu" :folder_path="default_folder.$path" />
   </div>

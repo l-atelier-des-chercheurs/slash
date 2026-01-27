@@ -5,7 +5,6 @@
     :style="itemStyle"
     @mousedown="handleMouseDown"
   >
-    {{ file.x }} {{ file.y }}
     <MediaContent :file="file" :resolution="320" />
   </div>
 </template>

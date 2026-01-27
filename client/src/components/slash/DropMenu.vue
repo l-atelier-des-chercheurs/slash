@@ -43,8 +43,8 @@ export default {
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 300px;
-  height: 300px;
+  // width: 300px;
+  // height: 300px;
   background: white;
   z-index: 1000;
   border: 1px solid var(--c-gris);

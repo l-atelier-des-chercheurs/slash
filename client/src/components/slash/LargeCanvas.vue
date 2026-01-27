@@ -36,7 +36,7 @@ export default {
     return {
       canvasScrollLeft: 0,
       canvasScrollTop: 0,
-      canvasSize: 10000,
+      canvasSize: 1000,
       nextGridX: 0,
       nextGridY: 0,
       viewerOptions: {},
@@ -137,12 +137,17 @@ export default {
 ._largeCanvas {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   cursor: move;
+}
 
-  // Repeating dot pattern background
+._canvasContent {
+  position: relative;
+
+  --dot-color: rgba(225, 225, 225, 1);
   background-image: radial-gradient(
     circle,
-    rgba(0, 0, 0, 1) 1px,
+    var(--dot-color) 1px,
     transparent 1px
   );
   background-size: 24px 24px;
@@ -152,14 +157,10 @@ export default {
   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     background-image: radial-gradient(
       circle,
-      rgba(0, 0, 0, 1) 0.5px,
+      var(--dot-color) 0.5px,
       transparent 0.5px
     );
     background-size: 24px 24px;
   }
-}
-
-._canvasContent {
-  position: relative;
 }
 </style>
