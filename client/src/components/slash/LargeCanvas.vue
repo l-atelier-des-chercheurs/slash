@@ -1,10 +1,12 @@
 <template>
-  <vue-infinite-viewer
+  <PanZoom3
     class="_largeCanvas"
     ref="viewer"
-    v-bind="viewerOptions"
-    @scroll="onScroll"
-    @dragStart="onDragStart"
+    :scale="1"
+    :content-width="canvasSize"
+    :content-height="canvasSize"
+    :show-rules="false"
+    :margin-around-content="200"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
       <CanvasItem
@@ -16,10 +18,10 @@
         @position-update="handlePositionUpdate"
       />
     </div>
-  </vue-infinite-viewer>
+  </PanZoom3>
 </template>
 <script>
-import { VueInfiniteViewer } from "vue-infinite-viewer";
+import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
 import CanvasItem from "@/components/slash/CanvasItem.vue";
 export default {
   props: {
@@ -29,7 +31,7 @@ export default {
     },
   },
   components: {
-    VueInfiniteViewer,
+    PanZoom3,
     CanvasItem,
   },
   data() {
@@ -39,7 +41,7 @@ export default {
       canvasSize: 1000,
       nextGridX: 0,
       nextGridY: 0,
-      viewerOptions: {},
+      scrollAnimationFrame: null,
     };
   },
   computed: {
@@ -61,39 +63,31 @@ export default {
     },
   },
   mounted() {
-    this.updateViewerOptions();
     this.initializeItemPositions();
     this.updateScrollPosition();
+    this.startScrollTracking();
+  },
+  beforeDestroy() {
+    this.stopScrollTracking();
   },
   methods: {
-    updateViewerOptions() {
-      const padding = 200;
-      const maxRangeX = Math.max(0, this.canvasSize);
-      const maxRangeY = Math.max(0, this.canvasSize);
-
-      this.viewerOptions = {
-        useMouseDrag: true,
-        useWheelScroll: true,
-        useAutoZoom: false,
-        rangeX: [-padding, maxRangeX + padding],
-        rangeY: [-padding, maxRangeY + padding],
-        displayVerticalScroll: false,
-        displayHorizontalScroll: false,
+    startScrollTracking() {
+      const trackScroll = () => {
+        this.updateScrollPosition();
+        this.scrollAnimationFrame = requestAnimationFrame(trackScroll);
       };
+      this.scrollAnimationFrame = requestAnimationFrame(trackScroll);
+    },
+    stopScrollTracking() {
+      if (this.scrollAnimationFrame) {
+        cancelAnimationFrame(this.scrollAnimationFrame);
+        this.scrollAnimationFrame = null;
+      }
     },
     updateScrollPosition() {
       if (this.$refs.viewer) {
         this.canvasScrollLeft = this.$refs.viewer.getScrollLeft();
         this.canvasScrollTop = this.$refs.viewer.getScrollTop();
-      }
-    },
-    onScroll() {
-      this.updateScrollPosition();
-    },
-    onDragStart(event) {
-      // Prevent panning when clicking on canvas items
-      if (event.inputEvent.target.closest(".panzoom-exclude")) {
-        event.stop();
       }
     },
     initializeItemPositions() {
