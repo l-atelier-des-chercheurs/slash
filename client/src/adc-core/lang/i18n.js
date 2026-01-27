@@ -43,8 +43,14 @@ const i18n = () => {
     if (lang === "fr") content = await import("@/adc-core/lang/fr.js");
     else if (lang === "it") content = await import("@/adc-core/lang/it.js");
     // else if (lang === "fon") content = await import("@/adc-core/lang/fon.js");
-    else content = await import("@/adc-core/lang/en.js");
-    return content.default;
+    else {
+      // Load English translations and merge with slash-specific translations
+      const mainContent = await import("@/adc-core/lang/en.js");
+      const slashContent = await import("@/adc-core/lang/en_slash.js");
+      // Merge slash translations with main translations
+      content = { ...mainContent.default, ...slashContent.default };
+    }
+    return content;
   };
 
   const i18n = new VueI18n({

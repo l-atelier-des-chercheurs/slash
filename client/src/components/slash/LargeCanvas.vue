@@ -2,11 +2,12 @@
   <PanZoom3
     class="_largeCanvas"
     ref="viewer"
-    :scale="1"
+    :scale="canvasZoom"
     :content-width="canvasSize"
     :content-height="canvasSize"
     :show-rules="false"
     :margin-around-content="200"
+    @update:scale="handleZoomUpdate"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
       <CanvasItem
@@ -15,7 +16,9 @@
         :file="file"
         :canvas-scroll-left="canvasScrollLeft"
         :canvas-scroll-top="canvasScrollTop"
+        :canvas-zoom="canvasZoom"
         @position-update="handlePositionUpdate"
+        @width-update="handleWidthUpdate"
       />
     </div>
   </PanZoom3>
@@ -38,7 +41,8 @@ export default {
     return {
       canvasScrollLeft: 0,
       canvasScrollTop: 0,
-      canvasSize: 1000,
+      canvasSize: 20000,
+      canvasZoom: 1,
       nextGridX: 0,
       nextGridY: 0,
       scrollAnimationFrame: null,
@@ -66,6 +70,7 @@ export default {
     this.initializeItemPositions();
     this.updateScrollPosition();
     this.startScrollTracking();
+    this.centerOnOrigin();
   },
   beforeDestroy() {
     this.stopScrollTracking();
@@ -108,6 +113,8 @@ export default {
 
           // Update grid position for next item
           gridX += gridSpacing;
+          // Allow items to be placed anywhere on the large canvas
+          // No need to wrap around since canvas is very large
           if (gridX > this.canvasSize - 200) {
             gridX = 0;
             gridY += gridSpacing;
@@ -123,6 +130,39 @@ export default {
       // Update file position locally
       this.$set(file, "x", x);
       this.$set(file, "y", y);
+    },
+    handleWidthUpdate({ file, width }) {
+      // Update file width locally
+      this.$set(file, "width", width);
+    },
+    handleZoomUpdate(zoom) {
+      this.canvasZoom = zoom;
+    },
+    centerOnOrigin() {
+      // Center the view on 0,0 by scrolling to negative values
+      // This allows 0,0 to be in the center of the viewport
+      this.$nextTick(() => {
+        if (this.$refs.viewer && this.$refs.viewer.$el) {
+          const viewer = this.$refs.viewer.$el;
+          const viewportWidth = viewer.offsetWidth || 0;
+          const viewportHeight = viewer.offsetHeight || 0;
+
+          // Calculate scroll position to center 0,0
+          // Negative scroll positions show content above/left of origin
+          const scrollX = -viewportWidth / 2;
+          const scrollY = -viewportHeight / 2;
+
+          // Use a small delay to ensure the viewer is fully initialized
+          setTimeout(() => {
+            if (this.$refs.viewer && this.$refs.viewer.scrollTo) {
+              this.$refs.viewer.scrollTo(scrollX, scrollY, {
+                duration: 0,
+                absolute: true,
+              });
+            }
+          }, 100);
+        }
+      });
     },
   },
 };
