@@ -359,6 +359,7 @@ export default {
   }
 
   ._canvasItem--content {
+    position: relative;
     border-radius: var(--border-radius);
     overflow: hidden;
     transition: transform 0.12s cubic-bezier(0.19, 1, 0.22, 1);

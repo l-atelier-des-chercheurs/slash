@@ -50,7 +50,7 @@
         </template>
       </template>
       <template v-else>
-        <vue-plyr :key="file_full_path" ref="plyr" :options="plyrOptions">
+        <vue-plyr :key="file_full_path" ref="plyr">
           <video
             v-if="file.$type === 'video'"
             :poster="thumb"
@@ -163,7 +163,6 @@
               v-else-if="load_iframe_type === 'video'"
               :key="'plyr-' + file_full_path"
               ref="plyr"
-              :options="plyrOptions"
             >
               <div class="plyr__video-embed">
                 <iframe
@@ -249,10 +248,6 @@ export default {
       default: false,
     },
     can_edit: Boolean,
-    controls: {
-      type: Boolean,
-      default: true,
-    },
   },
   components: {
     ThreeDPreview: () => import("@/adc-core/fields/ThreeDPreview.vue"),
@@ -291,10 +286,6 @@ export default {
   },
   watch: {},
   computed: {
-    plyrOptions() {
-      if (this.controls) return {};
-      return { controls: ["play-large"] };
-    },
     load_iframe_type() {
       if (this.file.$type === "pdf") return "pdf";
       if (["stl", "obj"].includes(this.file.$type)) return "3D file";
@@ -441,6 +432,10 @@ export default {
       backdrop-filter: blur(5px) !important;
     }
   }
+}
+
+._mediaContent--image {
+  display: block;
 }
 
 ._mediaContent--iframe {

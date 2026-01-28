@@ -2,7 +2,10 @@
   <div v-if="default_folder" class="_folderView">
     <ViewModeBar v-model="viewMode" />
     <LargeCanvas v-show="viewMode === 'map'" :files="default_folder.$files" />
-    <MediaGridView v-show="viewMode === 'grid'" :files="default_folder.$files" />
+    <MediaGridView
+      v-show="viewMode === 'grid'"
+      :files="default_folder.$files"
+    />
     <DropMenu class="_dropMenu" :folder_path="default_folder.$path" />
   </div>
 </template>
