@@ -9,7 +9,7 @@
           <!-- Day Separator -->
           <div
             v-if="element.type === 'day'"
-            :key="element.key"
+            :key="`day-${element.key}`"
             class="_timelineView--daySeparator"
           >
             <div class="_timelineView--separator"></div>
@@ -19,7 +19,7 @@
           <!-- Gap -->
           <div
             v-else-if="element.type === 'gap'"
-            :key="element.key"
+            :key="`gap-${element.key}`"
             class="_timelineView--gap"
           >
             <svg
@@ -44,7 +44,7 @@
           <!-- Media Item -->
           <CanvasItem
             v-else-if="element.type === 'media'"
-            :key="element.key"
+            :key="`media-${element.key}`"
             :file="element.file"
             :mode="'timeline'"
             :timeline-height="element.height"
