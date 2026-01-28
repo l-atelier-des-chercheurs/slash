@@ -16,7 +16,7 @@
       :aria-pressed="value === 'grid'"
       @click="$emit('input', 'grid')"
     >
-      <b-icon icon="grid-fill" />
+      <b-icon icon="grid" />
     </button>
     <button
       type="button"
@@ -69,7 +69,7 @@ export default {
   top: calc(var(--spacing, 1rem) * 1.5);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 10000;
 
   display: flex;
   align-items: center;

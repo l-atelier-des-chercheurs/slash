@@ -429,7 +429,7 @@ export default {
       z-index: 10;
     }
     .plyr__controls {
-      border-radius: 4px;
+      border-radius: var(--border-radius, 4px);
     }
 
     ._editBtn {

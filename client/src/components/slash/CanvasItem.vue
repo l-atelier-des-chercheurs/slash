@@ -6,9 +6,6 @@
     @mousedown="handleMouseDown"
     :data-file-path="file.$path"
   >
-    <!-- <span class="_canvasItem--debug"
-      >{{ file.x }} {{ file.y }} {{ optimalResolution }}</span
-    > -->
     <div class="_canvasItem--shadow" />
 
     <div class="_canvasItem--content">
@@ -363,7 +360,6 @@ export default {
   ._canvasItem--content {
     position: relative;
     border-radius: var(--border-radius);
-    overflow: hidden;
     transition: transform 0.12s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
