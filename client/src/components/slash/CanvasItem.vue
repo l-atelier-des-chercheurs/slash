@@ -1,7 +1,11 @@
 <template>
   <div
     class="_canvasItem panzoom-exclude"
-    :class="{ 'is--dragging': isDragging, 'is--resizing': isResizing }"
+    :class="{
+      'is--dragging': isDragging,
+      'is--resizing': isResizing,
+      'is--timeline': mode === 'timeline',
+    }"
     :style="itemStyle"
     @mousedown="handleMouseDown"
     :data-file-path="file.$path"
@@ -17,6 +21,7 @@
       />
     </div>
     <div
+      v-if="mode !== 'timeline'"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       @mousedown.stop="handleResizeStart"
@@ -29,6 +34,14 @@ export default {
     file: {
       type: Object,
       required: true,
+    },
+    mode: {
+      type: String,
+      default: "canvas", // 'canvas' or 'timeline'
+    },
+    timelineHeight: {
+      type: Number,
+      default: null,
     },
     canvasScrollLeft: {
       type: Number,
@@ -68,6 +81,34 @@ export default {
       return !this.file.$infos?.ratio;
     },
     itemStyle() {
+      if (this.mode === "timeline") {
+        // Timeline mode: flex layout
+        const width =
+          this.currentWidth !== null
+            ? this.currentWidth
+            : this.file.width || 160;
+        const ratio = this.file.$infos?.ratio;
+        const height =
+          this.timelineHeight || (ratio ? width * ratio : null) || 200;
+
+        const style = {
+          cursor: this.isDragging ? "grabbing" : "grab",
+          width: `${width}px`,
+        };
+
+        if (height !== null) {
+          style.height = `${height}px`;
+        }
+
+        // Set aspect ratio for images
+        if (this.file.$type === "image" && ratio) {
+          style.aspectRatio = ratio;
+        }
+
+        return style;
+      }
+
+      // Canvas mode: absolute positioning
       const x = this.currentX !== null ? this.currentX : this.file.x || 0;
       const y = this.currentY !== null ? this.currentY : this.file.y || 0;
       const width =
@@ -157,6 +198,11 @@ export default {
     handleMouseDown(event) {
       // Don't start dragging if clicking on resize handle
       if (event.target.classList.contains("_canvasItem--resizeHandle")) {
+        return;
+      }
+
+      // In timeline mode, don't allow dragging
+      if (this.mode === "timeline") {
         return;
       }
 
@@ -349,6 +395,32 @@ export default {
 
   transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
 
+  &.is--timeline {
+    position: relative;
+    margin-top: 0;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    background: white;
+    transition: transform 0.2s;
+
+    &:hover {
+      z-index: 100;
+      transform: scale(1.02);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    &[data-filetype="text"] {
+      background-color: #fff9c4; /* Post-it yellow */
+      padding: 10px;
+      width: 200px; /* Fixed width for text items */
+
+      ::v-deep ._mediaContent {
+        font-family: var(--sl-font-handwritten, cursive);
+        font-size: 1.1em;
+      }
+    }
+  }
+
   &.is--dragging {
     cursor: grabbing;
     z-index: 1000;
@@ -373,6 +445,40 @@ export default {
   &.is--resizing {
     ._canvasItem--content {
       transform: translate(-5px, -5px);
+    }
+  }
+
+  &.is--timeline {
+    &:hover,
+    &.is--dragging,
+    &.is--resizing {
+      ._canvasItem--content {
+        transform: none; // No transform in timeline mode
+      }
+    }
+
+    ._canvasItem--content {
+      height: 100%;
+      width: 100%;
+
+      ::v-deep ._mediaContent {
+        height: 100%;
+        width: 100%;
+
+        img,
+        video {
+          height: 100%;
+          width: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        ._mediaContent--rawText {
+          padding: 0;
+          height: 100%;
+          overflow: hidden;
+        }
+      }
     }
   }
 

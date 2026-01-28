@@ -21,9 +21,9 @@
     <button
       type="button"
       class="_viewModeBar--btn"
-      :class="{ 'is--active': value === 'geoMap' }"
-      :aria-pressed="value === 'geoMap'"
-      @click="$emit('input', 'geoMap')"
+      :class="{ 'is--active': value === 'map' }"
+      :aria-pressed="value === 'map'"
+      @click="$emit('input', 'map')"
     >
       <b-icon icon="map" />
     </button>
@@ -53,7 +53,7 @@ export default {
     value: {
       type: String,
       default: "canvas",
-      validator: (v) => ["canvas", "grid", "geoMap", "timeline"].includes(v),
+      validator: (v) => ["canvas", "grid", "map", "timeline"].includes(v),
     },
   },
   methods: {

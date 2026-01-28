@@ -8,8 +8,8 @@
         <template v-for="(element, index) in timelineElements">
           <!-- Day Separator -->
           <div
-            :key="element.key"
             v-if="element.type === 'day'"
+            :key="element.key"
             class="_timelineView--daySeparator"
           >
             <div class="_timelineView--separator"></div>
@@ -42,25 +42,14 @@
           </div>
 
           <!-- Media Item -->
-          <div
+          <CanvasItem
             v-else-if="element.type === 'media'"
+            :key="element.key"
+            :file="element.file"
+            :mode="'timeline'"
+            :timeline-height="element.height"
             class="_timelineView--item"
-            :class="{
-              _isText: element.file.$type === 'text',
-              _isImage: element.file.$type === 'image',
-            }"
-            :style="{
-              height: element.height + 'px',
-              aspectRatio:
-                element.file.$type === 'image' && element.file.$infos?.ratio
-                  ? element.file.$infos.ratio
-                  : undefined,
-            }"
-          >
-            <div class="_timelineView--itemContent">
-              <MediaContent :file="element.file" :resolution="320" />
-            </div>
-          </div>
+          />
         </template>
       </div>
     </div>
@@ -69,6 +58,7 @@
 
 <script>
 import moment from "moment";
+import CanvasItem from "@/components/slash/CanvasItem.vue";
 
 export default {
   props: {
@@ -76,6 +66,9 @@ export default {
       type: Array,
       default: () => [],
     },
+  },
+  components: {
+    CanvasItem,
   },
   data() {
     return {
@@ -253,59 +246,7 @@ export default {
 }
 
 ._timelineView--item {
-  position: relative;
   flex-shrink: 0;
   margin-top: 50px;
-  overflow: hidden;
-
-  /* Shadow for depth */
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  background: white;
-  transition: transform 0.2s;
-
-  &:hover {
-    z-index: 100;
-    transform: scale(1.02);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  }
-
-  &._isText {
-    background-color: #fff9c4; /* Post-it yellow */
-    padding: 10px;
-    width: 200px; /* Fixed width for text items */
-
-    ::v-deep ._mediaContent {
-      font-family: var(--sl-font-handwritten, cursive);
-      font-size: 1.1em;
-    }
-  }
-
-  &._isImage {
-    // Width automatically calculated from aspect-ratio CSS property
-  }
-}
-
-._timelineView--itemContent {
-  height: 100%;
-  width: 100%;
-
-  ::v-deep ._mediaContent {
-    height: 100%;
-    width: 100%;
-
-    img,
-    video {
-      height: 100%;
-      width: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    ._mediaContent--rawText {
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-    }
-  }
 }
 </style>
