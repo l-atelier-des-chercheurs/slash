@@ -1589,4 +1589,10 @@ export default {
   add_cover: "Ajouter une couverture",
 
   back_to_content: "Revenir au contenu",
+
+  // TimelineView
+  day_later: "{n} jour plus tard | {n} jours plus tard",
+  week_later: "{n} semaine plus tard | {n} semaines plus tard",
+  month_later: "{n} mois plus tard | {n} mois plus tard",
+  year_later: "{n} an plus tard | {n} ans plus tard",
 };

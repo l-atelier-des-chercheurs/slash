@@ -142,31 +142,15 @@ export default {
 
             if (gapDays >= 365) {
               const val = Math.round(gapDays / 365);
-              label = `${val} ${val > 1 ? "years" : "year"} later...`;
-              if (this.$t)
-                label = `${val} ${
-                  this.$t(val > 1 ? "years_later" : "year_later") || label
-                }`;
+              label = `${this.$tc("year_later", val)}...`;
             } else if (gapDays >= 30) {
               const val = Math.round(gapDays / 30);
-              label = `${val} ${val > 1 ? "months" : "month"} later...`;
-              if (this.$t)
-                label = `${val} ${
-                  this.$t(val > 1 ? "months_later" : "month_later") || label
-                }`;
+              label = `${this.$tc("month_later", val)}...`;
             } else if (gapDays >= 7) {
               const val = Math.round(gapDays / 7);
-              label = `${val} ${val > 1 ? "weeks" : "week"} later...`;
-              if (this.$t)
-                label = `${val} ${
-                  this.$t(val > 1 ? "weeks_later" : "week_later") || label
-                }`;
+              label = `${this.$tc("week_later", val)}...`;
             } else {
-              label = `${gapDays} ${gapDays > 1 ? "days" : "day"} later...`;
-              if (this.$t)
-                label = `${gapDays} ${
-                  this.$t(gapDays > 1 ? "days_later" : "day_later") || label
-                }`;
+              label = `${this.$tc("day_later", gapDays)}...`;
             }
 
             gaps.push({
