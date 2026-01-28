@@ -175,6 +175,7 @@ import {
   BIconLayoutSidebarInset,
   BIconLayoutSidebarReverse,
   BIconLayoutSidebarInsetReverse,
+  BIconLayoutWtf,
 } from "bootstrap-vue";
 
 Vue.component("BIconShieldCheck", BIconShieldCheck);
@@ -350,3 +351,4 @@ Vue.component("BIconLayoutSidebar", BIconLayoutSidebar);
 Vue.component("BIconLayoutSidebarInset", BIconLayoutSidebarInset);
 Vue.component("BIconLayoutSidebarReverse", BIconLayoutSidebarReverse);
 Vue.component("BIconLayoutSidebarInsetReverse", BIconLayoutSidebarInsetReverse);
+Vue.component("BIconLayoutWtf", BIconLayoutWtf);

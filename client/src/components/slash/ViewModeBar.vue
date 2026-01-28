@@ -7,7 +7,7 @@
       :aria-pressed="value === 'map'"
       @click="$emit('input', 'map')"
     >
-      <b-icon icon="map-fill" />
+      <b-icon icon="layout-wtf" />
     </button>
     <button
       type="button"
