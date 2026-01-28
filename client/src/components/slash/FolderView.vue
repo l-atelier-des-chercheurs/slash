@@ -3,6 +3,7 @@
     <ViewModeBar :value="viewMode" @input="switchViewMode" />
     <LargeCanvas v-show="viewMode === 'map'" :files="default_folder.$files" />
     <GeoMapView v-show="viewMode === 'geoMap'" :files="default_folder.$files" />
+    <TimelineView v-show="viewMode === 'timeline'" :files="default_folder.$files" />
     <MediaGridView
       v-show="viewMode === 'grid'"
       :files="default_folder.$files"
@@ -15,6 +16,7 @@ import DropMenu from "@/components/slash/DropMenu.vue";
 import GeoMapView from "@/components/slash/GeoMapView.vue";
 import LargeCanvas from "@/components/slash/LargeCanvas.vue";
 import MediaGridView from "@/components/slash/MediaGridView.vue";
+import TimelineView from "@/components/slash/TimelineView.vue";
 import ViewModeBar from "@/components/slash/ViewModeBar.vue";
 export default {
   props: {},
@@ -23,6 +25,7 @@ export default {
     GeoMapView,
     LargeCanvas,
     MediaGridView,
+    TimelineView,
     ViewModeBar,
   },
   data() {
@@ -88,7 +91,7 @@ export default {
       this.animateTransitions(firstPositions);
     },
     capturePositions() {
-      if (this.viewMode === "geoMap") return new Map();
+      if (this.viewMode === "geoMap" || this.viewMode === "timeline") return new Map();
 
       const positions = new Map();
       const selector =
@@ -106,7 +109,7 @@ export default {
       return positions;
     },
     animateTransitions(firstPositions) {
-      if (this.viewMode === "geoMap") return;
+      if (this.viewMode === "geoMap" || this.viewMode === "timeline") return;
 
       const selector =
         this.viewMode === "map"

@@ -27,6 +27,15 @@
     >
       <b-icon icon="map" />
     </button>
+    <button
+      type="button"
+      class="_viewModeBar--btn"
+      :class="{ 'is--active': value === 'timeline' }"
+      :aria-pressed="value === 'timeline'"
+      @click="$emit('input', 'timeline')"
+    >
+      <b-icon icon="calendar-day" />
+    </button>
     <div class="_viewModeBar--divider"></div>
     <button
       type="button"
@@ -44,7 +53,7 @@ export default {
     value: {
       type: String,
       default: "map",
-      validator: (v) => ["map", "grid", "geoMap"].includes(v),
+      validator: (v) => ["map", "grid", "geoMap", "timeline"].includes(v),
     },
   },
   methods: {

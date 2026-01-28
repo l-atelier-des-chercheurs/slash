@@ -8,4 +8,14 @@ export default {
 
   // DropMenu
   logged_in_as: "Logged in as:",
+
+  // TimelineView
+  days_later: "days later",
+  day_later: "day later",
+  weeks_later: "weeks later",
+  week_later: "week later",
+  months_later: "months later",
+  month_later: "month later",
+  years_later: "years later",
+  year_later: "year later",
 };
