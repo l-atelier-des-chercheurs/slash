@@ -1,7 +1,7 @@
 <template>
   <div v-if="default_folder" class="_folderView">
     <ViewModeBar :value="viewMode" @input="switchViewMode" />
-    <LargeCanvas v-show="viewMode === 'map'" :files="default_folder.$files" />
+    <LargeCanvas v-show="viewMode === 'canvas'" :files="default_folder.$files" />
     <GeoMapView v-show="viewMode === 'geoMap'" :files="default_folder.$files" />
     <TimelineView v-show="viewMode === 'timeline'" :files="default_folder.$files" />
     <MediaGridView
@@ -31,10 +31,13 @@ export default {
   data() {
     return {
       default_folder: null,
-      viewMode: "map",
+      viewMode: "canvas",
     };
   },
   async created() {
+    // Initialize view mode from URL or localStorage fallback
+    this.initializeViewMode();
+
     try {
       this.default_folder = await this.loadFolders();
     } catch (err) {
@@ -52,9 +55,60 @@ export default {
   },
   mounted() {},
   beforeDestroy() {},
-  watch: {},
+  watch: {
+    // Watch for route changes to sync view mode from URL
+    "$route.query.view"(newView) {
+      if (newView && this.isValidViewMode(newView) && newView !== this.viewMode) {
+        this.viewMode = newView;
+      }
+    },
+  },
   computed: {},
   methods: {
+    initializeViewMode() {
+      const validModes = ["canvas", "grid", "geoMap", "timeline"];
+      
+      // 1. Check URL query parameter first (handle legacy "map" value)
+      const urlView = this.$route.query.view;
+      if (urlView) {
+        const normalizedView = urlView === "map" ? "canvas" : urlView;
+        if (validModes.includes(normalizedView)) {
+          this.viewMode = normalizedView;
+          // Update URL if it was legacy "map"
+          if (urlView === "map") {
+            this.updateUrlViewMode("canvas");
+          }
+          return;
+        }
+      }
+
+      // 2. Fallback to localStorage (also handle legacy "map" value)
+      const storedView = localStorage.getItem("slash_viewMode");
+      const normalizedView = storedView === "map" ? "canvas" : storedView;
+      if (normalizedView && validModes.includes(normalizedView)) {
+        this.viewMode = normalizedView;
+        // Update URL to match localStorage
+        this.updateUrlViewMode(normalizedView);
+        return;
+      }
+
+      // 3. Default to "canvas"
+      this.viewMode = "canvas";
+      this.updateUrlViewMode("canvas");
+    },
+    isValidViewMode(mode) {
+      // Also accept legacy "map" for backward compatibility
+      return ["canvas", "map", "grid", "geoMap", "timeline"].includes(mode);
+    },
+    updateUrlViewMode(mode) {
+      // Use replace to avoid cluttering browser history with view mode changes
+      this.$router.replace({
+        query: {
+          ...this.$route.query,
+          view: mode,
+        },
+      });
+    },
     async loadFolders() {
       return await this.$api
         .getFolder({
@@ -84,10 +138,14 @@ export default {
       // 2. Change view mode
       this.viewMode = newMode;
 
-      // 3. Wait for DOM update
+      // 3. Update URL and localStorage
+      this.updateUrlViewMode(newMode);
+      localStorage.setItem("slash_viewMode", newMode);
+
+      // 4. Wait for DOM update
       await this.$nextTick();
 
-      // 4. Animate to new positions
+      // 5. Animate to new positions
       this.animateTransitions(firstPositions);
     },
     capturePositions() {
@@ -95,7 +153,7 @@ export default {
 
       const positions = new Map();
       const selector =
-        this.viewMode === "map"
+        this.viewMode === "canvas"
           ? "._canvasItem"
           : "._mediaGridView--item";
       
@@ -112,7 +170,7 @@ export default {
       if (this.viewMode === "geoMap" || this.viewMode === "timeline") return;
 
       const selector =
-        this.viewMode === "map"
+        this.viewMode === "canvas"
           ? "._canvasItem"
           : "._mediaGridView--item";
           
