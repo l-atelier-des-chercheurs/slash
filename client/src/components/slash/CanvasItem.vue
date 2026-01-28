@@ -8,16 +8,20 @@
     <!-- <span class="_canvasItem--debug"
       >{{ file.x }} {{ file.y }} {{ optimalResolution }}</span
     > -->
-    <MediaContent
-      :file="file"
-      :context="'full'"
-      :resolution="optimalResolution"
-    />
-    <div
-      v-if="showResizeHandle"
-      class="_resizeHandle"
-      @mousedown.stop="handleResizeStart"
-    ></div>
+    <div class="_canvasItem--shadow" />
+
+    <div class="_canvasItem--content">
+      <MediaContent
+        :file="file"
+        :context="'full'"
+        :resolution="optimalResolution"
+      />
+      <div
+        v-if="showResizeHandle"
+        class="_resizeHandle"
+        @mousedown.stop="handleResizeStart"
+      ></div>
+    </div>
   </div>
 </template>
 <script>
@@ -333,45 +337,57 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._canvasItem {
+  --shadow-size: 5px;
+
   position: absolute;
   width: 160px;
   height: auto;
-  overflow: hidden;
 
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.12);
-  border-radius: var(--border-radius);
-  overflow: hidden;
+  overflow: visible;
 
   cursor: grab;
   user-select: none;
 
-  transform-origin: top left;
-
-  &:not(.is--dragging) {
-    transition: all 0.2s cubic-bezier(0.19, 1, 0.22, 1);
-  }
-
-  &:hover:not(.is--dragging):not(.is--resizing) {
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.24);
-    transform: scale(1.01);
-  }
+  transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
 
   &.is--dragging {
     cursor: grabbing;
     z-index: 1000;
-    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.3);
-    transform: scale(1.01) rotate(-1deg);
   }
-
   &.is--resizing {
     cursor: ew-resize;
+  }
+
+  ._canvasItem--content {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: transform 0.12s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  &:hover,
+  &.is--dragging,
+  &.is--resizing {
+    ._canvasItem--content {
+      transform: translate(-5px, -5px);
+    }
+  }
+
+  ._canvasItem--shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(221, 221, 221);
+    border-radius: var(--border-radius);
+    z-index: -1;
   }
 
   ._resizeHandle {
     position: absolute;
     right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 6px;
+
     width: 6px;
     height: 16px;
     background-color: white;
