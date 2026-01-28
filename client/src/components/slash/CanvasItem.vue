@@ -8,19 +8,19 @@
   >
     <div class="_canvasItem--shadow" />
 
-    <div class="_canvasItem--content">
+    <div class="_canvasItem--content" :data-filetype="file.$type">
       <MediaContent
         :file="file"
         :context="'full'"
         :resolution="optimalResolution"
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
-      <div
-        class="_canvasItem--resizeHandle"
-        :class="{ 'is--widthOnly': isWidthOnly }"
-        @mousedown.stop="handleResizeStart"
-      />
     </div>
+    <div
+      class="_canvasItem--resizeHandle"
+      :class="{ 'is--widthOnly': isWidthOnly }"
+      @mousedown.stop="handleResizeStart"
+    />
   </div>
 </template>
 <script>
@@ -361,6 +361,11 @@ export default {
     position: relative;
     border-radius: var(--border-radius);
     transition: transform 0.12s cubic-bezier(0.19, 1, 0.22, 1);
+
+    &:not([data-filetype="audio"]) {
+      // not audio because we need to keep the controls tooltip when hovering the seek bar
+      overflow: hidden;
+    }
   }
 
   &:hover,
@@ -383,25 +388,49 @@ export default {
   }
 
   ._canvasItem--resizeHandle {
-    position: absolute;
-    right: 6px;
-    bottom: 6px;
+    --button-size: 36px;
 
-    width: 6px;
-    height: 16px;
-    background-color: white;
-    border-radius: 4px;
+    position: absolute;
+    right: calc(var(--button-size) / -2);
+    bottom: calc(var(--button-size) / -2);
+
+    // Larger touch target (44x44px minimum for accessibility)
+    width: var(--button-size);
+    height: var(--button-size);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // padding: 8px; // Creates larger hit area while keeping visual size same
+
     cursor: nwse-resize;
     z-index: 10;
-    transition: background-color 0.2s;
     pointer-events: auto;
-    opacity: 0;
+    opacity: 1;
+
+    // Visual handle using pseudo-element
+    &::before {
+      content: "";
+      display: block;
+      width: 16px;
+      height: 6px;
+      transform: rotate(90deg);
+      background-color: black;
+      border-radius: 4px;
+      box-shadow: 0 0 0px 2px white;
+      transform: rotate(45deg);
+      transition: background-color 0.2s;
+    }
 
     &.is--widthOnly {
       cursor: ew-resize;
       // right: 0;
       top: 50%;
       transform: translateY(-50%);
+
+      &::before {
+        transform: rotate(90deg);
+      }
     }
 
     &:hover {
@@ -412,6 +441,10 @@ export default {
   &.is--resizing {
     ._canvasItem--resizeHandle {
       opacity: 1;
+
+      &:hover::before {
+        background-color: var(--c-noir);
+      }
     }
   }
 }
