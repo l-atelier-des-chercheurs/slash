@@ -16,10 +16,10 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
       <div
-        v-if="showResizeHandle"
-        class="_resizeHandle"
+        class="_canvasItem--resizeHandle"
+        :class="{ 'is--widthOnly': isWidthOnly }"
         @mousedown.stop="handleResizeStart"
-      ></div>
+      />
     </div>
   </div>
 </template>
@@ -64,6 +64,9 @@ export default {
     };
   },
   computed: {
+    isWidthOnly() {
+      return !this.file.$infos?.ratio;
+    },
     itemStyle() {
       const x = this.currentX !== null ? this.currentX : this.file.x || 0;
       const y = this.currentY !== null ? this.currentY : this.file.y || 0;
@@ -88,9 +91,6 @@ export default {
       }
 
       return style;
-    },
-    showResizeHandle() {
-      return (this.isHovering || this.isResizing) && !this.isDragging;
     },
     optimalResolution() {
       // Available thumbnail resolutions
@@ -156,7 +156,7 @@ export default {
     },
     handleMouseDown(event) {
       // Don't start dragging if clicking on resize handle
-      if (event.target.classList.contains("_resizeHandle")) {
+      if (event.target.classList.contains("_canvasItem--resizeHandle")) {
         return;
       }
 
@@ -382,7 +382,7 @@ export default {
     z-index: -1;
   }
 
-  ._resizeHandle {
+  ._canvasItem--resizeHandle {
     position: absolute;
     right: 6px;
     bottom: 6px;
@@ -391,14 +391,35 @@ export default {
     height: 16px;
     background-color: white;
     border-radius: 4px;
-    cursor: ew-resize;
+    cursor: nwse-resize;
     z-index: 10;
     transition: background-color 0.2s;
     pointer-events: auto;
+    opacity: 0;
+
+    &.is--widthOnly {
+      cursor: ew-resize;
+      // right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
 
     &:hover {
-      transform: translateY(-50%) scale(1.2);
     }
+  }
+  &:hover,
+  &.is--dragging,
+  &.is--resizing {
+    ._canvasItem--resizeHandle {
+      opacity: 1;
+    }
+  }
+}
+
+._canvasItem--content {
+  ::v-deep .plyr__controls {
+    border-radius: var(--border-radius, 4px);
+    width: 100%;
   }
 }
 
