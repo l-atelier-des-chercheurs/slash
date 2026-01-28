@@ -5,6 +5,7 @@
       'is--dragging': isDragging,
       'is--resizing': isResizing,
       'is--timeline': mode === 'timeline',
+      'is--hovering-resize-handle': isHoveringResizeHandle,
     }"
     :style="itemStyle"
     @mousedown="handleMouseDown"
@@ -25,6 +26,8 @@
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       @mousedown.stop="handleResizeStart"
+      @mouseenter="handleResizeHandleEnter"
+      @mouseleave="handleResizeHandleLeave"
     />
   </div>
 </template>
@@ -62,6 +65,7 @@ export default {
       isDragging: false,
       isResizing: false,
       isHovering: false,
+      isHoveringResizeHandle: false,
       dragStartX: 0,
       dragStartY: 0,
       dragStartFileX: 0,
@@ -183,6 +187,12 @@ export default {
     },
     handleMouseLeave() {
       this.isHovering = false;
+    },
+    handleResizeHandleEnter() {
+      this.isHoveringResizeHandle = true;
+    },
+    handleResizeHandleLeave() {
+      this.isHoveringResizeHandle = false;
     },
     handleResizeStart(event) {
       event.preventDefault();
@@ -387,6 +397,7 @@ export default {
   position: absolute;
   width: 160px;
   height: auto;
+  z-index: 10;
 
   overflow: visible;
 
@@ -440,9 +451,8 @@ export default {
     }
   }
 
-  &:hover,
-  &.is--dragging,
-  &.is--resizing {
+  &:hover:not(.is--hovering-resize-handle),
+  &.is--dragging {
     ._canvasItem--content {
       transform: translate(-5px, -5px);
     }
@@ -539,7 +549,9 @@ export default {
       }
     }
 
-    &:hover {
+    &:hover::before {
+      background-color: white;
+      box-shadow: 0 0 0px 2px black;
     }
   }
   &:hover,
@@ -547,10 +559,6 @@ export default {
   &.is--resizing {
     ._canvasItem--resizeHandle {
       opacity: 1;
-
-      &:hover::before {
-        background-color: var(--c-noir);
-      }
     }
   }
 }

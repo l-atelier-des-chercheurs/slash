@@ -145,22 +145,46 @@ export default {
 
       // 4. Wait for DOM update
       await this.$nextTick();
+      // Ensure layout is computed for the newly-shown view (v-show toggles display:none)
+      await new Promise((resolve) => requestAnimationFrame(resolve));
 
       // 5. Animate to new positions
       this.animateTransitions(firstPositions);
+    },
+    getViewContainer(mode) {
+      switch (mode) {
+        case "canvas":
+          return this.$el.querySelector("._largeCanvas");
+        case "timeline":
+          return this.$el.querySelector("._timelineView");
+        case "grid":
+          return this.$el.querySelector("._mediaGridView");
+        default:
+          return null;
+      }
+    },
+    getItemSelector(mode) {
+      switch (mode) {
+        case "canvas":
+        case "timeline":
+          return "._canvasItem";
+        case "grid":
+          return "._mediaGridView--item";
+        default:
+          return null;
+      }
     },
     capturePositions() {
       if (this.viewMode === "map") return new Map();
 
       const positions = new Map();
-      const selector =
-        this.viewMode === "canvas"
-          ? "._canvasItem"
-          : this.viewMode === "timeline"
-          ? "._canvasItem"
-          : "._mediaGridView--item";
+      const container = this.getViewContainer(this.viewMode);
+      const selector = this.getItemSelector(this.viewMode);
+      if (!container || !selector) return positions;
 
-      const elements = this.$el.querySelectorAll(selector);
+      // Important: scope to the active view container only.
+      // Otherwise hidden views (v-show) can overwrite rects with 0x0.
+      const elements = container.querySelectorAll(selector);
       elements.forEach((el) => {
         const path = el.getAttribute("data-file-path");
         if (path) {
@@ -172,14 +196,11 @@ export default {
     animateTransitions(firstPositions) {
       if (this.viewMode === "map") return;
 
-      const selector =
-        this.viewMode === "canvas"
-          ? "._canvasItem"
-          : this.viewMode === "timeline"
-          ? "._canvasItem"
-          : "._mediaGridView--item";
+      const container = this.getViewContainer(this.viewMode);
+      const selector = this.getItemSelector(this.viewMode);
+      if (!container || !selector) return;
 
-      const elements = this.$el.querySelectorAll(selector);
+      const elements = container.querySelectorAll(selector);
 
       // Force a reflow before starting to ensure we have clean state
       document.body.offsetHeight;
@@ -190,6 +211,7 @@ export default {
 
         if (first) {
           const last = el.getBoundingClientRect();
+          if (!last.width || !last.height) return;
 
           // Calculate delta
           const deltaX = first.left - last.left;
