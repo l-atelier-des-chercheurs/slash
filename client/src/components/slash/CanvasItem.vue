@@ -4,6 +4,7 @@
     :class="{ 'is--dragging': isDragging, 'is--resizing': isResizing }"
     :style="itemStyle"
     @mousedown="handleMouseDown"
+    :data-file-path="file.$path"
   >
     <!-- <span class="_canvasItem--debug"
       >{{ file.x }} {{ file.y }} {{ optimalResolution }}</span

@@ -5,8 +5,9 @@
         v-for="file in files"
         :key="file.$path"
         class="_mediaGridView--item"
+        :data-file-path="file.$path"
       >
-        <MediaContent :file="file" :resolution="320" />
+        <MediaContent :file="file" :context="'full'" :resolution="320" />
       </div>
     </div>
   </div>
