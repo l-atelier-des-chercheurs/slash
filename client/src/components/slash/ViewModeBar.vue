@@ -3,9 +3,9 @@
     <button
       type="button"
       class="_viewModeBar--btn"
-      :class="{ 'is--active': value === 'map' }"
-      :aria-pressed="value === 'map'"
-      @click="$emit('input', 'map')"
+      :class="{ 'is--active': value === 'canvas' }"
+      :aria-pressed="value === 'canvas'"
+      @click="$emit('input', 'canvas')"
     >
       <b-icon icon="layout-wtf" />
     </button>
@@ -52,8 +52,8 @@ export default {
   props: {
     value: {
       type: String,
-      default: "map",
-      validator: (v) => ["map", "grid", "geoMap", "timeline"].includes(v),
+      default: "canvas",
+      validator: (v) => ["canvas", "grid", "geoMap", "timeline"].includes(v),
     },
   },
   methods: {
