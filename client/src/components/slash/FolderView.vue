@@ -2,6 +2,7 @@
   <div v-if="default_folder" class="_folderView">
     <ViewModeBar :value="viewMode" @input="switchViewMode" />
     <LargeCanvas v-show="viewMode === 'map'" :files="default_folder.$files" />
+    <GeoMapView v-show="viewMode === 'geoMap'" :files="default_folder.$files" />
     <MediaGridView
       v-show="viewMode === 'grid'"
       :files="default_folder.$files"
@@ -11,6 +12,7 @@
 </template>
 <script>
 import DropMenu from "@/components/slash/DropMenu.vue";
+import GeoMapView from "@/components/slash/GeoMapView.vue";
 import LargeCanvas from "@/components/slash/LargeCanvas.vue";
 import MediaGridView from "@/components/slash/MediaGridView.vue";
 import ViewModeBar from "@/components/slash/ViewModeBar.vue";
@@ -18,6 +20,7 @@ export default {
   props: {},
   components: {
     DropMenu,
+    GeoMapView,
     LargeCanvas,
     MediaGridView,
     ViewModeBar,
@@ -85,6 +88,8 @@ export default {
       this.animateTransitions(firstPositions);
     },
     capturePositions() {
+      if (this.viewMode === "geoMap") return new Map();
+
       const positions = new Map();
       const selector =
         this.viewMode === "map"
@@ -101,6 +106,8 @@ export default {
       return positions;
     },
     animateTransitions(firstPositions) {
+      if (this.viewMode === "geoMap") return;
+
       const selector =
         this.viewMode === "map"
           ? "._canvasItem"

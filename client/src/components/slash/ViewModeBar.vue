@@ -18,6 +18,15 @@
     >
       <b-icon icon="grid-fill" />
     </button>
+    <button
+      type="button"
+      class="_viewModeBar--btn"
+      :class="{ 'is--active': value === 'geoMap' }"
+      :aria-pressed="value === 'geoMap'"
+      @click="$emit('input', 'geoMap')"
+    >
+      <b-icon icon="map" />
+    </button>
     <div class="_viewModeBar--divider"></div>
     <button
       type="button"
@@ -35,7 +44,7 @@ export default {
     value: {
       type: String,
       default: "map",
-      validator: (v) => ["map", "grid"].includes(v),
+      validator: (v) => ["map", "grid", "geoMap"].includes(v),
     },
   },
   methods: {
