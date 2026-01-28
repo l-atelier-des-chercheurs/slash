@@ -16,6 +16,7 @@
         :file="file"
         :context="'full'"
         :resolution="optimalResolution"
+        :plyr_options="{ controls: ['play', 'progress'] }"
       />
       <div
         v-if="showResizeHandle"

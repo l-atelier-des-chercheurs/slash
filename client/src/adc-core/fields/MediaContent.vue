@@ -50,7 +50,7 @@
         </template>
       </template>
       <template v-else>
-        <vue-plyr :key="file_full_path" ref="plyr">
+        <vue-plyr :key="file_full_path" ref="plyr" :options="plyr_options">
           <video
             v-if="file.$type === 'video'"
             :poster="thumb"
@@ -163,6 +163,7 @@
               v-else-if="load_iframe_type === 'video'"
               :key="'plyr-' + file_full_path"
               ref="plyr"
+              :options="plyr_options"
             >
               <div class="plyr__video-embed">
                 <iframe
@@ -226,6 +227,10 @@
 export default {
   props: {
     file: Object,
+    plyr_options: {
+      type: Object,
+      default: () => ({}),
+    },
     resolution: {
       type: Number,
       default: 220,
