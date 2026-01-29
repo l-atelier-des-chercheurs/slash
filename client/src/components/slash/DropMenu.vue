@@ -12,8 +12,17 @@
         'is--open': is_open,
       }"
     >
-      <div v-show="is_open" class="_dropMenu--panel">
-        <div v-for="row in typeRows" :key="row.id" class="_dropMenu--row">
+      <div class="_dropMenu--panel" :class="{ 'is--open': is_open }">
+        <div
+          v-for="(row, index) in typeRows"
+          :key="row.id"
+          class="_dropMenu--row"
+          :style="{
+            '--transition-delay': is_open
+              ? `${(typeRows.length - 1 - index) * 20}ms`
+              : '0ms',
+          }"
+        >
           <button type="button" class="_dropMenu--btn" @click.prevent>
             <span class="_dropMenu--label">{{ row.label }}</span>
             <b-icon :icon="row.icon" class="_dropMenu--icon" />
@@ -103,7 +112,6 @@ $_peach_dark: #e8bc85;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  pointer-events: auto;
 
   transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
 }
@@ -140,6 +148,7 @@ $_peach_dark: #e8bc85;
   font-size: 30px;
   border-radius: 50%;
   background-color: white;
+  pointer-events: auto;
 
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 
@@ -179,10 +188,22 @@ $_peach_dark: #e8bc85;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
+
+  &.is--open {
+    pointer-events: auto;
+  }
 }
 
 ._dropMenu--row {
-  // margin-right: 20px;
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+  transition-delay: var(--transition-delay);
+
+  ._dropMenu--panel.is--open & {
+    opacity: 1;
+  }
 }
 
 ._dropMenu--btn {
@@ -230,5 +251,6 @@ $_peach_dark: #e8bc85;
   background: white;
   color: var(--c-noir);
   font-weight: 600;
+  pointer-events: auto;
 }
 </style>
