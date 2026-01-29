@@ -75,6 +75,24 @@ export default {
       baseLineHeight: 28, // Height of horizontal lines
       padding: 60,
       headerHeight: 40,
+
+      slash_timeline_events: [
+        {
+          label: "Local Hubs",
+          from: "2025-03-01",
+          to: "2025-10-01",
+        },
+        {
+          label: "Briefs + artists selection",
+          from: "2025-10-01",
+          to: "2025-12-01",
+        },
+        {
+          label: "Training",
+          from: "2025-12-08",
+          to: "2025-12-17",
+        },
+      ],
     };
   },
   computed: {
