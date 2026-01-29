@@ -43,6 +43,14 @@ export default {
     scale: Number,
     contentWidth: Number,
     contentHeight: Number,
+    marginAroundContent: {
+      type: Number,
+      default: 0,
+    },
+    limitRange: {
+      type: Boolean,
+      default: false,
+    },
     magnification: Number,
     layout_mode: {
       type: String,
@@ -51,10 +59,6 @@ export default {
     show_rules: {
       type: Boolean,
       default: false,
-    },
-    margin_around_content: {
-      type: Number,
-      default: 100,
     },
     enableDragToPan: {
       type: Boolean,
@@ -372,6 +376,25 @@ export default {
     getViewerOptions() {
       // Set ranges to prevent scrolling to negative values (less than 0)
       // but allow unlimited positive scrolling
+
+      let rangeX = undefined;
+      let rangeY = undefined;
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      if (this.limitRange) {
+        rangeX = [
+          -this.marginAroundContent,
+          this.contentWidth - windowWidth + this.marginAroundContent,
+        ];
+        rangeY = [
+          -this.marginAroundContent,
+          this.contentHeight - windowHeight + this.marginAroundContent,
+        ];
+      }
+
+      debugger;
+
       return {
         useMouseDrag: this.enableDragToPan,
         useWheelScroll: true,
@@ -381,6 +404,8 @@ export default {
         maxPinchWheel: 10,
         displayVerticalScroll: true,
         displayHorizontalScroll: true,
+        rangeX: rangeX,
+        rangeY: rangeY,
       };
     },
     updateViewerOptions() {
@@ -504,78 +529,6 @@ export default {
           this.infiniteviewer.getScrollTop()
         );
       }, 500);
-    },
-    getContentBounds() {
-      // Get content bounds from viewport's scroll dimensions
-      if (!this.$refs.viewport) {
-        return { width: 0, height: 0 };
-      }
-
-      const viewport = this.$refs.viewport;
-      const width = viewport.scrollWidth || viewport.offsetWidth || 0;
-      const height = viewport.scrollHeight || viewport.offsetHeight || 0;
-
-      return {
-        width: Math.max(0, width),
-        height: Math.max(0, height),
-      };
-    },
-    clampScrollToContent() {
-      if (!this.infiniteviewer || !this.$refs.viewport) return;
-
-      const contentBounds = this.getContentBounds();
-      // If no content, don't clamp
-      if (contentBounds.width === 0 && contentBounds.height === 0) return;
-
-      const padding = this.margin_around_content;
-      const zoom = this.infiniteviewer.getZoom() || this.scale || 1;
-
-      // Get viewer dimensions
-      const viewer = this.$refs.infiniteviewer;
-      const viewerWidth = viewer.offsetWidth || 0;
-      const viewerHeight = viewer.offsetHeight || 0;
-
-      // Calculate scaled content dimensions
-      const scaledContentWidth = contentBounds.width * zoom;
-      const scaledContentHeight = contentBounds.height * zoom;
-
-      // Calculate max scroll positions
-      // If content is smaller than viewer, max scroll should be at least 0
-      // If content is larger, max scroll is content size - viewer size + padding
-      const maxScrollX =
-        scaledContentWidth <= viewerWidth
-          ? padding
-          : Math.max(padding, scaledContentWidth - viewerWidth + padding);
-      const maxScrollY =
-        scaledContentHeight <= viewerHeight
-          ? padding
-          : Math.max(padding, scaledContentHeight - viewerHeight + padding);
-
-      const minScrollX = -padding;
-      const minScrollY = -padding;
-
-      // Get current scroll position
-      const currentScrollX = this.infiniteviewer.getScrollLeft() || 0;
-      const currentScrollY = this.infiniteviewer.getScrollTop() || 0;
-
-      // Clamp scroll position
-      const clampedX = Math.max(
-        minScrollX,
-        Math.min(maxScrollX, currentScrollX)
-      );
-      const clampedY = Math.max(
-        minScrollY,
-        Math.min(maxScrollY, currentScrollY)
-      );
-
-      // If scroll was clamped, update it instantly (no animation)
-      if (clampedX !== currentScrollX || clampedY !== currentScrollY) {
-        // Use scrollTo with no duration for instant correction
-        this.infiniteviewer.scrollTo(clampedX, clampedY, {
-          absolute: true,
-          duration: 0, // Instant - no animation
-        });
-      }
     },
     checkContentVisibility() {
       // Debounce: only execute once every 500ms

@@ -1,24 +1,26 @@
 <template>
   <div v-if="default_folder" class="_folderView">
-    <ViewModeBar :value="viewMode" @input="switchViewMode" />
-    <LargeCanvas
-      v-show="viewMode === 'canvas'"
-      :files="default_folder.$files"
+    <div v-show="filterBarOpen" class="_filterBar" aria-hidden="true">
+      <FilterBar v-model="mediaTypeFilter" />
+    </div>
+    <ViewModeBar
+      :value="viewMode"
+      :filter-open="filterBarOpen"
+      @input="switchViewMode"
+      @toggle-filter="filterBarOpen = !filterBarOpen"
     />
-    <GeoMapView v-show="viewMode === 'map'" :files="default_folder.$files" />
-    <TimelineView
-      v-show="viewMode === 'timeline'"
-      :files="default_folder.$files"
-    />
-    <MediaGridView
-      v-show="viewMode === 'grid'"
-      :files="default_folder.$files"
-    />
+    <div class="_viewArea">
+      <LargeCanvas v-show="viewMode === 'canvas'" :files="filteredFiles" />
+      <GeoMapView v-show="viewMode === 'map'" :files="filteredFiles" />
+      <TimelineView v-show="viewMode === 'timeline'" :files="filteredFiles" />
+      <MediaGridView v-show="viewMode === 'grid'" :files="filteredFiles" />
+    </div>
     <DropMenu class="_dropMenu" :folder_path="default_folder.$path" />
   </div>
 </template>
 <script>
 import DropMenu from "@/components/slash/DropMenu.vue";
+import FilterBar from "@/components/slash/FilterBar.vue";
 import GeoMapView from "@/components/slash/GeoMapView.vue";
 import LargeCanvas from "@/components/slash/LargeCanvas.vue";
 import MediaGridView from "@/components/slash/MediaGridView.vue";
@@ -28,6 +30,7 @@ export default {
   props: {},
   components: {
     DropMenu,
+    FilterBar,
     GeoMapView,
     LargeCanvas,
     MediaGridView,
@@ -38,6 +41,8 @@ export default {
     return {
       default_folder: null,
       viewMode: "canvas",
+      filterBarOpen: false,
+      mediaTypeFilter: null,
     };
   },
   async created() {
@@ -73,7 +78,21 @@ export default {
       }
     },
   },
-  computed: {},
+  computed: {
+    filteredFiles() {
+      if (!this.default_folder || !Array.isArray(this.default_folder.$files)) {
+        return [];
+      }
+      const type = this.mediaTypeFilter;
+      if (!type) return this.default_folder.$files;
+      if (type === "3d") {
+        return this.default_folder.$files.filter(
+          (f) => f.$type === "stl" || f.$type === "obj"
+        );
+      }
+      return this.default_folder.$files.filter((f) => f.$type === type);
+    },
+  },
   methods: {
     initializeViewMode() {
       const validModes = ["canvas", "grid", "map", "timeline"];
@@ -269,8 +288,25 @@ export default {
 <style lang="scss" scoped>
 ._folderView {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   min-height: 100vh;
+}
+
+._filterBar {
+  flex-shrink: 0;
+  width: 100%;
+  background: var(--c-gris_clair, #f0f0f0);
+  border-bottom: 1px solid var(--c-gris, #ccc);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  z-index: 9999;
+}
+
+._viewArea {
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
 </style>

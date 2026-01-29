@@ -6,8 +6,9 @@
     :content-width="canvasSize"
     :content-height="canvasSize"
     :show-rules="false"
-    :margin-around-content="200"
     :enable-drag-to-pan="true"
+    :margin-around-content="200"
+    :limitRange="true"
     @update:scale="handleZoomUpdate"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
@@ -42,7 +43,7 @@ export default {
     return {
       canvasScrollLeft: 0,
       canvasScrollTop: 0,
-      canvasSize: 20000,
+      canvasSize: 10000,
       canvasZoom: 1,
       nextGridX: 0,
       nextGridY: 0,
@@ -163,6 +164,7 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background: var(--c-bleuvert);
 }
 
 ._canvasContent {
@@ -170,6 +172,7 @@ export default {
 
   // Dot grid pattern with --color-rule; pans with content (this div is inside the panned viewport)
   --rule-color: var(--color-rule);
+  --background-color: white;
   --rule-size: 48px;
   --dot-size: 2px;
 
@@ -177,7 +180,7 @@ export default {
   background-image: radial-gradient(
     circle,
     var(--rule-color) var(--dot-size),
-    transparent var(--dot-size)
+    var(--background-color) var(--dot-size)
   );
   background-size: var(--rule-size) var(--rule-size);
   background-position: 0 0;
@@ -186,7 +189,7 @@ export default {
     background-image: radial-gradient(
       circle,
       var(--rule-color) var(--dot-size),
-      transparent var(--dot-size)
+      var(--background-color) var(--dot-size)
     );
     background-size: var(--rule-size) var(--rule-size);
   }

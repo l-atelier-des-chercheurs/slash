@@ -41,8 +41,10 @@
     <button
       type="button"
       class="_viewModeBar--btn"
+      :class="{ 'is--active': filterOpen }"
       aria-label="Filter"
-      @click="onFilterClick"
+      aria-pressed="filterOpen"
+      @click="$emit('toggle-filter')"
     >
       <b-icon icon="filter" />
     </button>
@@ -56,10 +58,9 @@ export default {
       default: "canvas",
       validator: (v) => ["canvas", "grid", "map", "timeline"].includes(v),
     },
-  },
-  methods: {
-    onFilterClick() {
-      // Does nothing for now
+    filterOpen: {
+      type: Boolean,
+      default: false,
     },
   },
 };
