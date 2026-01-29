@@ -107,7 +107,6 @@ import {
   BIconListCheck,
   BIconGrid3x2GapFill,
   BIconGridFill,
-  BIconGrid,
   BIconMapFill,
   BIconIntersect,
   BIconFilePdf,
@@ -164,8 +163,6 @@ import {
   BIconFolderSymlink,
   BIconChatDots,
   BIconChatDotsFill,
-  BIconChatLeft,
-  BIconChatLeftTextFill,
   BIconArrowUpRightSquare,
   BIconArrowUpRightSquareFill,
   BIconGlobe,
@@ -178,8 +175,6 @@ import {
   BIconLayoutSidebarInset,
   BIconLayoutSidebarReverse,
   BIconLayoutSidebarInsetReverse,
-  BIconLayoutWtf,
-  BIconCalendarDay,
 } from "bootstrap-vue";
 
 Vue.component("BIconShieldCheck", BIconShieldCheck);
@@ -284,7 +279,6 @@ Vue.component("BIconListOl", BIconListOl);
 Vue.component("BIconListCheck", BIconListCheck);
 Vue.component("BIconGrid3x2GapFill", BIconGrid3x2GapFill);
 Vue.component("BIconGridFill", BIconGridFill);
-Vue.component("BIconGrid", BIconGrid);
 Vue.component("BIconMapFill", BIconMapFill);
 Vue.component("BIconIntersect", BIconIntersect);
 Vue.component("BIconFilePdf", BIconFilePdf);
@@ -344,8 +338,6 @@ Vue.component("BIconFileCode", BIconFileCode);
 Vue.component("BIconFolderSymlink", BIconFolderSymlink);
 Vue.component("BIconChatDots", BIconChatDots);
 Vue.component("BIconChatDotsFill", BIconChatDotsFill);
-Vue.component("BIconChatLeft", BIconChatLeft);
-Vue.component("BIconChatLeftTextFill", BIconChatLeftTextFill);
 Vue.component("BIconArrowUpRightSquare", BIconArrowUpRightSquare);
 Vue.component("BIconArrowUpRightSquareFill", BIconArrowUpRightSquareFill);
 Vue.component("BIconGlobe", BIconGlobe);
@@ -358,5 +350,3 @@ Vue.component("BIconLayoutSidebar", BIconLayoutSidebar);
 Vue.component("BIconLayoutSidebarInset", BIconLayoutSidebarInset);
 Vue.component("BIconLayoutSidebarReverse", BIconLayoutSidebarReverse);
 Vue.component("BIconLayoutSidebarInsetReverse", BIconLayoutSidebarInsetReverse);
-Vue.component("BIconLayoutWtf", BIconLayoutWtf);
-Vue.component("BIconCalendarDay", BIconCalendarDay);

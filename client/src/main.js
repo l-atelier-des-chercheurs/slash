@@ -3,6 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 
 import "./utils/icons";
+import "./utils/icons_slash";
 
 // Add Bootstrap Vue CSS for icon animations
 import "bootstrap-vue/dist/bootstrap-vue-icons.min.css";

@@ -20,23 +20,23 @@
         :resolution="optimalResolution"
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
+
+      <button
+        type="button"
+        class="_canvasItem--pathBubble"
+        :aria-label="$t('file_path')"
+        @mousedown.stop
+        @click.stop="showPathModal = true"
+      >
+        <b-icon icon="chat-left-text-fill" />
+      </button>
+
+      <ItemChat
+        v-if="showPathModal"
+        :file="file"
+        @close="showPathModal = false"
+      />
     </div>
-
-    <button
-      type="button"
-      class="_canvasItem--pathBubble"
-      :aria-label="$t('file_path')"
-      @mousedown.stop
-      @click.stop="showPathModal = true"
-    >
-      <b-icon icon="chat-left-text-fill" />
-    </button>
-
-    <ItemChat
-      v-if="showPathModal"
-      :file="file"
-      @close="showPathModal = false"
-    />
 
     <div
       v-if="mode === 'canvas'"
@@ -472,8 +472,8 @@ export default {
 
   ._canvasItem--pathBubble {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: calc(var(--spacing) / 4);
+    right: calc(var(--spacing) / 4);
     z-index: 5;
 
     display: flex;
@@ -484,7 +484,8 @@ export default {
     height: 28px;
     padding: 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: calc(var(--border-radius) - 2px);
+
     background: black;
     color: white;
     cursor: pointer;
@@ -565,6 +566,7 @@ export default {
 ._canvasItem--content {
   ::v-deep .plyr__controls {
     border-radius: var(--border-radius, 4px);
+    padding-right: calc(var(--spacing) * 3);
     width: 100%;
   }
 
