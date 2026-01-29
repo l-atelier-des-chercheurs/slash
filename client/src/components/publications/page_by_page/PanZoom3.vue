@@ -1,5 +1,12 @@
 <template>
-  <div ref="infiniteviewer" class="viewer">
+  <div
+    ref="infiniteviewer"
+    class="viewer"
+    :class="{
+      'is--drag-to-pan': enableDragToPan && !isPanning,
+      'is--panning': enableDragToPan && isPanning,
+    }"
+  >
     <div
       v-if="show_rules"
       ref="horizontalGuides"
@@ -49,6 +56,10 @@ export default {
       type: Number,
       default: 100,
     },
+    enableDragToPan: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -66,6 +77,7 @@ export default {
 
       contentOffset: { x: 0, y: 0 },
       isContentVisible: true,
+      isPanning: false,
     };
   },
   created() {},
@@ -76,10 +88,10 @@ export default {
       // Handle wheel zoom with Cmd/Ctrl modifier after initialization
       // Use capture phase to intercept before InfiniteViewer processes it
       if (this.$refs.infiniteviewer) {
-        this.$refs.infiniteviewer.addEventListener("wheel", this.onWheel, {
-          passive: false,
-          capture: true, // Capture phase - runs before InfiniteViewer's handler
-        });
+        //   this.$refs.infiniteviewer.addEventListener("wheel", this.onWheel, {
+        //     passive: false,
+        //     capture: true, // Capture phase - runs before InfiniteViewer's handler
+        //   });
       }
     });
 
@@ -110,7 +122,7 @@ export default {
     }
     window.removeEventListener("resize", this.onWindowResize);
     if (this.$refs.infiniteviewer) {
-      this.$refs.infiniteviewer.removeEventListener("wheel", this.onWheel);
+      // this.$refs.infiniteviewer.removeEventListener("wheel", this.onWheel);
     }
     this.$eventHub.$off(`panzoom.panTo`, this.panTo);
     this.$root.set_new_module_offset_left = 0;
@@ -173,6 +185,12 @@ export default {
           this.verticalGuides.destroy();
           this.verticalGuides = null;
         }
+      }
+    },
+    enableDragToPan(newValue) {
+      // Update drag-to-pan option dynamically
+      if (this.infiniteviewer) {
+        this.infiniteviewer.useMouseDrag = newValue;
       }
     },
   },
@@ -355,7 +373,7 @@ export default {
       // Set ranges to prevent scrolling to negative values (less than 0)
       // but allow unlimited positive scrolling
       return {
-        useMouseDrag: true,
+        useMouseDrag: this.enableDragToPan,
         useWheelScroll: true,
         useAutoZoom: true,
         margin: 0,
@@ -371,12 +389,12 @@ export default {
       // This method is kept for API compatibility but doesn't need to do anything.
     },
     dragStart(event) {
-      console.log("dragStart");
       if (event.inputEvent?.target?.classList?.contains("panzoom-exclude"))
         event.stop();
+      this.isPanning = true;
     },
     dragEnd(event) {
-      console.log("dragEnd");
+      this.isPanning = false;
       if (!event.isDrag) this.disableActiveModule();
     },
     pinchStart() {
@@ -727,19 +745,9 @@ export default {
         return;
       }
 
-      // Get mouse position relative to viewer for zoom center
-      const viewerRect = this.$refs.infiniteviewer.getBoundingClientRect();
-      const mouseX = event.clientX - viewerRect.left;
-      const mouseY = event.clientY - viewerRect.top;
-
-      // Set new zoom with the mouse position as center
+      // No zoom offset – use library default (like daybrush.com/infinite-viewer)
       this.is_zooming = true;
-      this.infiniteviewer.setZoom(newZoom, {
-        duration: 0, // Instant zoom for smooth feel
-        zoomBase: "viewport",
-        zoomOffsetX: mouseX,
-        zoomOffsetY: mouseY,
-      });
+      this.infiniteviewer.setZoom(newZoom, { duration: 0 });
 
       // Update guides zoom
       this.updateGuidesZoom();
@@ -763,7 +771,13 @@ export default {
   position: relative;
   width: 100%;
   height: 100%;
-  cursor: move;
+
+  &.is--drag-to-pan {
+    cursor: grab;
+  }
+  &.is--panning {
+    cursor: grabbing;
+  }
 }
 ._pzViewport {
   position: relative;

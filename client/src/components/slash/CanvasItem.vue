@@ -96,7 +96,6 @@ export default {
           this.timelineHeight || (ratio ? width * ratio : null) || 200;
 
         const style = {
-          cursor: this.isDragging ? "grabbing" : "grab",
           width: `${width}px`,
         };
 
@@ -123,11 +122,6 @@ export default {
       const style = {
         left: `${x}px`,
         top: `${y}px`,
-        cursor: this.isDragging
-          ? "grabbing"
-          : this.isResizing
-          ? "ew-resize"
-          : "grab",
         width: `${width}px`,
       };
 
@@ -381,7 +375,7 @@ export default {
 
   overflow: visible;
 
-  cursor: grab;
+  cursor: pointer;
   user-select: none;
 
   transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
@@ -413,7 +407,7 @@ export default {
   }
 
   &.is--dragging {
-    cursor: grabbing;
+    cursor: pointer;
     z-index: 1000;
   }
   &.is--resizing {
@@ -431,19 +425,13 @@ export default {
     }
   }
 
-  &:hover:not(.is--hovering-resize-handle),
-  &.is--dragging {
-    ._canvasItem--content {
-      transform: translate(-5px, -5px);
-    }
-  }
-
-  &.is--timeline {
+  &:not(.is--timeline) {
     &:hover,
-    &.is--dragging,
-    &.is--resizing {
-      ._canvasItem--content {
-        transform: none; // No transform in timeline mode
+    &.is--dragging {
+      &:not(.is--resizing) {
+        ._canvasItem--content {
+          transform: translate(-5px, -5px);
+        }
       }
     }
   }

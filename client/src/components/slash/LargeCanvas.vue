@@ -7,6 +7,7 @@
     :content-height="canvasSize"
     :show-rules="false"
     :margin-around-content="200"
+    :enable-drag-to-pan="true"
     @update:scale="handleZoomUpdate"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
