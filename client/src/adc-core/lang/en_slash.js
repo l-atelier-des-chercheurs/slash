@@ -8,6 +8,8 @@ export default {
 
   // DropMenu
   logged_in_as: "Logged in as:",
+  file: "File",
+  integration: "Integration",
 
   // TimelineView
   day_later: "{n} day later | {n} days later",

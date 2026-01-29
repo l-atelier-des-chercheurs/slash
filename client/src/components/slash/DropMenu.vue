@@ -23,7 +23,13 @@
       </div>
 
       <div class="_dropMenu--buttonContainer">
-        <button type="button" class="_dropMenu--userLabel">Louis</button>
+        <button
+          type="button"
+          class="_dropMenu--userLabel"
+          @click="openLoginModal()"
+        >
+          Louis
+        </button>
         <button
           class="_dropMenu--openButton"
           :title="$t('import')"
@@ -35,35 +41,6 @@
           <b-icon icon="plus-lg" scale="1" />
         </button>
       </div>
-
-      <!-- <button
-      class="u-button u-button_white u-spacingBottom _loginButton"
-      @click="openLoginModal()"
-      style="margin-bottom: 12px; margin-right: 8px"
-    >
-      <template v-if="$root.slash_logged_in_as?.name">
-        {{ $root.slash_logged_in_as.name }}
-      </template>
-      <template v-else>Login</template>
-    </button>
-
-    <template v-if="$root.slash_logged_in_as">
-      <ImportFileZone :multiple="true" :files_to_import.sync="files_to_import">
-        <template #trigger>
-          <button class="u-button u-button_white">
-            <b-icon icon="upload" :label="$t('import')" />
-          </button>
-        </template>
-      </ImportFileZone>
-      <UploadFiles
-        v-if="files_to_import.length > 0"
-        :files_to_import="files_to_import"
-        :path="folder_path"
-        :allow_caption_edition="false"
-        @importedMedias="mediasJustImported($event)"
-        @close="files_to_import = []"
-      />
-    </template> -->
     </div>
   </div>
 </template>
@@ -82,12 +59,12 @@ export default {
       files_to_import: [],
       is_open: false,
       typeRows: [
-        { id: "texte", label: "Texte", icon: "file-earmark-text" },
-        { id: "integration", label: "Intégration", icon: "puzzle" },
-        { id: "audio", label: "Audio", icon: "record-circle-fill" },
-        { id: "fichier", label: "Fichier", icon: "file-earmark" },
-        { id: "video", label: "Vidéo", icon: "play-fill" },
-        { id: "image", label: "Image", icon: "image" },
+        { id: "texte", label: this.$t("text"), icon: "file-earmark-text" },
+        { id: "embed", label: this.$t("embed"), icon: "puzzle" },
+        { id: "audio", label: this.$t("audio"), icon: "record-circle-fill" },
+        { id: "fichier", label: this.$t("file"), icon: "file-earmark" },
+        { id: "video", label: this.$t("video"), icon: "play-fill" },
+        { id: "image", label: this.$t("image"), icon: "image" },
       ],
     };
   },
@@ -161,7 +138,7 @@ $_peach_dark: #e8bc85;
 ._dropMenu--openButton {
   width: 72px;
   height: 72px;
-  font-size: 36px;
+  font-size: 30px;
   border-radius: 50%;
   background-color: white;
 
@@ -219,7 +196,7 @@ $_peach_dark: #e8bc85;
   font-size: 1.25rem;
   font-weight: 500;
   text-transform: lowercase;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 
   &:hover {
     background: var(--c-noir);
@@ -254,9 +231,8 @@ $_peach_dark: #e8bc85;
 ._dropMenu--userLabel {
   position: absolute;
   right: 100%;
-  // padding: 4px 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  // border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
   background: white;
   color: var(--c-noir);
   font-weight: 600;
