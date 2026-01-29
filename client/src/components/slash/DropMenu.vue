@@ -83,7 +83,6 @@ export default {
       is_open: false,
       typeRows: [
         { id: "texte", label: "Texte", icon: "file-earmark-text" },
-        { id: "marqueur", label: "Marqueur", icon: "circle-fill" },
         { id: "integration", label: "Intégration", icon: "puzzle" },
         { id: "audio", label: "Audio", icon: "record-circle-fill" },
         { id: "fichier", label: "Fichier", icon: "file-earmark" },

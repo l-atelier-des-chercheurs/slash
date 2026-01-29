@@ -3,15 +3,16 @@
     <div v-show="filterBarOpen" class="_filterBar" aria-hidden="true">
       <FilterBar v-model="mediaTypeFilter" />
     </div>
-    <ViewModeBar
-      :value="viewMode"
-      :filter-open="filterBarOpen"
-      :canvas-zoom="canvasZoom"
-      @input="switchViewMode"
-      @toggle-filter="filterBarOpen = !filterBarOpen"
-      @update:canvasZoom="canvasZoom = $event"
-    />
+
     <div class="_viewArea">
+      <ViewModeBar
+        :value="viewMode"
+        :filter-open="filterBarOpen"
+        :canvas-zoom="canvasZoom"
+        @input="switchViewMode"
+        @toggle-filter="filterBarOpen = !filterBarOpen"
+        @update:canvasZoom="canvasZoom = $event"
+      />
       <LargeCanvas
         v-show="viewMode === 'canvas'"
         :files="filteredFiles"
@@ -313,6 +314,7 @@ export default {
 }
 
 ._viewArea {
+  position: relative;
   flex: 1;
   min-height: 0;
   position: relative;

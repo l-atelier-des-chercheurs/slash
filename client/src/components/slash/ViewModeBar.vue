@@ -103,7 +103,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._viewModeBar {
-  position: fixed;
+  position: absolute;
   top: calc(var(--spacing, 1rem) * 1.5);
   left: 50%;
   transform: translateX(-50%);
