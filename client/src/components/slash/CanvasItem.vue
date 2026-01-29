@@ -250,31 +250,11 @@ export default {
     },
     handleMouseMove(event) {
       if (this.isResizing) {
-        // Calculate width change based on mouse movement
+        // Mouse delta in screen pixels; convert to canvas coordinates using zoom
         const deltaX = event.clientX - this.resizeStartX;
+        const adjustedDeltaX = deltaX / this.canvasZoom;
 
-        // Get canvas container to account for zoom/scale
-        const canvasContainer = this.$el.closest("._largeCanvas");
-        if (!canvasContainer) return;
-
-        // Get the PanZoom3 viewer to check for zoom
-        const viewer = canvasContainer.querySelector(".viewer");
-        let scale = 1;
-        if (viewer) {
-          const transform = window.getComputedStyle(viewer).transform;
-          if (transform && transform !== "none") {
-            const matrix = transform.match(/matrix\(([^)]+)\)/);
-            if (matrix) {
-              const values = matrix[1].split(",");
-              scale = parseFloat(values[0]) || 1;
-            }
-          }
-        }
-
-        // Adjust deltaX for zoom scale
-        const adjustedDeltaX = deltaX / scale;
-
-        // Calculate new width
+        // Calculate new width (in canvas coordinates)
         const newWidth = Math.max(50, this.resizeStartWidth + adjustedDeltaX);
 
         // Allow any width (no upper bound clamping since we allow negative positions)
@@ -307,10 +287,10 @@ export default {
       const mouseY = mouseScreenY / this.canvasZoom + this.canvasScrollTop;
 
       // Calculate new file position (mouse position minus offset)
-      const newX = mouseX - this.dragOffsetX;
-      const newY = mouseY - this.dragOffsetY;
+      // Clamp to >= 0 so content stays within canvas (no negative coords)
+      const newX = Math.max(0, mouseX - this.dragOffsetX);
+      const newY = Math.max(0, mouseY - this.dragOffsetY);
 
-      // Allow any position (negative or positive) - no clamping
       this.currentX = newX;
       this.currentY = newY;
 
@@ -466,30 +446,6 @@ export default {
         transform: none; // No transform in timeline mode
       }
     }
-
-    ._canvasItem--content {
-      height: 100%;
-      width: 100%;
-
-      ::v-deep ._mediaContent {
-        height: 100%;
-        width: 100%;
-
-        img,
-        video {
-          height: 100%;
-          width: 100%;
-          object-fit: cover;
-          display: block;
-        }
-
-        ._mediaContent--rawText {
-          padding: 0;
-          height: 100%;
-          overflow: hidden;
-        }
-      }
-    }
   }
 
   ._canvasItem--shadow {
@@ -567,6 +523,29 @@ export default {
   ::v-deep .plyr__controls {
     border-radius: var(--border-radius, 4px);
     width: 100%;
+  }
+
+  height: 100%;
+  width: 100%;
+
+  ::v-deep ._mediaContent {
+    height: 100%;
+    width: 100%;
+
+    img,
+    video {
+      height: 100%;
+      max-width: none;
+      width: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    ._mediaContent--rawText {
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
   }
 }
 

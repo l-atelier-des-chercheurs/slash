@@ -97,40 +97,43 @@ export default {
       }
     },
     initializeItemPositions() {
-      // Initialize positions for items without x/y coordinates
+      // Initialize positions for items without x/y coordinates; clamp all to >= 0 so content stays in canvas
       let gridX = this.nextGridX;
       let gridY = this.nextGridY;
       const gridSpacing = 200;
 
       this.files.forEach((file) => {
         if (file.x === undefined || file.y === undefined) {
-          // Use grid layout for initial positioning
-          const x = gridX;
-          const y = gridY;
+          // Use grid layout for initial positioning (always non-negative)
+          const x = Math.max(0, gridX);
+          const y = Math.max(0, gridY);
 
-          // Update file object locally (will be saved when dragged)
           this.$set(file, "x", x);
           this.$set(file, "y", y);
 
-          // Update grid position for next item
           gridX += gridSpacing;
-          // Allow items to be placed anywhere on the large canvas
-          // No need to wrap around since canvas is very large
           if (gridX > this.canvasSize - 200) {
             gridX = 0;
             gridY += gridSpacing;
           }
+        } else {
+          // Clamp existing coordinates so content stays in positive quadrant
+          const clampedX = Math.max(0, file.x);
+          const clampedY = Math.max(0, file.y);
+          if (file.x !== clampedX) this.$set(file, "x", clampedX);
+          if (file.y !== clampedY) this.$set(file, "y", clampedY);
         }
       });
 
-      // Update next grid position
       this.nextGridX = gridX;
       this.nextGridY = gridY;
     },
     handlePositionUpdate({ file, x, y }) {
-      // Update file position locally
-      this.$set(file, "x", x);
-      this.$set(file, "y", y);
+      // Clamp to >= 0 so all content stays within the canvas (no negative coords)
+      const clampedX = Math.max(0, x);
+      const clampedY = Math.max(0, y);
+      this.$set(file, "x", clampedX);
+      this.$set(file, "y", clampedY);
     },
     handleWidthUpdate({ file, width }) {
       // Update file width locally
@@ -140,27 +143,14 @@ export default {
       this.canvasZoom = zoom;
     },
     centerOnOrigin() {
-      // Center the view on 0,0 by scrolling to negative values
-      // This allows 0,0 to be in the center of the viewport
+      // Start at canvas origin (0,0) so content is visible; all content is clamped to >= 0
       this.$nextTick(() => {
-        if (this.$refs.viewer && this.$refs.viewer.$el) {
-          const viewer = this.$refs.viewer.$el;
-          const viewportWidth = viewer.offsetWidth || 0;
-          const viewportHeight = viewer.offsetHeight || 0;
-
-          // Calculate scroll position to center 0,0
-          // Negative scroll positions show content above/left of origin
-          const scrollX = -viewportWidth / 2;
-          const scrollY = -viewportHeight / 2;
-
-          // Use a small delay to ensure the viewer is fully initialized
+        if (this.$refs.viewer && this.$refs.viewer.scrollTo) {
           setTimeout(() => {
-            if (this.$refs.viewer && this.$refs.viewer.scrollTo) {
-              this.$refs.viewer.scrollTo(scrollX, scrollY, {
-                duration: 0,
-                absolute: true,
-              });
-            }
+            this.$refs.viewer.scrollTo(0, 0, {
+              duration: 0,
+              absolute: true,
+            });
           }, 100);
         }
       });
@@ -179,23 +169,25 @@ export default {
 ._canvasContent {
   position: relative;
 
-  --dot-color: rgba(225, 225, 225, 1);
+  // Dot grid pattern with --color-rule; pans with content (this div is inside the panned viewport)
+  --rule-color: var(--color-rule);
+  --rule-size: 48px;
+  --dot-size: 2px;
   background-image: radial-gradient(
     circle,
-    var(--dot-color) 1px,
-    transparent 1px
+    var(--rule-color) var(--dot-size),
+    transparent var(--dot-size)
   );
-  background-size: 24px 24px;
+  background-size: var(--rule-size) var(--rule-size);
   background-position: 0 0;
 
-  // For retina/high-DPI displays (2x)
   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     background-image: radial-gradient(
       circle,
-      var(--dot-color) 0.5px,
-      transparent 0.5px
+      var(--rule-color) var(--dot-size),
+      transparent var(--dot-size)
     );
-    background-size: 24px 24px;
+    background-size: var(--rule-size) var(--rule-size);
   }
 }
 

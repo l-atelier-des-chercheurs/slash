@@ -154,6 +154,8 @@ export default {
   --g-500: hsl(0, 0%, 60%);
   --g-600: hsl(0, 0%, 45%);
 
+  --color-rule: #d2d2d2;
+
   --c-vert: hsl(143, 69%, 55%);
   --c-vert_fonce: hsl(143, 69%, 40%);
 
@@ -243,8 +245,6 @@ export default {
   --max-column-width: 90%;
   --max-column-width-px: 1280px;
   --switch-thumb-border-radius: 4px;
-
-  --rule-color: #d2d2d2;
 
   accent-color: var(--c-orange);
 }
