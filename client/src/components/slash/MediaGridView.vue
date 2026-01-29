@@ -1,24 +1,28 @@
 <template>
   <div class="_mediaGridView">
     <div class="_mediaGridView--grid">
-      <div
+      <CanvasItem
         v-for="file in files"
         :key="file.$path"
+        :file="file"
+        mode="grid"
         class="_mediaGridView--item"
-        :data-file-path="file.$path"
-      >
-        <MediaContent :file="file" :context="'full'" :resolution="320" />
-      </div>
+      />
     </div>
   </div>
 </template>
 <script>
+import CanvasItem from "@/components/slash/CanvasItem.vue";
+
 export default {
   props: {
     files: {
       type: Array,
       default: () => [],
     },
+  },
+  components: {
+    CanvasItem,
   },
 };
 </script>

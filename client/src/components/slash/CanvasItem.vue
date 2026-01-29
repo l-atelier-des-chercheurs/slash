@@ -5,6 +5,7 @@
       'is--dragging': isDragging,
       'is--resizing': isResizing,
       'is--timeline': mode === 'timeline',
+      'is--grid': mode === 'grid',
     }"
     :style="itemStyle"
     @mousedown="handleMouseDown"
@@ -20,8 +21,25 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
     </div>
+
+    <button
+      type="button"
+      class="_canvasItem--pathBubble"
+      :aria-label="$t('file_path')"
+      @mousedown.stop
+      @click.stop="showPathModal = true"
+    >
+      <b-icon icon="chat-left-text-fill" />
+    </button>
+
+    <ItemChat
+      v-if="showPathModal"
+      :file="file"
+      @close="showPathModal = false"
+    />
+
     <div
-      v-if="mode !== 'timeline'"
+      v-if="mode === 'canvas'"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="{ '--button-size': resizeHandleSize }"
@@ -38,7 +56,7 @@ export default {
     },
     mode: {
       type: String,
-      default: "canvas", // 'canvas' or 'timeline'
+      default: "canvas", // 'canvas', 'timeline', or 'grid'
     },
     timelineHeight: {
       type: Number,
@@ -57,9 +75,12 @@ export default {
       default: 1,
     },
   },
-  components: {},
+  components: {
+    ItemChat: () => import("@/components/slash/ItemChat.vue"),
+  },
   data() {
     return {
+      showPathModal: false,
       isDragging: false,
       isResizing: false,
       dragStartX: 0,
@@ -85,6 +106,9 @@ export default {
       return `${24 / zoom}px`;
     },
     itemStyle() {
+      if (this.mode === "grid") {
+        return { width: "100%", height: "100%" };
+      }
       if (this.mode === "timeline") {
         // Timeline mode: flex layout
         const width =
@@ -194,7 +218,7 @@ export default {
       }
 
       // In timeline mode, don't allow dragging
-      if (this.mode === "timeline") {
+      if (this.mode === "timeline" || this.mode === "grid") {
         return;
       }
 
@@ -368,6 +392,17 @@ export default {
 
   transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
 
+  &.is--grid {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    ._canvasItem--shadow {
+      display: none;
+    }
+  }
+
   &.is--timeline {
     position: relative;
     margin-top: 0;
@@ -413,7 +448,7 @@ export default {
     }
   }
 
-  &:not(.is--timeline) {
+  &:not(.is--timeline):not(.is--grid) {
     &:hover,
     &.is--dragging {
       &:not(.is--resizing) {
@@ -433,6 +468,38 @@ export default {
     background-color: rgb(221, 221, 221);
     border-radius: var(--border-radius);
     z-index: -1;
+  }
+
+  ._canvasItem--pathBubble {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 5;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: black;
+    color: white;
+    cursor: pointer;
+    // opacity: 0.7;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .b-icon {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   ._canvasItem--resizeHandle {

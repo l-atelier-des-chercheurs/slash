@@ -164,6 +164,8 @@ import {
   BIconFolderSymlink,
   BIconChatDots,
   BIconChatDotsFill,
+  BIconChatLeft,
+  BIconChatLeftTextFill,
   BIconArrowUpRightSquare,
   BIconArrowUpRightSquareFill,
   BIconGlobe,
@@ -342,6 +344,8 @@ Vue.component("BIconFileCode", BIconFileCode);
 Vue.component("BIconFolderSymlink", BIconFolderSymlink);
 Vue.component("BIconChatDots", BIconChatDots);
 Vue.component("BIconChatDotsFill", BIconChatDotsFill);
+Vue.component("BIconChatLeft", BIconChatLeft);
+Vue.component("BIconChatLeftTextFill", BIconChatLeftTextFill);
 Vue.component("BIconArrowUpRightSquare", BIconArrowUpRightSquare);
 Vue.component("BIconArrowUpRightSquareFill", BIconArrowUpRightSquareFill);
 Vue.component("BIconGlobe", BIconGlobe);
