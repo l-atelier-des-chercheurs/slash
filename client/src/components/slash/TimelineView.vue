@@ -92,6 +92,26 @@ export default {
           from: "2025-12-08",
           to: "2025-12-17",
         },
+        {
+          label: "Online Consortium",
+          from: "2026-02-01",
+          to: "2026-03-01",
+        },
+        {
+          label: "Study Visits + Residencies",
+          from: "2026-03-01",
+          to: "2026-08-01",
+        },
+        {
+          label: "Artworks Presentation",
+          from: "2026-08-01",
+          to: "2026-10-01",
+        },
+        {
+          label: "Collab Lab Lisboa",
+          from: "2026-10-01",
+          to: "2027-03-01",
+        },
       ],
     };
   },

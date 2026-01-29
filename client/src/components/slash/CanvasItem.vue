@@ -24,6 +24,7 @@
       v-if="mode !== 'timeline'"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
+      :style="{ '--button-size': resizeHandleSize }"
       @mousedown.stop="handleResizeStart"
     />
   </div>
@@ -78,6 +79,10 @@ export default {
   computed: {
     isWidthOnly() {
       return !this.file.$infos?.ratio;
+    },
+    resizeHandleSize() {
+      const zoom = Math.max(0.1, this.canvasZoom);
+      return `${24 / zoom}px`;
     },
     itemStyle() {
       if (this.mode === "timeline") {
@@ -455,14 +460,14 @@ export default {
     &::before {
       content: "";
       display: block;
-      width: 16px;
-      height: 6px;
+      width: var(--button-size);
+      height: calc(var(--button-size) / 2.5);
       transform: rotate(90deg);
       background-color: black;
-      border-radius: 4px;
-      box-shadow: 0 0 0px 2px white;
+      border-radius: calc(var(--button-size) / 2);
+      box-shadow: 0 0 0px calc(var(--button-size) / 10) white;
       transform: rotate(45deg);
-      transition: background-color 0.2s;
+      transition: all 0.2s;
     }
 
     &.is--widthOnly {
