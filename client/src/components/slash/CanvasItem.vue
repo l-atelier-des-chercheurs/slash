@@ -13,6 +13,14 @@
   >
     <div class="_canvasItem--shadow" />
 
+    <div
+      v-if="mode === 'timeline' && eventPhase"
+      class="_canvasItem--phaseBadge"
+      :title="eventPhase"
+    >
+      {{ eventPhase }}
+    </div>
+
     <div class="_canvasItem--content" :data-filetype="file.$type">
       <MediaContent
         :file="file"
@@ -73,6 +81,10 @@ export default {
     canvasZoom: {
       type: Number,
       default: 1,
+    },
+    eventPhase: {
+      type: String,
+      default: null,
     },
   },
   components: {
@@ -561,6 +573,24 @@ export default {
       opacity: 1;
     }
   }
+}
+
+._canvasItem--phaseBadge {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  right: 0;
+  font-family: var(--sl-font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4a5bb5;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
 }
 
 ._canvasItem--content {

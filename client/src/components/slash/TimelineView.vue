@@ -6,14 +6,50 @@
 
       <div class="_timelineView--content">
         <template v-for="(element, index) in timelineElements">
-          <!-- Day Separator -->
+          <!-- Day: label (button) + contained media items -->
           <div
             v-if="element.type === 'day'"
             :key="`day-${element.key}`"
-            class="_timelineView--daySeparator"
+            class="_timelineView--day"
           >
-            <div class="_timelineView--separator"></div>
-            <div class="_timelineView--separatorLabel">{{ element.label }}</div>
+            <button
+              type="button"
+              class="_timelineView--dayButton"
+              :class="{ 'is--collapsed': isDayCollapsed(element.key) }"
+              :aria-expanded="!isDayCollapsed(element.key)"
+              @click="toggleDayCollapsed(element.key)"
+            >
+              <span class="_timelineView--dayButtonLabel">{{
+                element.label
+              }}</span>
+              <span class="_timelineView--dayButtonCount"
+                >({{ element.mediaItems.length }})</span
+              >
+            </button>
+            <div
+              v-show="!isDayCollapsed(element.key)"
+              class="_timelineView--dayItems"
+            >
+              <CanvasItem
+                v-for="item in element.mediaItems"
+                :key="item.key"
+                :file="item.file"
+                :mode="'timeline'"
+                :timeline-height="item.height"
+                :event-phase="item.eventPhase"
+                class="_timelineView--item"
+              />
+            </div>
+          </div>
+
+          <!-- Event / Phase marker -->
+          <div
+            v-else-if="element.type === 'event'"
+            :key="`event-${element.key}`"
+            class="_timelineView--event"
+          >
+            <div class="_timelineView--eventBar"></div>
+            <div class="_timelineView--eventLabel">{{ element.label }}</div>
           </div>
 
           <!-- Gap -->
@@ -30,8 +66,9 @@
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
+              <!-- Half circles linked: bottom, top, bottom, top, bottom -->
               <path
-                d="M1 6C4 6 6 1 10 1C14 1 16 11 20 11C24 11 26 1 30 1C34 1 36 11 40 11C44 11 46 1 50 1C54 1 56 6 59 6"
+                d="M 0 6 A 6 6 0 0 1 12 6 A 6 6 0 0 0 24 6 A 6 6 0 0 1 36 6 A 6 6 0 0 0 48 6 A 6 6 0 0 1 60 6"
                 stroke="#CCCCCC"
                 stroke-width="1.5"
                 stroke-linecap="round"
@@ -40,16 +77,6 @@
             </svg>
             <div class="_timelineView--gapLabel">{{ element.label }}</div>
           </div>
-
-          <!-- Media Item -->
-          <CanvasItem
-            v-else-if="element.type === 'media'"
-            :key="`media-${element.key}`"
-            :file="element.file"
-            :mode="'timeline'"
-            :timeline-height="element.height"
-            class="_timelineView--item"
-          />
         </template>
       </div>
     </div>
@@ -75,6 +102,7 @@ export default {
       baseLineHeight: 28, // Height of horizontal lines
       padding: 60,
       headerHeight: 40,
+      collapsedDays: {}, // { 'day-YYYY-MM-DD': true } when day is collapsed
 
       slash_timeline_events: [
         {
@@ -135,8 +163,21 @@ export default {
     timelineElements() {
       const elements = [];
       const gapWidth = 150;
+      let prevEventKey = null;
 
       this.activeDays.forEach((day, index) => {
+        const event = this.getEventForDate(day.date);
+
+        // Insert event/phase marker when we enter a new event
+        if (event && event.key !== prevEventKey) {
+          elements.push({
+            type: "event",
+            key: `event-${event.key}`,
+            label: event.label,
+          });
+          prevEventKey = event.key;
+        }
+
         // Add gap if needed
         if (index > 0) {
           const prev = this.activeDays[index - 1];
@@ -168,40 +209,37 @@ export default {
           }
         }
 
-        // Add day separator
-        elements.push({
-          type: "day",
-          key: `day-${day.date.format("YYYY-MM-DD")}`,
-          label: day.date.format("dddd D MMMM YY"),
-        });
-
-        // Add media items for this day
+        // Add day block with label + media items (day contains its items)
+        const mediaItems = [];
         day.files.forEach((file) => {
           const fileMoment = moment(file.$date_created);
-          const timeInDay = fileMoment.diff(day.date); // ms since start of day
+          const fileEvent = this.getEventForDate(fileMoment);
+          const phaseLabel = fileEvent ? fileEvent.label : null;
 
-          // Calculate height only - width will be automatic from aspect ratio
           let height = 200;
-
           if (file.$type === "image") {
             const ratio = file.$infos?.ratio || 1;
-            // Use a base width to calculate height
             const baseWidth = 180 + Math.random() * 100;
             height = baseWidth * ratio;
           } else if (file.$type === "text") {
             height = 150 + Math.random() * 100;
           }
-
-          // Quantize height
           height =
             Math.ceil(height / this.baseLineHeight) * this.baseLineHeight;
 
-          elements.push({
-            type: "media",
+          mediaItems.push({
             key: file.$path,
             file,
             height,
+            eventPhase: phaseLabel,
           });
+        });
+
+        elements.push({
+          type: "day",
+          key: `day-${day.date.format("YYYY-MM-DD")}`,
+          label: day.date.format("dddd D MMMM YY"),
+          mediaItems,
         });
       });
 
@@ -209,6 +247,24 @@ export default {
     },
   },
   methods: {
+    isDayCollapsed(dayKey) {
+      return !!this.collapsedDays[dayKey];
+    },
+    toggleDayCollapsed(dayKey) {
+      this.$set(this.collapsedDays, dayKey, !this.collapsedDays[dayKey]);
+    },
+    getEventForDate(dateMoment) {
+      const d = dateMoment.valueOf();
+      for (let i = 0; i < this.slash_timeline_events.length; i++) {
+        const ev = this.slash_timeline_events[i];
+        const from = moment(ev.from).startOf("day").valueOf();
+        const to = moment(ev.to).endOf("day").valueOf();
+        if (d >= from && d <= to) {
+          return { key: `${i}-${ev.from}`, label: ev.label };
+        }
+      }
+      return null;
+    },
     onWheel(e) {
       const track = this.$refs.track;
       if (!track) return;
@@ -251,16 +307,89 @@ export default {
   min-height: 100%;
 }
 
-._timelineView--daySeparator {
+._timelineView--day {
   position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   flex-shrink: 0;
   height: 100%;
 }
 
-._timelineView--separator {
+._timelineView--dayButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  margin: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #f8f8f8;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: #eee;
+    border-color: #ccc;
+  }
+
+  &.is--collapsed {
+    background: #f0f0f0;
+    border-color: #ddd;
+  }
 }
 
-._timelineView--separatorLabel {
+._timelineView--dayButtonLabel {
+  font-weight: 500;
+}
+
+._timelineView--dayButtonCount {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: normal;
+}
+
+._timelineView--dayItems {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0;
+  margin-left: 12px;
+}
+
+._timelineView--event {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  height: 100%;
+  padding-right: 16px;
+  pointer-events: none;
+}
+
+._timelineView--eventBar {
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #6b7fd7 0%, #4a5bb5 100%);
+  flex-shrink: 0;
+}
+
+._timelineView--eventLabel {
+  font-family: var(--sl-font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5bb5;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 ._timelineView--gap {
