@@ -393,8 +393,6 @@ export default {
         ];
       }
 
-      debugger;
-
       return {
         useMouseDrag: this.enableDragToPan,
         useWheelScroll: true,
@@ -404,8 +402,8 @@ export default {
         maxPinchWheel: 10,
         displayVerticalScroll: true,
         displayHorizontalScroll: true,
-        rangeX: rangeX,
-        rangeY: rangeY,
+        // rangeX: rangeX,
+        // rangeY: rangeY,
       };
     },
     updateViewerOptions() {

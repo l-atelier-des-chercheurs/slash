@@ -6,11 +6,18 @@
     <ViewModeBar
       :value="viewMode"
       :filter-open="filterBarOpen"
+      :canvas-zoom="canvasZoom"
       @input="switchViewMode"
       @toggle-filter="filterBarOpen = !filterBarOpen"
+      @update:canvasZoom="canvasZoom = $event"
     />
     <div class="_viewArea">
-      <LargeCanvas v-show="viewMode === 'canvas'" :files="filteredFiles" />
+      <LargeCanvas
+        v-show="viewMode === 'canvas'"
+        :files="filteredFiles"
+        :scale="canvasZoom"
+        @update:scale="canvasZoom = $event"
+      />
       <GeoMapView v-show="viewMode === 'map'" :files="filteredFiles" />
       <TimelineView v-show="viewMode === 'timeline'" :files="filteredFiles" />
       <MediaGridView v-show="viewMode === 'grid'" :files="filteredFiles" />
@@ -43,6 +50,7 @@ export default {
       viewMode: "canvas",
       filterBarOpen: false,
       mediaTypeFilter: null,
+      canvasZoom: 1,
     };
   },
   async created() {

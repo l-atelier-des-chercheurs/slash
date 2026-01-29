@@ -2,7 +2,7 @@
   <PanZoom3
     class="_largeCanvas"
     ref="viewer"
-    :scale="canvasZoom"
+    :scale="scale"
     :content-width="canvasSize"
     :content-height="canvasSize"
     :show-rules="false"
@@ -18,7 +18,7 @@
         :file="file"
         :canvas-scroll-left="canvasScrollLeft"
         :canvas-scroll-top="canvasScrollTop"
-        :canvas-zoom="canvasZoom"
+        :canvas-zoom="scale"
         @position-update="handlePositionUpdate"
         @width-update="handleWidthUpdate"
       />
@@ -34,6 +34,10 @@ export default {
       type: Array,
       required: true,
     },
+    scale: {
+      type: Number,
+      default: 1,
+    },
   },
   components: {
     PanZoom3,
@@ -44,7 +48,6 @@ export default {
       canvasScrollLeft: 0,
       canvasScrollTop: 0,
       canvasSize: 10000,
-      canvasZoom: 1,
       nextGridX: 0,
       nextGridY: 0,
       scrollAnimationFrame: null,
@@ -141,7 +144,7 @@ export default {
       this.$set(file, "width", width);
     },
     handleZoomUpdate(zoom) {
-      this.canvasZoom = zoom;
+      this.$emit("update:scale", zoom);
     },
     centerOnOrigin() {
       // Start at canvas origin (0,0) so content is visible; all content is clamped to >= 0

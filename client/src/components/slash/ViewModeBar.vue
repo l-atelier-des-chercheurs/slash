@@ -1,53 +1,74 @@
 <template>
   <div class="_viewModeBar">
-    <button
-      type="button"
-      class="_viewModeBar--btn"
-      :class="{ 'is--active': value === 'canvas' }"
-      :aria-pressed="value === 'canvas'"
-      @click="$emit('input', 'canvas')"
-    >
-      <b-icon icon="layout-wtf" />
-    </button>
-    <button
-      type="button"
-      class="_viewModeBar--btn"
-      :class="{ 'is--active': value === 'grid' }"
-      :aria-pressed="value === 'grid'"
-      @click="$emit('input', 'grid')"
-    >
-      <b-icon icon="grid" />
-    </button>
-    <button
-      type="button"
-      class="_viewModeBar--btn"
-      :class="{ 'is--active': value === 'map' }"
-      :aria-pressed="value === 'map'"
-      @click="$emit('input', 'map')"
-    >
-      <b-icon icon="map" />
-    </button>
-    <button
-      type="button"
-      class="_viewModeBar--btn"
-      :class="{ 'is--active': value === 'timeline' }"
-      :aria-pressed="value === 'timeline'"
-      @click="$emit('input', 'timeline')"
-    >
-      <b-icon icon="calendar-day" />
-    </button>
-    <div class="_viewModeBar--divider"></div>
+    <div class="_viewModeBar--row">
+      <button
+        type="button"
+        class="_viewModeBar--btn"
+        :class="{ 'is--active': value === 'canvas' }"
+        :aria-pressed="value === 'canvas'"
+        @click="$emit('input', 'canvas')"
+      >
+        <b-icon icon="layout-wtf" />
+      </button>
+      <button
+        type="button"
+        class="_viewModeBar--btn"
+        :class="{ 'is--active': value === 'grid' }"
+        :aria-pressed="value === 'grid'"
+        @click="$emit('input', 'grid')"
+      >
+        <b-icon icon="grid" />
+      </button>
+      <button
+        type="button"
+        class="_viewModeBar--btn"
+        :class="{ 'is--active': value === 'map' }"
+        :aria-pressed="value === 'map'"
+        @click="$emit('input', 'map')"
+      >
+        <b-icon icon="map" />
+      </button>
+      <button
+        type="button"
+        class="_viewModeBar--btn"
+        :class="{ 'is--active': value === 'timeline' }"
+        :aria-pressed="value === 'timeline'"
+        @click="$emit('input', 'timeline')"
+      >
+        <b-icon icon="calendar-day" />
+      </button>
+      <div class="_viewModeBar--divider"></div>
 
-    <button
-      type="button"
-      class="_viewModeBar--btn"
-      :class="{ 'is--active': filterOpen }"
-      aria-label="Filter"
-      aria-pressed="filterOpen"
-      @click="$emit('toggle-filter')"
+      <button
+        type="button"
+        class="_viewModeBar--btn"
+        :class="{ 'is--active': filterOpen }"
+        aria-label="Filter"
+        aria-pressed="filterOpen"
+        @click="$emit('toggle-filter')"
+      >
+        <b-icon icon="filter" />
+      </button>
+    </div>
+
+    <div
+      v-if="value === 'canvas'"
+      class="_viewModeBar--row _viewModeBar--zoomRow"
     >
-      <b-icon icon="filter" />
-    </button>
+      <span class="_viewModeBar--zoomLabel" aria-hidden="true">{{
+        zoomLabel
+      }}</span>
+      <input
+        type="range"
+        class="_viewModeBar--zoomSlider"
+        :value="canvasZoom"
+        min="0.1"
+        max="10"
+        step="0.01"
+        aria-label="Canvas zoom"
+        @input="onZoomInput"
+      />
+    </div>
   </div>
 </template>
 <script>
@@ -62,6 +83,21 @@ export default {
       type: Boolean,
       default: false,
     },
+    canvasZoom: {
+      type: Number,
+      default: 1,
+    },
+  },
+  computed: {
+    zoomLabel() {
+      return `${Math.round(this.canvasZoom * 100)}%`;
+    },
+  },
+  methods: {
+    onZoomInput(e) {
+      const v = parseFloat(e.target.value);
+      if (!Number.isNaN(v)) this.$emit("update:canvasZoom", v);
+    },
   },
 };
 </script>
@@ -74,14 +110,69 @@ export default {
   z-index: 10000;
 
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px;
+  background: var(--c-gris_clair, #f0f0f0);
+  border: 2px solid var(--c-gris, #ccc);
+  border-radius: 12px;
+  // box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+._viewModeBar--row {
+  display: flex;
   align-items: center;
   gap: 2px;
+}
 
-  padding: 6px 8px;
-  background: var(--c-gris_clair, #f0f0f0);
-  border: 1px solid var(--c-gris, #ccc);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+._viewModeBar--zoomRow {
+  width: 100%;
+  padding-top: 2px;
+  border-top: 1px solid var(--c-gris, #ccc);
+  gap: 8px;
+}
+
+._viewModeBar--zoomLabel {
+  min-width: 2.5rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-gris_fonce, #555);
+}
+
+._viewModeBar--zoomSlider {
+  flex: 1;
+  min-width: 80px;
+  max-width: 140px;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--c-gris, #ccc);
+  border-radius: 3px;
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--c-bleuvert, #2a9d8f);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--c-bleuvert, #2a9d8f);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
 }
 
 ._viewModeBar--btn {
