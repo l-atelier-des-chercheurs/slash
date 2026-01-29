@@ -366,12 +366,16 @@ export default {
 ._timelineView--event {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   flex-shrink: 0;
   height: 100%;
   padding-right: 16px;
   pointer-events: none;
+
+  min-height: 50vh;
+  position: sticky;
+  left: 0;
 }
 
 ._timelineView--eventBar {

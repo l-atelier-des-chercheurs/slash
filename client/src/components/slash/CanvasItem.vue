@@ -13,14 +13,6 @@
   >
     <div class="_canvasItem--shadow" />
 
-    <div
-      v-if="mode === 'timeline' && eventPhase"
-      class="_canvasItem--phaseBadge"
-      :title="eventPhase"
-    >
-      {{ eventPhase }}
-    </div>
-
     <div class="_canvasItem--content" :data-filetype="file.$type">
       <MediaContent
         :file="file"
@@ -81,10 +73,6 @@ export default {
     canvasZoom: {
       type: Number,
       default: 1,
-    },
-    eventPhase: {
-      type: String,
-      default: null,
     },
   },
   components: {
