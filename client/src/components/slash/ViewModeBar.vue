@@ -107,7 +107,7 @@ export default {
   top: calc(var(--spacing, 1rem) * 1.5);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10000;
+  z-index: 1000;
 
   display: flex;
   flex-direction: column;

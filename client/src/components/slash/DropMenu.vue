@@ -23,7 +23,21 @@
               : '0ms',
           }"
         >
-          <button type="button" class="_dropMenu--btn" @click.prevent>
+          <template v-if="row.accept">
+            <label :for="inputId(row)" class="_dropMenu--btn">
+              <span class="_dropMenu--label">{{ row.label }}</span>
+              <b-icon :icon="row.icon" class="_dropMenu--icon" />
+            </label>
+            <input
+              :id="inputId(row)"
+              type="file"
+              class="_dropMenu--fileInput"
+              :accept="row.accept"
+              multiple
+              @change="onFileSelect($event, row)"
+            />
+          </template>
+          <button v-else type="button" class="_dropMenu--btn" @click.prevent>
             <span class="_dropMenu--label">{{ row.label }}</span>
             <b-icon :icon="row.icon" class="_dropMenu--icon" />
           </button>
@@ -50,6 +64,15 @@
         </button>
       </div>
     </div>
+
+    <UploadFiles
+      v-if="files_to_import.length > 0"
+      :files_to_import="files_to_import"
+      :path="folder_path"
+      :allow_caption_edition="true"
+      @importedMedias="mediasJustImported($event)"
+      @close="files_to_import = []"
+    />
   </div>
 </template>
 <script>
@@ -69,10 +92,30 @@ export default {
       typeRows: [
         { id: "texte", label: this.$t("text"), icon: "file-earmark-text" },
         { id: "embed", label: this.$t("embed"), icon: "puzzle" },
-        { id: "audio", label: this.$t("audio"), icon: "record-circle-fill" },
-        { id: "fichier", label: this.$t("file"), icon: "file-earmark" },
-        { id: "video", label: this.$t("video"), icon: "play-fill" },
-        { id: "image", label: this.$t("image"), icon: "image" },
+        {
+          id: "audio",
+          label: this.$t("audio"),
+          icon: "record-circle-fill",
+          accept: "audio/*",
+        },
+        {
+          id: "fichier",
+          label: this.$t("file"),
+          icon: "file-earmark",
+          accept: "*/*",
+        },
+        {
+          id: "video",
+          label: this.$t("video"),
+          icon: "play-fill",
+          accept: "video/*",
+        },
+        {
+          id: "image",
+          label: this.$t("image"),
+          icon: "image",
+          accept: "image/*",
+        },
       ],
     };
   },
@@ -82,6 +125,16 @@ export default {
   watch: {},
   computed: {},
   methods: {
+    inputId(row) {
+      return `_dropMenu--file-${row.id}`;
+    },
+    onFileSelect($event, row) {
+      const files = Array.from($event.target.files || []);
+      $event.target.value = "";
+      if (files.length) {
+        this.files_to_import = files;
+      }
+    },
     mediasJustImported(medias) {
       console.log(medias);
     },
@@ -104,7 +157,7 @@ $_peach_dark: #e8bc85;
 
 ._dropMenu--content {
   position: fixed;
-  z-index: 10002;
+  z-index: 1002;
   bottom: calc(var(--spacing) * 2);
   right: calc(var(--spacing) * 2);
   padding: calc(var(--spacing) / 1);
@@ -122,7 +175,7 @@ $_peach_dark: #e8bc85;
   width: 100%;
   height: 100%;
   background-color: rgba(255, 255, 255, 0.4);
-  z-index: 10001;
+  z-index: 1001;
   backdrop-filter: blur(10px);
 
   transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
@@ -241,6 +294,16 @@ $_peach_dark: #e8bc85;
   display: block;
   // width: 30px;
   // height: 30px;
+}
+
+._dropMenu--fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
 }
 
 ._dropMenu--userLabel {

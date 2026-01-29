@@ -5,7 +5,6 @@
       'is--dragging': isDragging,
       'is--resizing': isResizing,
       'is--timeline': mode === 'timeline',
-      'is--hovering-resize-handle': isHoveringResizeHandle,
     }"
     :style="itemStyle"
     @mousedown="handleMouseDown"
