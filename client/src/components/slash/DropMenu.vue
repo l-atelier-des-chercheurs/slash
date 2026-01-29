@@ -19,7 +19,6 @@
             <b-icon :icon="row.icon" class="_dropMenu--icon" />
           </button>
         </div>
-        <div class="_dropMenu--footer"></div>
       </div>
 
       <div class="_dropMenu--buttonContainer">
@@ -168,6 +167,10 @@ $_peach_dark: #e8bc85;
     transform: rotate(225deg);
     background-color: var(--c-noir);
     color: white;
+
+    &:hover {
+      background-color: var(--c-gris_fonce);
+    }
   }
 }
 
@@ -175,7 +178,7 @@ $_peach_dark: #e8bc85;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  gap: 10px;
 }
 
 ._dropMenu--row {
@@ -217,15 +220,6 @@ $_peach_dark: #e8bc85;
   display: block;
   // width: 30px;
   // height: 30px;
-}
-
-._dropMenu--footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 8px;
-  padding-top: 8px;
 }
 
 ._dropMenu--userLabel {
