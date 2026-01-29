@@ -3,9 +3,15 @@
     <div ref="mapContainer" class="_geoMapView--map"></div>
     <div ref="popupContainer" class="_geoMapView--popup" v-show="selectedFile">
       <div class="_geoMapView--popupContent" v-if="selectedFile">
-        <button class="_geoMapView--closePopup" @click="selectedFile = null">×</button>
+        <button class="_geoMapView--closePopup" @click="selectedFile = null">
+          ×
+        </button>
         <div class="_geoMapView--media">
-          <MediaContent :file="selectedFile" :context="'full'" :resolution="320" />
+          <MediaContent
+            :file="selectedFile"
+            :context="'full'"
+            :resolution="320"
+          />
         </div>
         <div class="_geoMapView--info">
           {{ selectedFile.name }}
@@ -50,7 +56,7 @@ export default {
   },
   mounted() {
     this.initMap();
-    
+
     this.resizeObserver = new ResizeObserver(() => {
       if (this.map) {
         this.map.updateSize();
@@ -74,7 +80,7 @@ export default {
   methods: {
     initMap() {
       // Center roughly in the middle of our polygon (Mediterranean/Europe)
-      const center = fromLonLat([15, 42]); 
+      const center = fromLonLat([15, 42]);
 
       this.map = new Map({
         target: this.$refs.mapContainer,
@@ -110,8 +116,8 @@ export default {
         autoPanAnimation: {
           duration: 250,
         },
-        positioning: 'bottom-center',
-        offset: [0, -10]
+        positioning: "bottom-center",
+        offset: [0, -10],
       });
       this.map.addOverlay(this.overlay);
 
@@ -138,10 +144,10 @@ export default {
           this.overlay.setPosition(undefined);
         }
       });
-      
+
       selectCluster.getFeatures().on(["remove"], () => {
-         this.selectedFile = null;
-         this.overlay.setPosition(undefined);
+        this.selectedFile = null;
+        this.overlay.setPosition(undefined);
       });
 
       // Pointer cursor on hover
@@ -172,8 +178,8 @@ export default {
             }),
           });
         } else {
-           // Single feature style
-           style = new Style({
+          // Single feature style
+          style = new Style({
             image: new Circle({
               radius: 6,
               fill: new Fill({ color: "#e76f51" }),
@@ -192,16 +198,18 @@ export default {
       if (!this.files || this.files.length === 0) return;
 
       const cities = [
-        { name: 'Lisbon', lon: -9.1393, lat: 38.7223 },
-        { name: 'Nantes', lon: -1.5536, lat: 47.2184 },
-        { name: 'Innsbruck', lon: 11.4041, lat: 47.2692 },
-        { name: 'Tunis', lon: 10.1815, lat: 36.8065 },
-        { name: 'Tbilisi', lon: 44.8271, lat: 41.7151 },
+        { name: "Lisbon", lon: -9.1393, lat: 38.7223 },
+        { name: "Nantes", lon: -1.5536, lat: 47.2184 },
+        { name: "Innsbruck", lon: 11.4041, lat: 47.2692 },
+        { name: "Tunis", lon: 10.1815, lat: 36.8065 },
+        { name: "Tbilisi", lon: 44.8271, lat: 41.7151 },
       ];
 
       const features = this.files.map((file) => {
         // Use a consistent hash to pick a city
-        const seed = this.hashCode(file.$path || file.name || Math.random().toString());
+        const seed = this.hashCode(
+          file.$path || file.name || Math.random().toString()
+        );
         const cityIndex = Math.abs(seed) % cities.length;
         const city = cities[cityIndex];
 
@@ -230,7 +238,7 @@ export default {
     seededRandom(seed) {
       const x = Math.sin(seed) * 10000;
       return x - Math.floor(x);
-    }
+    },
   },
 };
 </script>
@@ -241,7 +249,7 @@ export default {
   inset: 0;
   width: 100%;
   height: 100%;
-  padding-top: calc(var(--spacing, 1rem) * 4); 
+  // padding-top: calc(var(--spacing, 1rem) * 4);
 }
 
 ._geoMapView--map {
@@ -254,11 +262,11 @@ export default {
   background-color: white;
   padding: 10px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   min-width: 200px;
   max-width: 300px;
   z-index: 1000;
-  
+
   /* Arrow */
   &::after {
     content: "";
@@ -284,7 +292,7 @@ export default {
   line-height: 1;
   color: #666;
   z-index: 10;
-  
+
   &:hover {
     color: #000;
   }
@@ -298,7 +306,7 @@ export default {
   overflow: hidden;
   background: #f0f0f0;
 
-  ::v-deep ._mediaContent, 
+  ::v-deep ._mediaContent,
   ::v-deep img {
     width: 100%;
     height: 100%;

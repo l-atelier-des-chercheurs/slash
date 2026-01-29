@@ -32,7 +32,7 @@ export default {
   inset: 0;
   overflow: auto;
   padding: calc(var(--spacing, 1rem) * 2);
-  padding-top: calc(var(--spacing, 1rem) * 5); /* under the top bar */
+  padding-top: calc(var(--spacing, 1rem) * 7); /* under the top bar */
 }
 
 ._mediaGridView--grid {
