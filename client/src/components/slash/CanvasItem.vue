@@ -23,7 +23,7 @@
 
       <button
         type="button"
-        class="_canvasItem--pathBubble"
+        class="_canvasItem--chatBubble"
         :aria-label="$t('file_path')"
         @mousedown.stop
         @click.stop="showPathModal = true"
@@ -103,7 +103,7 @@ export default {
     },
     resizeHandleSize() {
       const zoom = Math.max(0.1, this.canvasZoom);
-      return `${24 / zoom}px`;
+      return `${30 / zoom}px`;
     },
     itemStyle() {
       if (this.mode === "grid") {
@@ -470,7 +470,7 @@ export default {
     z-index: -1;
   }
 
-  ._canvasItem--pathBubble {
+  ._canvasItem--chatBubble {
     position: absolute;
     top: calc(var(--spacing) / 4);
     right: calc(var(--spacing) / 4);
@@ -486,7 +486,7 @@ export default {
     border: none;
     border-radius: calc(var(--border-radius) - 2px);
 
-    background: black;
+    background: transparent;
     color: white;
     cursor: pointer;
     // opacity: 0.7;
@@ -498,8 +498,8 @@ export default {
     }
 
     .b-icon {
-      width: 14px;
-      height: 14px;
+      // width: 14px;
+      // height: 14px;
     }
   }
 
@@ -551,7 +551,7 @@ export default {
 
     &:hover::before {
       background-color: white;
-      box-shadow: 0 0 0px 2px black;
+      box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
     }
   }
   &:hover,
