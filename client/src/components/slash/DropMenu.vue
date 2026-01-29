@@ -12,10 +12,13 @@
     </button>
 
     <template v-if="$root.slash_logged_in_as">
-      <ImportFileZone
-        :multiple="true"
-        :files_to_import.sync="files_to_import"
-      />
+      <ImportFileZone :multiple="true" :files_to_import.sync="files_to_import">
+        <template #trigger>
+          <button class="u-button u-button_white">
+            <b-icon icon="upload" :label="$t('import')" />
+          </button>
+        </template>
+      </ImportFileZone>
       <UploadFiles
         v-if="files_to_import.length > 0"
         :files_to_import="files_to_import"
@@ -62,8 +65,10 @@ export default {
   position: fixed;
   bottom: calc(var(--spacing) * 2);
   right: calc(var(--spacing) * 2);
-  border: 2px solid var(--c-gris_clair);
-  background-color: var(--c-bleuvert);
+  // border: 2px solid var(--c-gris_clair);
+  // background-color: var(--c-bleuvert);
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
 
   padding: calc(var(--spacing) / 1);
 }

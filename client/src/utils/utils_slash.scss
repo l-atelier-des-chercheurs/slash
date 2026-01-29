@@ -1,3 +1,15 @@
+button {
+  background: white;
+  color: var(--c-noir);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 4px;
+  padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
+  font-size: var(--sl-font-size-normal);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+  appearance: none;
+}
 // Basic input styles – uses CSS variables from App.vue (:root)
 
 input[type="text"],

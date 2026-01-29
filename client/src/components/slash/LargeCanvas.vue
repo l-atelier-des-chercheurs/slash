@@ -162,7 +162,6 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  cursor: move;
 }
 
 ._canvasContent {
