@@ -12,20 +12,21 @@
             :key="`day-${element.key}`"
             class="_timelineView--day"
           >
-            <button
-              type="button"
-              class="_timelineView--dayButton"
-              :class="{ 'is--collapsed': isDayCollapsed(element.key) }"
+            <div
+              class="_timelineView--dayLabel"
               :aria-expanded="!isDayCollapsed(element.key)"
               @click="toggleDayCollapsed(element.key)"
             >
-              <span class="_timelineView--dayButtonLabel">{{
-                element.label
-              }}</span>
-              <span class="_timelineView--dayButtonCount"
-                >({{ element.mediaItems.length }})</span
+              <button
+                type="button"
+                class="_timelineView--dayButton"
+                :class="{ 'is--collapsed': isDayCollapsed(element.key) }"
+                :aria-label="element.label"
               >
-            </button>
+                <span class="">{{ element.label }}</span>
+                <span class="">({{ element.mediaItems.length }})</span>
+              </button>
+            </div>
             <div
               v-show="!isDayCollapsed(element.key)"
               class="_timelineView--dayItems"
@@ -158,7 +159,9 @@ export default {
         if (!groups[key]) groups[key] = { date: d, files: [] };
         groups[key].files.push(f);
       });
-      return Object.values(groups);
+      return Object.values(groups).sort(
+        (a, b) => a.date.valueOf() - b.date.valueOf()
+      );
     },
     timelineElements() {
       const elements = [];
@@ -316,42 +319,49 @@ export default {
   height: 100%;
 }
 
-._timelineView--dayButton {
+._timelineView--dayLabel {
+  // width: 4rem;
+  position: relative;
+  height: 100vh;
+  width: 4rem;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: block;
+    width: 1px;
+    height: 100%;
+    background: var(--c-gris);
+  }
+}
+
+._timelineView--dayButton {
+  position: relative;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
-  padding: 8px 12px;
-  margin: 0;
-  border: 1px solid #e0e0e0;
   border-radius: 6px;
-  background: #f8f8f8;
-  font-family: inherit;
-  font-size: 0.95rem;
-  color: #333;
-  cursor: pointer;
+  padding: 4px 12px;
+  transform: rotate(-90deg);
+  background: white;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover {
-    background: #eee;
-    border-color: #ccc;
+    background: var(--c-gris_fonce);
+    color: white;
   }
 
   &.is--collapsed {
-    background: #f0f0f0;
-    border-color: #ddd;
+    background: var(--c-noir);
+    color: white;
   }
-}
-
-._timelineView--dayButtonLabel {
-  font-weight: 500;
-}
-
-._timelineView--dayButtonCount {
-  font-size: 0.85rem;
-  color: #888;
-  font-weight: normal;
 }
 
 ._timelineView--dayItems {
