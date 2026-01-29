@@ -10,7 +10,6 @@
     @update:scale="handleZoomUpdate"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
-      <div class="_originDot"></div>
       <CanvasItem
         v-for="file in files"
         :key="file.$path"
@@ -173,6 +172,8 @@ export default {
   --rule-color: var(--color-rule);
   --rule-size: 48px;
   --dot-size: 2px;
+
+  border: var(--dot-size) solid var(--rule-color);
   background-image: radial-gradient(
     circle,
     var(--rule-color) var(--dot-size),
@@ -189,18 +190,5 @@ export default {
     );
     background-size: var(--rule-size) var(--rule-size);
   }
-}
-
-._originDot {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  background-color: rgba(0, 0, 0, 0.8);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 10;
 }
 </style>

@@ -359,7 +359,7 @@ export default {
         useWheelScroll: true,
         useAutoZoom: true,
         margin: 0,
-        zoomRange: [0.4, 10],
+        zoomRange: [0.1, 50],
         maxPinchWheel: 10,
         displayVerticalScroll: true,
         displayHorizontalScroll: true,
@@ -708,7 +708,7 @@ export default {
 
       // Get current zoom
       const currentZoom = this.infiniteviewer.getZoom() || this.scale || 1;
-      const zoomRange = [0.4, 10]; // From getViewerOptions
+      const zoomRange = this.getViewerOptions().zoomRange;
 
       // Calculate zoom delta based on wheel delta
       // Negative deltaY (scrolling up) = zoom in, positive deltaY (scrolling down) = zoom out
