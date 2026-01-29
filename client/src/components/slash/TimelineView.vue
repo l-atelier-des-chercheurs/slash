@@ -1,6 +1,6 @@
 <template>
-  <div class="_timelineView" ref="container">
-    <div class="_timelineView--track">
+  <div class="_timelineView" ref="container" @wheel.prevent="onWheel">
+    <div class="_timelineView--track" ref="track">
       <!-- Horizontal lines background -->
       <div class="_timelineView--background"></div>
 
@@ -170,7 +170,16 @@ export default {
       return elements;
     },
   },
-  methods: {},
+  methods: {
+    onWheel(e) {
+      const track = this.$refs.track;
+      if (!track) return;
+      // Vertical wheel → horizontal scroll; horizontal wheel → horizontal scroll (like Les Cahiers)
+      const delta = e.deltaX + e.deltaY;
+      if (delta === 0) return;
+      track.scrollLeft += delta;
+    },
+  },
 };
 </script>
 
@@ -182,10 +191,9 @@ export default {
   height: 100%;
   background-color: white;
 
-  /* Notebook lines pattern */
-  background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
-  background-size: 100% 28px; /* Matches baseLineHeight */
-  background-position: 0 40px; /* Offset for header */
+  // background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
+  // background-size: 100% 28px; /* Matches baseLineHeight */
+  // background-position: 0 40px; /* Offset for header */
 }
 
 ._timelineView--track {

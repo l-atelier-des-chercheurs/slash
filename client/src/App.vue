@@ -244,6 +244,8 @@ export default {
   --max-column-width-px: 1280px;
   --switch-thumb-border-radius: 4px;
 
+  --rule-color: #d2d2d2;
+
   accent-color: var(--c-orange);
 }
 

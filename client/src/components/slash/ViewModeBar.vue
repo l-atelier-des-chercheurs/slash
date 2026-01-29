@@ -37,6 +37,8 @@
       <b-icon icon="calendar-day" />
     </button>
     <div class="_viewModeBar--divider"></div>
+
+    <DropMenu :folder_path="folder_path" />
     <button
       type="button"
       class="_viewModeBar--btn"

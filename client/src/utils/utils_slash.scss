@@ -139,3 +139,62 @@ select {
     pointer-events: none;
   }
 }
+
+input[type="file"] {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+
+  + label {
+    display: inline-flex;
+    flex-direction: row nowrap;
+    align-items: center;
+    justify-content: center;
+
+    // width: 100%;
+    // max-width: 380px;
+    text-align: center;
+
+    cursor: pointer;
+    overflow: hidden;
+    word-break: break-word;
+
+    padding: calc(var(--spacing) / 2) calc(var(--spacing) / 1);
+    border-radius: var(--input-border-radius);
+    margin-bottom: 0;
+
+    transition: color 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  :focus + label,
+  &.has-focus + label {
+    outline: 1px dotted var(--c-rouge);
+    outline: -webkit-focus-ring-color auto 5px;
+  }
+
+  + label * {
+    display: block;
+  }
+
+  + label svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    fill: currentColor;
+    // margin-right: calc(var(--spacing) / 1);
+  }
+
+  &.inputfile-2 + label {
+    background-color: var(--c-rouge);
+    color: white;
+    border: 0px solid currentColor;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: var(--c-rouge_fonce);
+    }
+  }
+}

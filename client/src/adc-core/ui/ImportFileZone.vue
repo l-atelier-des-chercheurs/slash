@@ -14,10 +14,10 @@
     >
       <div class="u-button u-button_red">
         <b-icon icon="upload" :label="$t('import')" />
-        {{ $t("import") }}
+        <!-- {{ $t("import") }} -->
       </div>
       <div class="u-instructions">
-        {{ $t("or_drag_drop_file_here").toLowerCase() }}
+        <!-- {{ $t("or_drag_drop_file_here").toLowerCase() }} -->
       </div>
     </label>
     <input
