@@ -25,8 +25,6 @@
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       @mousedown.stop="handleResizeStart"
-      @mouseenter="handleResizeHandleEnter"
-      @mouseleave="handleResizeHandleLeave"
     />
   </div>
 </template>
@@ -63,8 +61,6 @@ export default {
     return {
       isDragging: false,
       isResizing: false,
-      isHovering: false,
-      isHoveringResizeHandle: false,
       dragStartX: 0,
       dragStartY: 0,
       dragStartFileX: 0,
@@ -175,18 +171,6 @@ export default {
     }
   },
   methods: {
-    handleMouseEnter() {
-      this.isHovering = true;
-    },
-    handleMouseLeave() {
-      this.isHovering = false;
-    },
-    handleResizeHandleEnter() {
-      this.isHoveringResizeHandle = true;
-    },
-    handleResizeHandleLeave() {
-      this.isHoveringResizeHandle = false;
-    },
     handleResizeStart(event) {
       event.preventDefault();
       event.stopPropagation();
@@ -465,7 +449,7 @@ export default {
     cursor: nwse-resize;
     z-index: 10;
     pointer-events: auto;
-    opacity: 1;
+    opacity: 0;
 
     // Visual handle using pseudo-element
     &::before {
