@@ -55,9 +55,9 @@
       v-if="value === 'canvas'"
       class="_viewModeBar--row _viewModeBar--zoomRow"
     >
-      <span class="_viewModeBar--zoomLabel" aria-hidden="true">{{
+      <!-- <span class="_viewModeBar--zoomLabel" aria-hidden="true">{{
         zoomLabel
-      }}</span>
+      }}</span> -->
       <input
         type="range"
         class="_viewModeBar--zoomSlider"
@@ -115,8 +115,8 @@ export default {
   gap: 6px;
 
   padding: 6px;
-  background: var(--c-gris_clair, #f0f0f0);
-  border: 2px solid var(--c-gris, #ccc);
+  background: var(--c-gris_clair, #ccc);
+  // border: 2px solid var(--c-gris, #ccc);
   border-radius: 12px;
   // box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
@@ -129,14 +129,15 @@ export default {
 
 ._viewModeBar--zoomRow {
   width: 100%;
-  padding-top: 2px;
-  border-top: 1px solid var(--c-gris, #ccc);
+  padding-top: 4px;
+  padding-bottom: 4px;
+  // border-top: 1px solid var(--c-gris, #ccc);
   gap: 8px;
 }
 
 ._viewModeBar--zoomLabel {
   min-width: 2.5rem;
-  font-size: 0.75rem;
+  font-size: var(--sl-font-size-small);
   font-variant-numeric: tabular-nums;
   color: var(--c-gris_fonce, #555);
 }
@@ -144,7 +145,7 @@ export default {
 ._viewModeBar--zoomSlider {
   flex: 1;
   min-width: 80px;
-  max-width: 140px;
+  // max-width: 140px;
   height: 6px;
   -webkit-appearance: none;
   appearance: none;

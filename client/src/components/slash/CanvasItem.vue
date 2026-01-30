@@ -111,10 +111,7 @@ export default {
       }
       if (this.mode === "timeline") {
         // Timeline mode: flex layout
-        const width =
-          this.currentWidth !== null
-            ? this.currentWidth
-            : this.file.width || 160;
+        const width = 224;
         const ratio = this.file.$infos?.ratio;
         const height =
           this.timelineHeight || (ratio ? width * ratio : null) || 200;
@@ -160,8 +157,15 @@ export default {
       const availableResolutions = [50, 320, 640, 2000];
 
       // Get the current item width
-      const itemWidth =
-        this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+      let itemWidth;
+      if (this.mode === "timeline") {
+        itemWidth = 160;
+      } else {
+        itemWidth =
+          this.currentWidth !== null
+            ? this.currentWidth
+            : this.file.width || 160;
+      }
 
       // Calculate displayed width (item width * zoom level)
       const displayedWidth = itemWidth * this.canvasZoom;

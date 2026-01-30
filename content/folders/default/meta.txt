@@ -1,0 +1,5 @@
+title = "Default"
+"$status" = "public"
+"$contributors" = "everyone"
+"$date_modified" = 2026-01-30T12:12:55.237Z
+"$date_created" = 2026-01-30T12:12:55.237Z

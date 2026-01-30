@@ -219,17 +219,7 @@ export default {
           const fileEvent = this.getEventForDate(fileMoment);
           const phaseLabel = fileEvent ? fileEvent.label : null;
 
-          let height = 200;
-          if (file.$type === "image") {
-            const ratio = file.$infos?.ratio || 1;
-            const baseWidth = 180 + Math.random() * 100;
-            height = baseWidth * ratio;
-          } else if (file.$type === "text") {
-            height = 150 + Math.random() * 100;
-          }
-          height =
-            Math.ceil(height / this.baseLineHeight) * this.baseLineHeight;
-
+          let height = 224;
           mediaItems.push({
             key: file.$path,
             file,
