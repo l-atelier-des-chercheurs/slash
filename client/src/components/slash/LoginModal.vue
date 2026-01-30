@@ -7,7 +7,7 @@
         create a new account below.
       </p>
 
-      <div class="u-spacingBottom">
+      <div class="u-spacingBottom" v-if="!is_logged_in">
         <label class="u-label">Choose an existing account</label>
         <select v-model="selected_author" class="u-input">
           <option disabled value="">Identify yourself here</option>
@@ -26,11 +26,27 @@
           </optgroup>
         </select>
       </div>
+      <div v-else class="u-spacingBottom">
+        <p>
+          You are currently logged in as
+          <strong>{{ selected_author.name }}</strong
+          >.
+        </p>
+      </div>
     </div>
 
     <template slot="footer">
       <div />
       <button
+        v-if="is_logged_in"
+        type="button"
+        class="u-button u-button_red"
+        @click="logout()"
+      >
+        Logout
+      </button>
+      <button
+        v-else
         type="button"
         class="u-button u-button_bleuvert"
         :disabled="!selected_author"
@@ -46,8 +62,16 @@ export default {
   props: {},
   components: {},
   data() {
+    let saved_author = this.$root.slash_logged_in_as;
+    if (typeof saved_author === "string") {
+      try {
+        saved_author = JSON.parse(saved_author);
+      } catch (e) {
+        // failed to parse
+      }
+    }
     return {
-      selected_author: this.$root.slash_logged_in_as || "",
+      selected_author: saved_author || "",
       show_create: false,
       new_author_name: "",
       authors_from_api: [],
@@ -60,6 +84,9 @@ export default {
   beforeDestroy() {},
   watch: {},
   computed: {
+    is_logged_in() {
+      return !!this.$root.slash_logged_in_as;
+    },
     all_contributors() {
       // Create a deep copy of the hardcoded list to avoid mutating the original
       let all = JSON.parse(JSON.stringify(this.$root.slash_contributors_list));
@@ -141,14 +168,30 @@ export default {
           return;
         }
       } else {
-        debugger;
         await this.$api.loginToFolder({
           path: this.selected_author.path,
           password: default_password,
         });
       }
 
+      this.$alertify.success("Logged in");
+
+      this.$root.slash_logged_in_as = this.selected_author;
+      localStorage.setItem(
+        "slash_logged_in_as",
+        JSON.stringify(this.selected_author)
+      );
+
       this.$emit("close");
+    },
+    async logout() {
+      if (this.$api.tokenpath.token_path) {
+        await this.$api.logoutFromFolder();
+      }
+      this.$root.slash_logged_in_as = null;
+      localStorage.removeItem("slash_logged_in_as");
+      this.selected_author = "";
+      this.$alertify.success("Logged out");
     },
   },
 };
