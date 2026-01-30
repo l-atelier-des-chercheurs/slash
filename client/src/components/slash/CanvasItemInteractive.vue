@@ -185,7 +185,8 @@ export default {
         const adjustedDeltaX = deltaX / this.canvasZoom;
 
         // Calculate new width (in canvas coordinates)
-        const newWidth = Math.max(50, this.resizeStartWidth + adjustedDeltaX);
+        let newWidth = Math.max(50, this.resizeStartWidth + adjustedDeltaX);
+        newWidth = Math.min(2600, this.resizeStartWidth + adjustedDeltaX);
 
         // Allow any width (no upper bound clamping since we allow negative positions)
         const clampedWidth = newWidth;

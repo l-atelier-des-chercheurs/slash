@@ -1,5 +1,9 @@
 <template>
-  <div class="_canvasItemContentWrapper" :class="wrapperClasses" :style="itemStyle">
+  <div
+    class="_canvasItemContentWrapper"
+    :class="wrapperClasses"
+    :style="itemStyle"
+  >
     <div class="_canvasItem--shadow" />
 
     <div class="_canvasItem--content" :data-filetype="file.$type">
@@ -176,6 +180,7 @@ export default {
 
   background: transparent;
   color: white;
+  background: var(--c-noir);
   cursor: pointer;
   // opacity: 0.7;
   transition: opacity 0.15s;

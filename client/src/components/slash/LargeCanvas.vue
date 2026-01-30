@@ -23,6 +23,14 @@
         @width-update="handleWidthUpdate"
       />
     </div>
+
+    <div
+      class="_currentCenterDot"
+      :style="{
+        left: canvasScrollLeft + 'px',
+        top: canvasScrollTop + 'px',
+      }"
+    ></div>
   </PanZoom3>
 </template>
 <script>
@@ -47,10 +55,13 @@ export default {
     return {
       canvasScrollLeft: 0,
       canvasScrollTop: 0,
+      canvasViewedCenterX: 0,
+      canvasViewedCenterY: 0,
       canvasSize: 10000,
       nextGridX: 0,
       nextGridY: 0,
       scrollAnimationFrame: null,
+      lastLogTime: 0,
     };
   },
   computed: {
@@ -98,7 +109,33 @@ export default {
       if (this.$refs.viewer) {
         this.canvasScrollLeft = this.$refs.viewer.getScrollLeft();
         this.canvasScrollTop = this.$refs.viewer.getScrollTop();
+        this.logCenterPosition();
       }
+    },
+    logCenterPosition() {
+      const now = Date.now();
+      if (now - this.lastLogTime < 200) return;
+      this.lastLogTime = now;
+
+      const viewerEl = this.$el;
+      if (!viewerEl) return;
+
+      const rect = viewerEl.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const zoom = this.scale;
+
+      this.canvasViewedCenterX = centerX / zoom + this.canvasScrollLeft;
+      this.canvasViewedCenterY = centerY / zoom + this.canvasScrollTop;
+
+      console.log(
+        `Canvas Center: x=${Math.round(
+          this.canvasViewedCenterX
+        )}, y=${Math.round(this.canvasViewedCenterY)}`,
+        `Canvas Scroll: x=${Math.round(this.canvasScrollLeft)}, y=${Math.round(
+          this.canvasScrollTop
+        )}`
+      );
     },
     initializeItemPositions() {
       // Initialize positions for items without x/y coordinates; clamp all to >= 0 so content stays in canvas
@@ -196,5 +233,14 @@ export default {
     );
     background-size: var(--rule-size) var(--rule-size);
   }
+}
+
+._currentCenterDot {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--c-orange);
+  border-radius: 50%;
+  z-index: 1000;
 }
 </style>
