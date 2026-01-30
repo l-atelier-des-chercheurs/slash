@@ -61,7 +61,7 @@ export default {
       canvasScrollTop: 0,
       canvasViewedCenterX: 0,
       canvasViewedCenterY: 0,
-      canvasSize: 10000,
+      canvasSize: 20000,
       lastLogTime: 0,
       saveStateTimeout: null,
     };

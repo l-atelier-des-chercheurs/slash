@@ -9,13 +9,9 @@
       <LoaderSpinner />
     </div>
     <div v-else-if="!chat_slug">
-      <p class="_itemChat--pathContent">{{ file.$path }}</p>
-      <br />
-      <button
-        type="button"
-        class="u-button u-button_bleumarine"
-        @click="createChat"
-      >
+      <!-- <p class="_itemChat--pathContent">{{ file.$path }}</p> -->
+      <!-- <br /> -->
+      <button type="button" class="u-button" @click="createChat">
         <b-icon icon="chat-left-text" />
         {{ $t("comment") || "Comment" }}
       </button>

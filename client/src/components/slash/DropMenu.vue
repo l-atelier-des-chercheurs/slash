@@ -50,7 +50,7 @@
           class="_dropMenu--userLabel"
           @click="openLoginModal()"
         >
-          Louis
+          {{ connected_as.name }}
         </button>
         <button
           class="_dropMenu--openButton"
