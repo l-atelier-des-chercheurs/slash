@@ -1,5 +1,5 @@
 <template>
-  <BaseModal2 :title="'Hello Slashers!'" :is_closable="true">
+  <BaseModal2 :title="'Hello Slashers!'" :is_closable="is_logged_in">
     <div>
       <p class="u-spacingBottom">
         Before using the app, please pick your name in this list so all your
@@ -29,7 +29,7 @@
       <div v-else class="u-spacingBottom">
         <p>
           You are currently logged in as
-          <strong>{{ selected_author.name }}</strong
+          <strong>{{ connected_as.name }}</strong
           >.
         </p>
       </div>
@@ -62,7 +62,7 @@ export default {
   props: {},
   components: {},
   data() {
-    let saved_author = this.$root.slash_logged_in_as;
+    let saved_author = this.connected_as;
     if (typeof saved_author === "string") {
       try {
         saved_author = JSON.parse(saved_author);
@@ -85,7 +85,7 @@ export default {
   watch: {},
   computed: {
     is_logged_in() {
-      return !!this.$root.slash_logged_in_as;
+      return !!this.connected_as;
     },
     all_contributors() {
       // Create a deep copy of the hardcoded list to avoid mutating the original
@@ -176,20 +176,12 @@ export default {
 
       this.$alertify.success("Logged in");
 
-      this.$root.slash_logged_in_as = this.selected_author;
-      localStorage.setItem(
-        "slash_logged_in_as",
-        JSON.stringify(this.selected_author)
-      );
-
       this.$emit("close");
     },
     async logout() {
       if (this.$api.tokenpath.token_path) {
         await this.$api.logoutFromFolder();
       }
-      this.$root.slash_logged_in_as = null;
-      localStorage.removeItem("slash_logged_in_as");
       this.selected_author = "";
       this.$alertify.success("Logged out");
     },

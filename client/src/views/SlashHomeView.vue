@@ -21,6 +21,9 @@ export default {
   },
   created() {
     this.$eventHub.$on("login.openModal", this.openLoginModal);
+    if (!this.connected_as) {
+      this.show_login_modal = true;
+    }
   },
   mounted() {},
   beforeDestroy() {

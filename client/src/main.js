@@ -390,6 +390,10 @@ new Vue({
             path: "authors/ecole-de-design-nantes-atlantique",
           },
           {
+            name: "Julien (EDNA)",
+            path: "authors/julien",
+          },
+          {
             name: "L’Art Rue",
             path: "authors/l-art-rue",
           },
@@ -408,7 +412,6 @@ new Vue({
         ],
       },
     ],
-    slash_logged_in_as: localStorage.getItem("slash_logged_in_as") || null,
 
     default_new_module_width: 200,
     default_new_module_height: 200,
