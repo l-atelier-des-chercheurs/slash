@@ -1,11 +1,14 @@
 <template>
   <div class="_geoMapView">
     <div ref="mapContainer" class="_geoMapView--map"></div>
-    <div ref="popupContainer" class="_geoMapView--popup" v-show="selectedFile">
+    <div
+      ref="popupContainer"
+      class="_geoMapView--popup"
+      v-show="selectedFile"
+      :style="popupStyle"
+    >
       <div class="_geoMapView--popupContent" v-if="selectedFile">
-        <button class="_geoMapView--closePopup" @click="selectedFile = null">
-          ×
-        </button>
+        <button class="_geoMapView--closePopup" @click="closePopup">×</button>
         <div class="_geoMapView--media">
           <MediaContent
             :file="selectedFile"
@@ -22,21 +25,16 @@
 </template>
 
 <script>
-import "ol/ol.css";
-import "ol-ext/dist/ol-ext.css";
-import Map from "ol/Map";
-import View from "ol/View";
-import TileLayer from "ol/layer/Tile";
-import OSM from "ol/source/OSM";
-import { fromLonLat } from "ol/proj";
-import VectorSource from "ol/source/Vector";
-import Feature from "ol/Feature";
-import Point from "ol/geom/Point";
-import { Style, Circle, Fill, Stroke, Text } from "ol/style";
-import Overlay from "ol/Overlay";
-import { Cluster } from "ol/source";
-import AnimatedCluster from "ol-ext/layer/AnimatedCluster";
-import SelectCluster from "ol-ext/interaction/SelectCluster";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+const CITIES = [
+  { name: "Lisbon", lon: -9.1393, lat: 38.7223 },
+  { name: "Nantes", lon: -1.5536, lat: 47.2184 },
+  { name: "Innsbruck", lon: 11.4041, lat: 47.2692 },
+  { name: "Tunis", lon: 10.1815, lat: 36.8065 },
+  { name: "Tbilisi", lon: 44.8271, lat: 41.7151 },
+];
 
 export default {
   props: {
@@ -49,17 +47,29 @@ export default {
     return {
       map: null,
       selectedFile: null,
-      overlay: null,
+      popupLngLat: null,
       resizeObserver: null,
-      styleCache: {},
     };
+  },
+  computed: {
+    popupStyle() {
+      if (!this.popupLngLat || !this.map) return {};
+      const pt = this.map.project(this.popupLngLat);
+      const el = this.$refs.popupContainer;
+      const w = el ? el.offsetWidth : 200;
+      const h = el ? el.offsetHeight : 0;
+      return {
+        left: `${pt.x - w / 2}px`,
+        top: `${pt.y - h - 10}px`,
+      };
+    },
   },
   mounted() {
     this.initMap();
 
     this.resizeObserver = new ResizeObserver(() => {
       if (this.map) {
-        this.map.updateSize();
+        this.map.resize();
       }
     });
     this.resizeObserver.observe(this.$refs.mapContainer);
@@ -68,176 +78,184 @@ export default {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
   },
   watch: {
     files: {
       handler() {
-        this.updateFeatures();
+        this.updateGeoJSON();
       },
       deep: true,
     },
   },
   methods: {
     initMap() {
-      // Center roughly in the middle of our polygon (Mediterranean/Europe)
-      const center = fromLonLat([15, 42]);
-
-      this.map = new Map({
-        target: this.$refs.mapContainer,
-        layers: [
-          new TileLayer({
-            source: new OSM(),
-          }),
-        ],
-        view: new View({
-          center: center,
-          zoom: 4,
-        }),
+      this.map = new maplibregl.Map({
+        container: this.$refs.mapContainer,
+        style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        center: [15, 42],
+        zoom: 4,
       });
 
-      this.vectorSource = new VectorSource();
-      this.clusterSource = new Cluster({
-        distance: 40,
-        source: this.vectorSource,
-      });
+      this.map.on("load", () => {
+        this.map.addSource("points", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+          cluster: true,
+          clusterMaxZoom: 14,
+          clusterRadius: 50,
+        });
 
-      const clusterLayer = new AnimatedCluster({
-        name: "Cluster",
-        source: this.clusterSource,
-        animationDuration: 700,
-        style: this.getStyle,
-      });
-      this.map.addLayer(clusterLayer);
+        // Cluster circles
+        this.map.addLayer({
+          id: "clusters",
+          type: "circle",
+          source: "points",
+          filter: ["has", "point_count"],
+          paint: {
+            "circle-color": "#e76f51",
+            "circle-radius": [
+              "step",
+              ["get", "point_count"],
+              18,
+              100,
+              24,
+              750,
+              30,
+            ],
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff",
+          },
+        });
 
-      // Popup overlay
-      this.overlay = new Overlay({
-        element: this.$refs.popupContainer,
-        autoPan: true,
-        autoPanAnimation: {
-          duration: 250,
-        },
-        positioning: "bottom-center",
-        offset: [0, -10],
-      });
-      this.map.addOverlay(this.overlay);
+        // Cluster count label
+        this.map.addLayer({
+          id: "cluster-count",
+          type: "symbol",
+          source: "points",
+          filter: ["has", "point_count"],
+          layout: {
+            "text-field": ["get", "point_count_abbreviated"],
+            "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+            "text-size": 12,
+          },
+          paint: {
+            "text-color": "#fff",
+          },
+        });
 
-      // Select interaction to handle clicks
-      const selectCluster = new SelectCluster({
-        pointRadius: 20,
-        animate: true,
-        spiral: true,
-        featureStyle: this.getStyle,
-      });
-      this.map.addInteraction(selectCluster);
+        // Unclustered points
+        this.map.addLayer({
+          id: "unclustered-point",
+          type: "circle",
+          source: "points",
+          filter: ["!", ["has", "point_count"]],
+          paint: {
+            "circle-color": "#e76f51",
+            "circle-radius": 6,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff",
+          },
+        });
 
-      selectCluster.getFeatures().on(["add"], (e) => {
-        const features = e.element.get("features");
-        if (features && features.length === 1) {
-          const file = features[0].get("file");
-          this.selectedFile = file;
-          const coordinates = e.element.getGeometry().getCoordinates();
-          this.overlay.setPosition(coordinates);
-        } else {
-          // If cluster with multiple items is clicked and spiderfied
-          // We don't show popup for the cluster center itself
-          this.selectedFile = null;
-          this.overlay.setPosition(undefined);
-        }
-      });
+        // Cluster click: zoom in to expand
+        this.map.on("click", "clusters", async (e) => {
+          const features = this.map.queryRenderedFeatures(e.point, {
+            layers: ["clusters"],
+          });
+          if (!features.length) return;
+          const clusterId = features[0].properties.cluster_id;
+          const source = this.map.getSource("points");
+          const zoom = await source.getClusterExpansionZoom(clusterId);
+          this.map.easeTo({
+            center: features[0].geometry.coordinates,
+            zoom,
+          });
+        });
 
-      selectCluster.getFeatures().on(["remove"], () => {
-        this.selectedFile = null;
-        this.overlay.setPosition(undefined);
-      });
+        // Unclustered point click: show popup
+        this.map.on("click", "unclustered-point", (e) => {
+          const feature = e.features[0];
+          const index = feature.properties.index;
+          if (index !== undefined && this.files[index]) {
+            this.selectedFile = this.files[index];
+            this.popupLngLat = feature.geometry.coordinates.slice();
+          }
+        });
 
-      // Pointer cursor on hover
-      this.map.on("pointermove", (evt) => {
-        const pixel = this.map.getEventPixel(evt.originalEvent);
-        const hit = this.map.hasFeatureAtPixel(pixel);
-        this.map.getTarget().style.cursor = hit ? "pointer" : "";
-      });
+        this.map.on("move", () => {
+          this.$forceUpdate();
+        });
 
-      this.updateFeatures();
+        this.map.on("mouseenter", "clusters", () => {
+          this.map.getCanvas().style.cursor = "pointer";
+        });
+        this.map.on("mouseleave", "clusters", () => {
+          this.map.getCanvas().style.cursor = "";
+        });
+        this.map.on("mouseenter", "unclustered-point", () => {
+          this.map.getCanvas().style.cursor = "pointer";
+        });
+        this.map.on("mouseleave", "unclustered-point", () => {
+          this.map.getCanvas().style.cursor = "";
+        });
+
+        this.updateGeoJSON();
+      });
     },
-    getStyle(feature) {
-      const features = feature.get("features");
-      const size = features ? features.length : 1;
-      let style = this.styleCache[size];
-      if (!style) {
-        if (size > 1) {
-          style = new Style({
-            image: new Circle({
-              radius: 10 + Math.min(size, 20), // Cap size
-              fill: new Fill({ color: "#2a9d8f" }),
-              stroke: new Stroke({ color: "#fff", width: 2 }),
-            }),
-            text: new Text({
-              text: size.toString(),
-              fill: new Fill({ color: "#fff" }),
-              scale: 1.2,
-            }),
-          });
-        } else {
-          // Single feature style
-          style = new Style({
-            image: new Circle({
-              radius: 6,
-              fill: new Fill({ color: "#e76f51" }),
-              stroke: new Stroke({ color: "#fff", width: 2 }),
-            }),
-          });
-        }
-        this.styleCache[size] = style;
+    buildGeoJSON() {
+      if (!this.files || !this.files.length) {
+        return { type: "FeatureCollection", features: [] };
       }
-      return style;
-    },
-    updateFeatures() {
-      if (!this.vectorSource) return;
-      this.vectorSource.clear();
-
-      if (!this.files || this.files.length === 0) return;
-
-      const cities = [
-        { name: "Lisbon", lon: -9.1393, lat: 38.7223 },
-        { name: "Nantes", lon: -1.5536, lat: 47.2184 },
-        { name: "Innsbruck", lon: 11.4041, lat: 47.2692 },
-        { name: "Tunis", lon: 10.1815, lat: 36.8065 },
-        { name: "Tbilisi", lon: 44.8271, lat: 41.7151 },
-      ];
-
-      const features = this.files.map((file) => {
-        // Use a consistent hash to pick a city
+      const features = this.files.map((file, index) => {
         const seed = this.hashCode(
           file.$path || file.name || Math.random().toString()
         );
-        const cityIndex = Math.abs(seed) % cities.length;
-        const city = cities[cityIndex];
+        const city = CITIES[Math.abs(seed) % CITIES.length];
 
-        // Exact coordinates now
-        const lat = city.lat;
-        const lon = city.lon;
+        // Add jitter to coordinates so points don't stack exactly
+        // This allows them to separate at high zoom levels
+        const randomX = this.seededRandom(seed) - 0.5;
+        const randomY = this.seededRandom(seed + 1) - 0.5;
+        const jitter = 0.05; // approx 5km
 
-        const feature = new Feature({
-          geometry: new Point(fromLonLat([lon, lat])),
-        });
-        feature.set("file", file);
-        return feature;
+        return {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [
+              city.lon + randomX * jitter,
+              city.lat + randomY * jitter,
+            ],
+          },
+          properties: { index },
+        };
       });
-
-      this.vectorSource.addFeatures(features);
+      return { type: "FeatureCollection", features };
+    },
+    seededRandom(seed) {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    },
+    updateGeoJSON() {
+      if (!this.map || !this.map.getSource("points")) return;
+      this.map.getSource("points").setData(this.buildGeoJSON());
+    },
+    closePopup() {
+      this.selectedFile = null;
+      this.popupLngLat = null;
     },
     hashCode(str) {
       let hash = 0;
       for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
         hash = (hash << 5) - hash + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash;
       }
       return hash;
-    },
-    seededRandom(seed) {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
     },
   },
 };
@@ -249,7 +267,6 @@ export default {
   inset: 0;
   width: 100%;
   height: 100%;
-  // padding-top: calc(var(--spacing, 1rem) * 4);
 }
 
 ._geoMapView--map {
@@ -266,6 +283,7 @@ export default {
   min-width: 200px;
   max-width: 300px;
   z-index: 1000;
+  pointer-events: auto;
 
   /* Arrow */
   &::after {
