@@ -12,7 +12,7 @@
     @update:scale="handleZoomUpdate"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
-      <CanvasItem
+      <CanvasItemInteractive
         v-for="file in files"
         :key="file.$path"
         :file="file"
@@ -27,7 +27,7 @@
 </template>
 <script>
 import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
-import CanvasItem from "@/components/slash/CanvasItem.vue";
+import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue";
 export default {
   props: {
     files: {
@@ -41,7 +41,7 @@ export default {
   },
   components: {
     PanZoom3,
-    CanvasItem,
+    CanvasItemInteractive,
   },
   data() {
     return {
