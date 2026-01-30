@@ -199,8 +199,9 @@ $_peach_dark: #e8bc85;
   width: 72px;
   height: 72px;
   font-size: 30px;
-  border-radius: 50%;
+  border-radius: 40%;
   background-color: white;
+  color: var(--c-noir);
   pointer-events: auto;
 
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
@@ -228,6 +229,7 @@ $_peach_dark: #e8bc85;
   &.is--open {
     transform: rotate(225deg);
     background-color: var(--c-noir);
+    border-radius: 50%;
     color: white;
 
     &:hover {

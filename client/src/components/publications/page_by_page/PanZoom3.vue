@@ -40,7 +40,7 @@ import Guides from "@scena/guides";
 
 export default {
   props: {
-    scale: Number,
+    zoom: Number,
     contentWidth: Number,
     contentHeight: Number,
     marginAroundContent: {
@@ -75,7 +75,7 @@ export default {
       scroll_top: undefined,
 
       debounce_zoom: undefined,
-      debounce_scroll: undefined,
+      debounce_interaction: undefined,
       debounce_content_visibility: undefined,
       is_zooming: false,
 
@@ -87,17 +87,6 @@ export default {
   created() {},
   mounted() {
     this.initInfiniteViewer();
-    this.$nextTick(() => {
-      this.scrollToCorner({ animate: false });
-      // Handle wheel zoom with Cmd/Ctrl modifier after initialization
-      // Use capture phase to intercept before InfiniteViewer processes it
-      if (this.$refs.infiniteviewer) {
-        //   this.$refs.infiniteviewer.addEventListener("wheel", this.onWheel, {
-        //     passive: false,
-        //     capture: true, // Capture phase - runs before InfiniteViewer's handler
-        //   });
-      }
-    });
 
     this.$eventHub.$on(`panzoom.panTo`, this.panTo);
 
@@ -124,33 +113,25 @@ export default {
     if (this.debounce_content_visibility) {
       clearTimeout(this.debounce_content_visibility);
     }
-    window.removeEventListener("resize", this.onWindowResize);
-    if (this.$refs.infiniteviewer) {
-      // this.$refs.infiniteviewer.removeEventListener("wheel", this.onWheel);
+    if (this.debounce_interaction) {
+      clearTimeout(this.debounce_interaction);
     }
+    window.removeEventListener("resize", this.onWindowResize);
     this.$eventHub.$off(`panzoom.panTo`, this.panTo);
-    this.$root.set_new_module_offset_left = 0;
-    this.$root.set_new_module_offset_top = 0;
   },
   watch: {
-    scale() {
-      this.updateScale(this.scale);
+    zoom() {
+      this.setZoom(this.zoom);
       this.updateViewerOptions();
       this.updateGuidesZoom();
     },
     contentWidth() {
       this.updateViewerOptions();
       this.updateGuidesResize();
-      this.$nextTick(() => {
-        this.checkContentVisibility();
-      });
     },
     contentHeight() {
       this.updateViewerOptions();
       this.updateGuidesResize();
-      this.$nextTick(() => {
-        this.checkContentVisibility();
-      });
     },
     magnification() {
       this.updateViewerOptions();
@@ -247,13 +228,6 @@ export default {
           }, 100);
         });
       }
-
-      // Initial content visibility check (debounced internally)
-      this.$nextTick(() => {
-        setTimeout(() => {
-          this.checkContentVisibility();
-        }, 200);
-      });
     },
     initGuides() {
       if (!this.$refs.horizontalGuides || !this.$refs.verticalGuides) return;
@@ -305,7 +279,7 @@ export default {
 
       const scrollLeft = this.infiniteviewer.getScrollLeft() || 0;
       const scrollTop = this.infiniteviewer.getScrollTop() || 0;
-      const currentZoom = this.infiniteviewer.getZoom() || this.scale || 1;
+      const currentZoom = this.infiniteviewer.getZoom() || 1;
       const config = this.guidesConfig;
 
       // Adjust scroll positions to account for content offset
@@ -411,6 +385,16 @@ export default {
       // when content dimensions change. The viewer will handle it automatically.
       // This method is kept for API compatibility but doesn't need to do anything.
     },
+    handleInteractionEnd() {
+      if (this.debounce_interaction) clearTimeout(this.debounce_interaction);
+      this.debounce_interaction = setTimeout(() => {
+        const x = this.infiniteviewer.getScrollLeft();
+        const y = this.infiniteviewer.getScrollTop();
+        const zoom = this.infiniteviewer.getZoom();
+        console.log("handleInteractionEnd", x, y, zoom);
+        this.$emit("scroll-end", { x, y, zoom });
+      }, 200);
+    },
     dragStart(event) {
       if (event.inputEvent?.target?.classList?.contains("panzoom-exclude"))
         event.stop();
@@ -427,19 +411,8 @@ export default {
       console.log("abortPinch");
     },
     pinch() {
-      // console.log("pinch");
-      this.is_zooming = true;
-      if (this.debounce_zoom) clearTimeout(this.debounce_zoom);
-      this.debounce_zoom = setTimeout(async () => {
-        const zoom = this.infiniteviewer.getZoom();
-        if (zoom !== this.scale) this.$emit("update:scale", zoom);
-        // Reset zooming flag (clamp disabled)
-        setTimeout(() => {
-          this.is_zooming = false;
-          // Clamp disabled
-          // this.clampScrollToContent();
-        }, 200);
-      }, 500);
+      console.log("pinch");
+      this.handleInteractionEnd();
     },
     panTo({ x, y }) {
       this.scrollToCorner({ x, y, animate: true });
@@ -469,140 +442,19 @@ export default {
         : { absolute: true };
 
       const margin = 80;
-      const currentScale = this.scale || this.infiniteviewer.getZoom() || 1;
+      const currentScale = this.zoom || this.infiniteviewer.getZoom() || 1;
 
       let _x = (x || 0) + -(0 + margin) / currentScale;
       let _y = (y || 0) + -margin / currentScale;
       this.infiniteviewer.scrollTo(_x, _y, opt);
     },
-    updateScale(scale) {
-      if (!this.infiniteviewer) return;
-      if (scale !== this.infiniteviewer.getZoom()) {
-        this.is_zooming = true;
-        this.infiniteviewer.setZoom(scale, {
-          duration: 200,
-          zoomBase: "viewport",
-          zoomOffsetX: this.$root.zoom_offset,
-          zoomOffsetY: this.$root.zoom_offset,
-        });
-        // Update guides zoom after zoom animation completes
-        setTimeout(() => {
-          this.updateGuidesZoom();
-          // Check content visibility after zoom (debounced internally)
-          this.checkContentVisibility();
-          // Reset zooming flag (clamp disabled)
-          setTimeout(() => {
-            this.is_zooming = false;
-            // Clamp disabled
-            // this.clampScrollToContent();
-          }, 300);
-        }, 250);
-      }
-    },
     disableActiveModule() {
       this.$eventHub.$emit("module.setActive", false);
     },
     onScroll() {
-      // console.log("onScroll");
-
-      // Clamp scroll disabled
-      // this.clampScrollToContent();
-
-      // Update guides scroll position (only if show_rules is true)
-      if (this.show_rules) {
-        this.updateGuidesScroll();
-      }
-
-      // Check if content is visible (debounced internally)
-      this.checkContentVisibility();
-
-      if (this.debounce_scroll) clearTimeout(this.debounce_scroll);
-      this.debounce_scroll = setTimeout(async () => {
-        this.$root.set_new_module_offset_left = Math.max(
-          0,
-          this.infiniteviewer.getScrollLeft()
-        );
-        this.$root.set_new_module_offset_top = Math.max(
-          0,
-          this.infiniteviewer.getScrollTop()
-        );
-      }, 500);
-    },
-    checkContentVisibility() {
-      // Debounce: only execute once every 500ms
-      if (this.debounce_content_visibility) {
-        clearTimeout(this.debounce_content_visibility);
-      }
-      this.debounce_content_visibility = setTimeout(() => {
-        this._checkContentVisibility();
-      }, 200);
-    },
-    _checkContentVisibility() {
-      if (!this.infiniteviewer || !this.$refs.viewport) {
-        this.isContentVisible = true;
-        return;
-      }
-
-      const viewer = this.$refs.infiniteviewer;
-      const viewport = this.$refs.viewport;
-      const scrollLeft = this.infiniteviewer.getScrollLeft() || 0;
-      const scrollTop = this.infiniteviewer.getScrollTop() || 0;
-      const zoom = this.infiniteviewer.getZoom() || this.scale || 1;
-
-      // Get viewport visible bounds (in scroll coordinates)
-      const viewerRect = viewer.getBoundingClientRect();
-      const viewportWidth = viewerRect.width / zoom;
-      const viewportHeight = viewerRect.height / zoom;
-
-      const viewportLeft = scrollLeft;
-      const viewportRight = scrollLeft + viewportWidth;
-      const viewportTop = scrollTop;
-      const viewportBottom = scrollTop + viewportHeight;
-
-      // Check all children of the viewport (slot content)
-      // This is generic and works with any content
-      const children = Array.from(viewport.children);
-
-      if (children.length === 0) {
-        this.isContentVisible = false;
-        return;
-      }
-
-      // Check if any child element intersects with viewport
-      let hasVisibleContent = false;
-      for (let i = 0; i < children.length; i++) {
-        const element = children[i];
-        const elementRect = element.getBoundingClientRect();
-
-        // Skip if element has no dimensions
-        if (elementRect.width === 0 && elementRect.height === 0) {
-          continue;
-        }
-
-        // Convert element position to scroll coordinates
-        const elementLeft =
-          (elementRect.left - viewerRect.left) / zoom + scrollLeft;
-        const elementRight =
-          (elementRect.right - viewerRect.left) / zoom + scrollLeft;
-        const elementTop =
-          (elementRect.top - viewerRect.top) / zoom + scrollTop;
-        const elementBottom =
-          (elementRect.bottom - viewerRect.top) / zoom + scrollTop;
-
-        // Check if element intersects with viewport
-        const intersects =
-          elementLeft < viewportRight &&
-          elementRight > viewportLeft &&
-          elementTop < viewportBottom &&
-          elementBottom > viewportTop;
-
-        if (intersects) {
-          hasVisibleContent = true;
-          break;
-        }
-      }
-
-      this.isContentVisible = hasVisibleContent;
+      console.log("onScroll");
+      if (this.show_rules) this.updateGuidesScroll();
+      this.handleInteractionEnd();
     },
     // Expose methods that might be called from parent components
     getZoom() {
@@ -634,7 +486,7 @@ export default {
       )
         return;
 
-      const currentZoom = this.infiniteviewer.getZoom() || this.scale || 1;
+      const currentZoom = this.infiniteviewer.getZoom() || this.zoom || 1;
       const config = this.guidesConfig;
 
       // Update guides zoom based on current scale
@@ -654,65 +506,10 @@ export default {
     onWindowResize() {
       this.updateGuidesResize();
       // Recalculate content offset after resize
-      this.$nextTick(() => {
-        this.updateGuidesScroll();
-        this.checkContentVisibility();
-      });
+      this.$nextTick(() => this.updateGuidesScroll());
     },
     onWheel(event) {
-      // Check if Command (Mac) or Ctrl (Windows/Linux) is pressed
-      const isModifierPressed = event.metaKey || event.ctrlKey;
-
-      if (!isModifierPressed) {
-        // Normal scroll behavior - let InfiniteViewer handle it
-        return;
-      }
-
-      // Prevent default scroll and stop propagation to prevent InfiniteViewer from scrolling
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation(); // Stop all other handlers on this element
-
-      if (!this.infiniteviewer) return;
-
-      // Get current zoom
-      const currentZoom = this.infiniteviewer.getZoom() || this.scale || 1;
-      const zoomRange = this.getViewerOptions().zoomRange;
-
-      // Calculate zoom delta based on wheel delta
-      // Negative deltaY (scrolling up) = zoom in, positive deltaY (scrolling down) = zoom out
-      // Use exponential scaling for smoother zoom feel
-      const zoomSpeed = 0.15; // Adjust this to control zoom sensitivity
-      const zoomDelta = -event.deltaY * zoomSpeed * 0.01 * currentZoom;
-
-      // Calculate new zoom
-      let newZoom = currentZoom + zoomDelta;
-
-      // Clamp zoom to range
-      newZoom = Math.max(zoomRange[0], Math.min(zoomRange[1], newZoom));
-
-      // Skip if zoom didn't change significantly
-      if (Math.abs(newZoom - currentZoom) < 0.01) {
-        return;
-      }
-
-      // No zoom offset – use library default (like daybrush.com/infinite-viewer)
-      this.is_zooming = true;
-      this.infiniteviewer.setZoom(newZoom, { duration: 0 });
-
-      // Update guides zoom
-      this.updateGuidesZoom();
-
-      // Emit zoom change
-      if (newZoom !== this.scale) {
-        this.$emit("update:scale", newZoom);
-      }
-
-      // Reset zooming flag
-      setTimeout(() => {
-        this.is_zooming = false;
-        this.checkContentVisibility();
-      }, 100);
+      this.handleInteractionEnd();
     },
   },
 };

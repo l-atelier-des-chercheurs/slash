@@ -2,23 +2,27 @@
   <PanZoom3
     class="_largeCanvas"
     ref="viewer"
-    :scale="scale"
+    :zoom="zoom"
     :content-width="canvasSize"
     :content-height="canvasSize"
     :show-rules="false"
     :enable-drag-to-pan="true"
     :margin-around-content="200"
     :limitRange="true"
-    @update:scale="handleZoomUpdate"
+    @scroll-end="updateScrollAndZoom"
   >
     <div class="_canvasContent" :style="canvasContentStyle">
       <CanvasItemInteractive
         v-for="file in files"
         :key="file.$path"
         :file="file"
+        class="_canvasItem"
+        :data-file-path="file.$path"
         :canvas-scroll-left="canvasScrollLeft"
         :canvas-scroll-top="canvasScrollTop"
-        :canvas-zoom="scale"
+        :canvas-width="canvasSize"
+        :canvas-height="canvasSize"
+        :canvas-zoom="zoom"
         @position-update="handlePositionUpdate"
         @width-update="handleWidthUpdate"
       />
@@ -42,7 +46,7 @@ export default {
       type: Array,
       required: true,
     },
-    scale: {
+    zoom: {
       type: Number,
       default: 1,
     },
@@ -58,10 +62,8 @@ export default {
       canvasViewedCenterX: 0,
       canvasViewedCenterY: 0,
       canvasSize: 10000,
-      nextGridX: 0,
-      nextGridY: 0,
-      scrollAnimationFrame: null,
       lastLogTime: 0,
+      saveStateTimeout: null,
     };
   },
   computed: {
@@ -74,100 +76,20 @@ export default {
   },
   watch: {
     files: {
-      handler() {
-        this.$nextTick(() => {
-          this.initializeItemPositions();
-        });
-      },
+      handler() {},
       deep: true,
     },
   },
   mounted() {
-    this.initializeItemPositions();
-    this.updateScrollPosition();
-    this.startScrollTracking();
-    this.centerOnOrigin();
+    this.restoreStateFromLocalStorage();
   },
-  beforeDestroy() {
-    this.stopScrollTracking();
-  },
+  beforeDestroy() {},
   methods: {
-    startScrollTracking() {
-      const trackScroll = () => {
-        this.updateScrollPosition();
-        this.scrollAnimationFrame = requestAnimationFrame(trackScroll);
-      };
-      this.scrollAnimationFrame = requestAnimationFrame(trackScroll);
-    },
-    stopScrollTracking() {
-      if (this.scrollAnimationFrame) {
-        cancelAnimationFrame(this.scrollAnimationFrame);
-        this.scrollAnimationFrame = null;
-      }
-    },
-    updateScrollPosition() {
-      if (this.$refs.viewer) {
-        this.canvasScrollLeft = this.$refs.viewer.getScrollLeft();
-        this.canvasScrollTop = this.$refs.viewer.getScrollTop();
-        this.logCenterPosition();
-      }
-    },
-    logCenterPosition() {
-      const now = Date.now();
-      if (now - this.lastLogTime < 200) return;
-      this.lastLogTime = now;
-
-      const viewerEl = this.$el;
-      if (!viewerEl) return;
-
-      const rect = viewerEl.getBoundingClientRect();
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const zoom = this.scale;
-
-      this.canvasViewedCenterX = centerX / zoom + this.canvasScrollLeft;
-      this.canvasViewedCenterY = centerY / zoom + this.canvasScrollTop;
-
-      console.log(
-        `Canvas Center: x=${Math.round(
-          this.canvasViewedCenterX
-        )}, y=${Math.round(this.canvasViewedCenterY)}`,
-        `Canvas Scroll: x=${Math.round(this.canvasScrollLeft)}, y=${Math.round(
-          this.canvasScrollTop
-        )}`
-      );
-    },
-    initializeItemPositions() {
-      // Initialize positions for items without x/y coordinates; clamp all to >= 0 so content stays in canvas
-      let gridX = this.nextGridX;
-      let gridY = this.nextGridY;
-      const gridSpacing = 200;
-
-      this.files.forEach((file) => {
-        if (file.x === undefined || file.y === undefined) {
-          // Use grid layout for initial positioning (always non-negative)
-          const x = Math.max(0, gridX);
-          const y = Math.max(0, gridY);
-
-          this.$set(file, "x", x);
-          this.$set(file, "y", y);
-
-          gridX += gridSpacing;
-          if (gridX > this.canvasSize - 200) {
-            gridX = 0;
-            gridY += gridSpacing;
-          }
-        } else {
-          // Clamp existing coordinates so content stays in positive quadrant
-          const clampedX = Math.max(0, file.x);
-          const clampedY = Math.max(0, file.y);
-          if (file.x !== clampedX) this.$set(file, "x", clampedX);
-          if (file.y !== clampedY) this.$set(file, "y", clampedY);
-        }
-      });
-
-      this.nextGridX = gridX;
-      this.nextGridY = gridY;
+    updateScrollAndZoom({ x, y, zoom } = {}) {
+      this.canvasScrollLeft = x;
+      this.canvasScrollTop = y;
+      this.$emit("update:zoom", zoom);
+      this.saveStateToLocalStorage();
     },
     handlePositionUpdate({ file, x, y }) {
       // Clamp to >= 0 so all content stays within the canvas (no negative coords)
@@ -180,8 +102,34 @@ export default {
       // Update file width locally
       this.$set(file, "width", width);
     },
-    handleZoomUpdate(zoom) {
-      this.$emit("update:scale", zoom);
+    getStorageKey() {
+      const path = this.$route ? this.$route.path : window.location.pathname;
+      return `slash_canvas_state_${path}`;
+    },
+    saveStateToLocalStorage() {
+      if (this.saveStateTimeout) clearTimeout(this.saveStateTimeout);
+      this.saveStateTimeout = setTimeout(() => {
+        const state = {
+          x: this.canvasScrollLeft,
+          y: this.canvasScrollTop,
+          zoom: this.zoom,
+        };
+        localStorage.setItem(this.getStorageKey(), JSON.stringify(state));
+      }, 500);
+    },
+    restoreStateFromLocalStorage() {
+      try {
+        const storedState = localStorage.getItem(this.getStorageKey());
+        if (storedState) {
+          const state = JSON.parse(storedState);
+          if (state.zoom) {
+            this.$emit("update:zoom", state.zoom);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to restore canvas state:", err);
+      }
+      this.centerOnOrigin();
     },
     centerOnOrigin() {
       // Start at canvas origin (0,0) so content is visible; all content is clamped to >= 0

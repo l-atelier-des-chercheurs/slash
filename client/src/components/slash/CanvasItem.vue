@@ -17,7 +17,7 @@
       <button
         type="button"
         class="_canvasItem--chatBubble"
-        :aria-label="$t('file_path')"
+        :aria-label="$t('chats')"
         @mousedown.stop
         @click.stop="showPathModal = true"
       >

@@ -38,7 +38,8 @@
                 :mode="'timeline'"
                 :timeline-height="item.height"
                 :event-phase="item.eventPhase"
-                class="_timelineView--item"
+                class="_timelineView--item _canvasItem"
+                :data-file-path="item.file.$path"
               />
             </div>
           </div>

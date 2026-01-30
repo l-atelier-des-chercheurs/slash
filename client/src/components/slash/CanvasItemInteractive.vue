@@ -41,6 +41,14 @@ export default {
       type: Number,
       default: 0,
     },
+    canvasWidth: {
+      type: Number,
+      default: 10000,
+    },
+    canvasHeight: {
+      type: Number,
+      default: 10000,
+    },
     canvasZoom: {
       type: Number,
       default: 1,
@@ -75,18 +83,22 @@ export default {
       // Canvas mode: absolute positioning
       const x = this.currentX !== null ? this.currentX : this.file.x || 0;
       const y = this.currentY !== null ? this.currentY : this.file.y || 0;
+      // Clamp for display as well
       const width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
       const ratio = this.file.$infos?.ratio;
-      const height = ratio ? width * ratio : null;
+      const height = ratio ? width * ratio : 160;
+
+      const clampedX = Math.max(0, Math.min(x, this.canvasWidth - width));
+      const clampedY = Math.max(0, Math.min(y, this.canvasHeight - height));
 
       const style = {
-        left: `${x}px`,
-        top: `${y}px`,
+        left: `${clampedX}px`,
+        top: `${clampedY}px`,
         width: `${width}px`,
       };
 
-      if (height !== null) {
+      if (ratio) {
         style.height = `${height}px`;
       }
 
@@ -218,8 +230,17 @@ export default {
 
       // Calculate new file position (mouse position minus offset)
       // Clamp to >= 0 so content stays within canvas (no negative coords)
-      const newX = Math.max(0, mouseX - this.dragOffsetX);
-      const newY = Math.max(0, mouseY - this.dragOffsetY);
+      let newX = Math.max(0, mouseX - this.dragOffsetX);
+      let newY = Math.max(0, mouseY - this.dragOffsetY);
+
+      // Clamp to <= canvas size (minus item width/height)
+      const currentWidth =
+        this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+      const ratio = this.file.$infos?.ratio;
+      const currentHeight = ratio ? currentWidth * ratio : 160;
+
+      newX = Math.min(newX, this.canvasWidth - currentWidth);
+      newY = Math.min(newY, this.canvasHeight - currentHeight);
 
       this.currentX = newX;
       this.currentY = newY;
@@ -261,8 +282,17 @@ export default {
       this.isDragging = false;
 
       // Save final position
-      const finalX = this.currentX !== null ? this.currentX : this.file.x || 0;
-      const finalY = this.currentY !== null ? this.currentY : this.file.y || 0;
+      // Re-clamp just in case
+      const currentWidth =
+        this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+      const ratio = this.file.$infos?.ratio;
+      const currentHeight = ratio ? currentWidth * ratio : 160;
+
+      let finalX = this.currentX !== null ? this.currentX : this.file.x || 0;
+      let finalY = this.currentY !== null ? this.currentY : this.file.y || 0;
+
+      finalX = Math.max(0, Math.min(finalX, this.canvasWidth - currentWidth));
+      finalY = Math.max(0, Math.min(finalY, this.canvasHeight - currentHeight));
 
       // Clear current position to use file position
       this.currentX = null;

@@ -7,6 +7,7 @@
         :file="file"
         mode="grid"
         class="_mediaGridView--item"
+        :data-file-path="file.$path"
       />
     </div>
   </div>

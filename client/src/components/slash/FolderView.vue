@@ -16,8 +16,8 @@
       <LargeCanvas
         v-show="viewMode === 'canvas'"
         :files="filteredFiles"
-        :scale="canvasZoom"
-        @update:scale="canvasZoom = $event"
+        :zoom="canvasZoom"
+        @update:zoom="canvasZoom = $event"
       />
       <GeoMapView v-show="viewMode === 'map'" :files="filteredFiles" />
       <TimelineView v-show="viewMode === 'timeline'" :files="filteredFiles" />
