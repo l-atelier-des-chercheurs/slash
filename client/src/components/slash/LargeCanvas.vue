@@ -1,41 +1,42 @@
 <template>
-  <PanZoom3
-    class="_largeCanvas"
-    ref="viewer"
-    :zoom="zoom"
-    :content-width="canvasSize"
-    :content-height="canvasSize"
-    :show-rules="false"
-    :enable-drag-to-pan="true"
-    :margin-around-content="200"
-    :limitRange="true"
-    @scroll-end="updateScrollAndZoom"
-  >
-    <div class="_canvasContent" :style="canvasContentStyle">
-      <CanvasItemInteractive
-        v-for="file in files"
-        :key="file.$path"
-        :file="file"
-        class="_canvasItem"
-        :data-file-path="file.$path"
-        :canvas-scroll-left="canvasScrollLeft"
-        :canvas-scroll-top="canvasScrollTop"
-        :canvas-width="canvasSize"
-        :canvas-height="canvasSize"
-        :canvas-zoom="zoom"
-        @position-update="handlePositionUpdate"
-        @width-update="handleWidthUpdate"
-      />
-    </div>
+  <div class="_largeCanvas">
+    <PanZoom3
+      ref="viewer"
+      :zoom="zoom"
+      :content-width="canvasSize"
+      :content-height="canvasSize"
+      :show-rules="false"
+      :enable-drag-to-pan="true"
+      :margin-around-content="200"
+      :limitRange="true"
+      @scroll-end="updateScrollAndZoom"
+    >
+      <div class="_canvasContent" :style="canvasContentStyle">
+        <CanvasItemInteractive
+          v-for="file in files"
+          :key="file.$path"
+          :file="file"
+          class="_canvasItem"
+          :data-file-path="file.$path"
+          :canvas-scroll-left="canvasScrollLeft"
+          :canvas-scroll-top="canvasScrollTop"
+          :canvas-width="canvasSize"
+          :canvas-height="canvasSize"
+          :canvas-zoom="zoom"
+          @position-update="handlePositionUpdate"
+          @width-update="handleWidthUpdate"
+        />
+      </div>
 
-    <div
-      class="_currentCenterDot"
-      :style="{
-        left: canvasScrollLeft + 'px',
-        top: canvasScrollTop + 'px',
-      }"
-    ></div>
-  </PanZoom3>
+      <div
+        class="_currentCenterDot"
+        :style="{
+          left: canvasScrollLeft + 'px',
+          top: canvasScrollTop + 'px',
+        }"
+      ></div>
+    </PanZoom3>
+  </div>
 </template>
 <script>
 import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
