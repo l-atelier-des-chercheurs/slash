@@ -199,8 +199,6 @@ import TextInput from "@/adc-core/inputs/TextInput.vue";
 Vue.component("TextInput", TextInput);
 import NumberInput from "@/adc-core/inputs/NumberInput.vue";
 Vue.component("NumberInput", NumberInput);
-import PositionPicker from "@/adc-core/inputs/PositionPicker.vue";
-Vue.component("PositionPicker", PositionPicker);
 import ColorInput from "@/adc-core/inputs/ColorInput.vue";
 Vue.component("ColorInput", ColorInput);
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";

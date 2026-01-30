@@ -180,6 +180,7 @@ export default {
   mixins: [DynamicTitle],
   components: {
     AdminSettings: () => import("@/adc-core/AdminSettings.vue"),
+    PositionPicker: () => import("@/adc-core/inputs/PositionPicker.vue"),
   },
   data() {
     return {

@@ -349,6 +349,7 @@ export default {
     DuplicateMedia,
     CropAdjustMedia: () => import("@/adc-core/fields/CropAdjustMedia.vue"),
     OptimizeMedia: () => import("@/adc-core/fields/OptimizeMedia.vue"),
+    PositionPicker: () => import("@/adc-core/inputs/PositionPicker.vue"),
   },
   data() {
     return {
