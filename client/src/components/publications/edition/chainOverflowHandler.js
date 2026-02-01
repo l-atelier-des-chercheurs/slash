@@ -206,6 +206,93 @@ export function findCutOffPoint(cell) {
 }
 
 /**
+ * Split DOM tree at textNode/offset and collect the right-hand side nodes
+ * @param {HTMLElement} container
+ * @param {Text} textNode
+ * @param {number} offset
+ */
+function splitAndCollectNodes(container, textNode, offset) {
+  const nodesToMove = [];
+
+  // 1. Split the text node
+  let rightNode;
+  if (offset < textNode.textContent.length) {
+    rightNode = textNode.splitText(offset);
+  } else {
+    // Offset at end, nothing to split in this node,
+    // but we might need to split parents if there are siblings after
+    rightNode = textNode.splitText(offset); // returns empty text node
+  }
+
+  // 2. Walk up and split parents
+  let currentLeft = textNode;
+  let currentRight = rightNode;
+  let parent = currentLeft.parentNode;
+
+  while (parent && parent !== container) {
+    // Create split parent (shallow clone)
+    const rightParent = parent.cloneNode(false);
+    if (rightParent.id) rightParent.removeAttribute("id"); // Remove ID to avoid duplicates
+
+    // Move currentRight and all subsequent siblings to rightParent
+    // Note: splitText already inserted rightNode into parent.
+    // So we just need to move currentRight and all following siblings.
+    let sibling = currentRight;
+    while (sibling) {
+      const next = sibling.nextSibling;
+      rightParent.appendChild(sibling);
+      sibling = next;
+    }
+
+    // Insert rightParent into grandparent, after parent
+    if (parent.parentNode) {
+      parent.parentNode.insertBefore(rightParent, parent.nextSibling);
+    }
+
+    currentLeft = parent;
+    currentRight = rightParent;
+    parent = parent.parentNode;
+  }
+
+  // At this point, parent === container.
+  // currentRight is the root of the right-side tree (direct child of container).
+  // It is already inserted in container after currentLeft.
+
+  // Now collect currentRight and all its following siblings in container.
+  let node = currentRight;
+  while (node) {
+    nodesToMove.push(node);
+    node = node.nextSibling;
+  }
+
+  return nodesToMove;
+}
+
+/**
+ * Clean up empty nodes in the path from startNode up to container
+ */
+function cleanupEmptyPath(startNode, container) {
+  let current = startNode;
+  while (current && current !== container) {
+    const parent = current.parentNode;
+
+    const isEmpty =
+      (current.nodeType === Node.TEXT_NODE &&
+        current.textContent.length === 0) ||
+      (current.nodeType === Node.ELEMENT_NODE &&
+        current.childNodes.length === 0);
+
+    if (isEmpty) {
+      current.remove();
+    } else {
+      // If not empty, parent won't be empty either (it contains current)
+      break;
+    }
+    current = parent;
+  }
+}
+
+/**
  * Move overflow content from current cell to next cell
  * @param {HTMLElement} currentCell - Cell with overflow
  * @param {HTMLElement} nextCell - Next cell in chain to receive overflow
@@ -215,264 +302,49 @@ export function moveOverflowToNextCell(currentCell, nextCell) {
   console.log("moveOverflowToNextCell start", { currentCell, nextCell });
   const cutOffPoint = findCutOffPoint(currentCell);
 
-  if (!cutOffPoint.node || cutOffPoint.offset === 0) {
+  if (!cutOffPoint.node) {
     console.log("moveOverflowToNextCell: No cut-off point found");
-    return false; // No cut-off point found
+    return false;
   }
 
   const textNode = cutOffPoint.node;
+  const offset = cutOffPoint.offset;
   const text = textNode.textContent;
 
   console.log(
-    `moveOverflowToNextCell: Found cut-off at offset ${
-      cutOffPoint.offset
-    } in text: "${text.substring(0, 20)}..."`
+    `moveOverflowToNextCell: Found cut-off at offset ${offset} in text: "${text.substring(
+      0,
+      20
+    )}..."`
   );
 
-  // First, collect all nodes that come after the cut-off text node
-  // Do this BEFORE modifying the DOM
-  const nodesToMove = [];
-
-  // Use TreeWalker to get all nodes (text and elements) after our split point
-  const walker = document.createTreeWalker(
-    currentCell,
-    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
-    {
-      acceptNode: (node) => {
-        // Skip script and style elements
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const tagName = node.tagName?.toLowerCase();
-          if (tagName === "script" || tagName === "style") {
-            return NodeFilter.FILTER_REJECT;
-          }
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    }
-  );
-
-  let collecting = false;
-  let node;
-  while ((node = walker.nextNode())) {
-    // Start collecting after we pass the split text node
-    if (node === textNode) {
-      collecting = true;
-      // For the text node itself, we'll handle the split separately
-      continue;
-    }
-
-    if (collecting) {
-      // Check if this node is a descendant of a node we're already moving
-      const isDescendant = nodesToMove.some(
-        (movedNode) =>
-          movedNode !== node &&
-          movedNode.nodeType === Node.ELEMENT_NODE &&
-          movedNode.contains &&
-          movedNode.contains(node)
-      );
-
-      if (!isDescendant) {
-        nodesToMove.push(node);
-      }
-    }
-  }
-
-  // Helper function to get element hierarchy from text node up to block element
-  function getElementHierarchy(node) {
-    const inlineElements = [
-      "b",
-      "strong",
-      "i",
-      "em",
-      "u",
-      "s",
-      "strike",
-      "del",
-      "ins",
-      "mark",
-      "small",
-      "sub",
-      "sup",
-      "code",
-      "kbd",
-      "samp",
-      "var",
-      "span",
-      "a",
-      "abbr",
-      "cite",
-      "dfn",
-      "time",
-      "q",
-    ];
-    const blockElements = [
-      "p",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "div",
-      "section",
-      "article",
-      "aside",
-      "blockquote",
-      "li",
-      "dt",
-      "dd",
-      "pre",
-      "address",
-      "figure",
-      "figcaption",
-      "header",
-      "footer",
-      "main",
-      "nav",
-      "form",
-      "fieldset",
-    ];
-
-    const hierarchy = [];
-    let current = node.parentElement;
-
-    while (current && current !== currentCell) {
-      const tagName = current.tagName.toLowerCase();
-      if (blockElements.includes(tagName)) {
-        hierarchy.unshift({ element: current, type: "block" });
-        break;
-      } else if (inlineElements.includes(tagName)) {
-        hierarchy.unshift({ element: current, type: "inline" });
-      }
-      current = current.parentElement;
-    }
-
-    return hierarchy;
-  }
-
-  // Now split the text node at the cut-off point
-  const beforeText = text.substring(0, cutOffPoint.offset);
-  const afterText = text.substring(cutOffPoint.offset);
-
-  // Update current node to only contain text before cut-off
-  textNode.textContent = beforeText;
-
-  // Cleanup empty text node and parents
-  if (beforeText.trim().length === 0) {
-    let current = textNode;
-    while (current && current !== currentCell) {
-      const parent = current.parentNode;
-      let isEmpty = false;
-      if (current.nodeType === Node.TEXT_NODE) {
-        isEmpty = current.textContent.trim().length === 0;
-      } else if (current.nodeType === Node.ELEMENT_NODE) {
-        // Check if it has no children or only empty text nodes
-        isEmpty = current.childNodes.length === 0;
-
-        if (!isEmpty) {
-          // Check if all children are empty text nodes
-          const hasContent = Array.from(current.childNodes).some((child) => {
-            return (
-              child.nodeType !== Node.TEXT_NODE ||
-              child.textContent.trim().length > 0
-            );
-          });
-          isEmpty = !hasContent;
-        }
-      }
-
-      if (isEmpty) {
-        current.remove();
-        current = parent;
-      } else {
-        break;
-      }
-    }
-  }
-
-  // Create new node for overflow text
-  if (afterText.trim().length > 0) {
-    const hierarchy = getElementHierarchy(textNode);
-    let overflowNode;
-
-    if (hierarchy.length > 0) {
-      // Recreate the element hierarchy
-      const overflowTextNode = document.createTextNode(afterText);
-      let currentContainer = overflowTextNode;
-
-      // Build from innermost (text) to outermost (block)
-      for (let i = hierarchy.length - 1; i >= 0; i--) {
-        const { element, type } = hierarchy[i];
-        const newElement = document.createElement(element.tagName);
-
-        // Copy relevant attributes
-        Array.from(element.attributes).forEach((attr) => {
-          // Skip data attributes that might be specific to the original element
-          if (
-            !attr.name.startsWith("data-") ||
-            attr.name === "data-chapter-meta-filename"
-          ) {
-            try {
-              newElement.setAttribute(attr.name, attr.value);
-            } catch (e) {
-              // Some attributes might not be settable, skip them
-            }
-          }
-        });
-
-        newElement.appendChild(currentContainer);
-        currentContainer = newElement;
-      }
-
-      overflowNode = currentContainer;
-
-      // Find the block element in the hierarchy to determine insertion point
-      const blockElement = hierarchy.find((h) => h.type === "block")?.element;
-      const insertParent = blockElement
-        ? blockElement.parentNode
-        : textNode.parentNode;
-      const insertBefore = blockElement
-        ? blockElement.nextSibling
-        : textNode.nextSibling;
-
-      if (insertParent) {
-        insertParent.insertBefore(overflowNode, insertBefore);
-      }
-    } else {
-      // No hierarchy to preserve, just create a plain text node
-      overflowNode = document.createTextNode(afterText);
-      // Insert after the split node
-      if (textNode.parentNode) {
-        textNode.parentNode.insertBefore(overflowNode, textNode.nextSibling);
-      }
-    }
-
-    // Add the overflow node to the beginning of nodes to move
-    if (overflowNode) {
-      nodesToMove.unshift(overflowNode);
-    }
-  }
+  // Split DOM and collect nodes to move
+  const nodesToMove = splitAndCollectNodes(currentCell, textNode, offset);
 
   // Move nodes to next cell
   if (nodesToMove.length > 0) {
     console.log(
       `moveOverflowToNextCell: Moving ${nodesToMove.length} nodes to next cell`
     );
+
+    // Create fragment and move nodes
+    const fragment = document.createDocumentFragment();
+    nodesToMove.forEach((node) => {
+      // Only move if node is still in the DOM and part of currentCell (it should be)
+      if (node.parentNode && currentCell.contains(node)) {
+        fragment.appendChild(node);
+      }
+    });
+
+    // Cleanup empty nodes left behind in currentCell
+    cleanupEmptyPath(textNode, currentCell);
+
     // Clear any existing overflow warning from next cell
     const existingWarning = nextCell.querySelector("._textOverflowWarning");
     if (existingWarning) {
       existingWarning.remove();
     }
     nextCell.classList.remove("has--textOverflow");
-
-    // Create fragment and move nodes
-    const fragment = document.createDocumentFragment();
-    nodesToMove.forEach((node) => {
-      // Only move if node is still in the DOM and part of currentCell
-      if (node.parentNode && currentCell.contains(node)) {
-        fragment.appendChild(node);
-      }
-    });
 
     // If fragment has children, add them to next cell
     if (fragment.hasChildNodes()) {
