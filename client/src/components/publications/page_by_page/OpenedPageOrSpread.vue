@@ -56,7 +56,8 @@
             @close="setPageActive(false)"
           >
             <PanZoom3
-              :scale.sync="scale"
+              :zoom="scale"
+              @scroll-end="scale = $event.zoom"
               :content-width="page_width"
               :content-height="page_height"
               :magnification="current_page_magnification"

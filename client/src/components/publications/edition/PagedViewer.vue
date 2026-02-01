@@ -15,9 +15,9 @@
     <PanZoom3
       v-if="viewer_type === 'infinite-viewer'"
       ref="panzoom3"
-      :scale="current_zoom"
+      :zoom="current_zoom"
       :layout_mode="'print'"
-      @update:scale="current_zoom = $event"
+      @scroll-end="onScrollEnd"
     >
       <div class="" ref="bookpreview" />
     </PanZoom3>
@@ -305,6 +305,9 @@ export default {
       while (this.is_generating_book) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
+    },
+    onScrollEnd({ zoom }) {
+      this.current_zoom = zoom;
     },
     async zoomToSection(meta_filename) {
       if (!meta_filename) return;
