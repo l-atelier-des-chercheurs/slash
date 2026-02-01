@@ -90,6 +90,7 @@ export default {
       this.canvasScrollLeft = x;
       this.canvasScrollTop = y;
       this.$emit("update:zoom", zoom);
+      this.$emit("update:scroll", { x, y });
       this.saveStateToLocalStorage();
     },
     handlePositionUpdate({ file, x, y }) {

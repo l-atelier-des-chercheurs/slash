@@ -22,6 +22,7 @@
           :path="path"
           :index_indicator="index + 1 + '/' + files_to_upload.length"
           :allow_caption_edition="allow_caption_edition"
+          :additional_meta="additional_meta"
           ref="filesList"
           @skip="abortFile(index)"
           @hide="hideFile(index)"
@@ -58,6 +59,7 @@ export default {
     files_to_import: Array,
     path: String,
     allow_caption_edition: Boolean,
+    additional_meta: Object,
   },
   components: {
     UploadFile,

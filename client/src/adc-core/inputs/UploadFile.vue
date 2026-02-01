@@ -165,6 +165,7 @@ export default {
     index_indicator: String,
     path: String,
     allow_caption_edition: Boolean,
+    additional_meta: Object,
   },
   components: {
     OptimizeMedia: () => import("@/adc-core/fields/OptimizeMedia.vue"),
@@ -209,7 +210,12 @@ export default {
       this.upload_percentage = 0;
 
       let additional_meta = {};
-      additional_meta.$origin = "collect";
+      // additional_meta.$origin = "collect";
+
+      if (this.additional_meta) {
+        Object.assign(additional_meta, this.additional_meta);
+      }
+
       if (this.file.lastModified)
         additional_meta.$date_created = this.file.lastModified;
       if (this.connected_as?.$path)

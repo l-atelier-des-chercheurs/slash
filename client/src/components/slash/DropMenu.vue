@@ -70,6 +70,7 @@
       :files_to_import="files_to_import"
       :path="folder_path"
       :allow_caption_edition="true"
+      :additional_meta="additionalMeta"
       @importedMedias="mediasJustImported($event)"
       @close="files_to_import = []"
     />
@@ -81,6 +82,8 @@ import ImportFileZone from "@/adc-core/ui/ImportFileZone.vue";
 export default {
   props: {
     folder_path: String,
+    canvas_zoom: Number,
+    canvas_scroll: Object,
   },
   components: {
     ImportFileZone,
@@ -123,7 +126,19 @@ export default {
   mounted() {},
   beforeDestroy() {},
   watch: {},
-  computed: {},
+  computed: {
+    additionalMeta() {
+      if (!this.canvas_scroll) return {};
+      const baseWidth = 320;
+      return {
+        x: this.canvas_scroll.x + 50,
+        y: this.canvas_scroll.y + 50,
+        width: this.canvas_zoom
+          ? Math.round(baseWidth / this.canvas_zoom)
+          : baseWidth,
+      };
+    },
+  },
   methods: {
     inputId(row) {
       return `_dropMenu--file-${row.id}`;
@@ -312,6 +327,7 @@ $_peach_dark: #e8bc85;
   position: absolute;
   right: 100%;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
 
   background: white;
   color: var(--c-noir);

@@ -18,12 +18,18 @@
         :files="filteredFiles"
         :zoom="canvasZoom"
         @update:zoom="canvasZoom = $event"
+        @update:scroll="canvasScroll = $event"
       />
       <GeoMapView v-show="viewMode === 'map'" :files="filteredFiles" />
       <TimelineView v-show="viewMode === 'timeline'" :files="filteredFiles" />
       <MediaGridView v-show="viewMode === 'grid'" :files="filteredFiles" />
     </div>
-    <DropMenu class="_dropMenu" :folder_path="default_folder.$path" />
+    <DropMenu
+      class="_dropMenu"
+      :folder_path="default_folder.$path"
+      :canvas_zoom="canvasZoom"
+      :canvas_scroll="canvasScroll"
+    />
   </div>
 </template>
 <script>
@@ -52,6 +58,7 @@ export default {
       filterBarOpen: false,
       mediaTypeFilter: null,
       canvasZoom: 1,
+      canvasScroll: { x: 0, y: 0 },
     };
   },
   async created() {
