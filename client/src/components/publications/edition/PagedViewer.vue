@@ -10,7 +10,13 @@
     <div
       class=""
       ref="bookrender"
-      style="opacity: 0; visibility: hidden; pointer-events: none"
+      style="
+        position: absolute;
+        top: 0;
+        left: -200vw;
+        pointer-events: none;
+        opacity: 0;
+      "
     />
     <PanZoom3
       v-if="viewer_type === 'infinite-viewer'"
@@ -29,6 +35,7 @@
 </template>
 <script>
 import { Handler, Previewer } from "pagedjs";
+import { PagedjsFlowHandler } from "./PagedjsFlowHandler.js";
 import {
   handleChainOverflow,
   checkCellOverflow,
@@ -175,6 +182,10 @@ export default {
         ];
 
         const bookrender = this.$refs.bookrender;
+
+        // Register the Flow Handler
+        paged.registerHandlers(PagedjsFlowHandler);
+
         paged.preview(pagedjs_html, theme_styles, bookrender).then((flow) => {
           bookpreview.innerHTML = "";
           bookpreview.appendChild(flow.pagesArea);
@@ -182,7 +193,7 @@ export default {
 
           this.$nextTick(() => {
             this.showOnlyPages();
-            this.handleCellOverflow();
+            // this.handleCellOverflow(); // Handled by PagedjsFlowHandler
             if (this.can_edit) {
               this.addChapterShortcuts();
               this.reportChapterPositions();
