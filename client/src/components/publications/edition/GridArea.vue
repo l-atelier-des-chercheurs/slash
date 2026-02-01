@@ -22,7 +22,7 @@
         >({{ $t(area_type) }})</span
       >
 
-      <template v-if="area_type === 'text'">
+      <template v-if="is_last_of_text_chain === true">
         &nbsp;
         <button
           type="button"
@@ -94,10 +94,9 @@ export default {
       type: Number,
       required: true,
     },
-    is_being_chained: {
-      type: Boolean,
-      default: false,
-    },
+    area_type: String,
+    is_last_of_text_chain: Boolean,
+    is_being_chained: Boolean,
   },
   computed: {
     clampedGridStyle() {
@@ -129,27 +128,8 @@ export default {
     isUpdating() {
       return this.updatingAreaId === this.area.id;
     },
-    area_type() {
-      const source_media = this.area?.source_medias?.[0];
-
-      const file = this.getSourceMedia({
-        source_media,
-        folder_path: this.publication.$path,
-      });
-
-      if (!file) {
-        return null;
-      }
-
-      if (file.$type === "text" || file.content_type === "markdown") {
-        return "text";
-      } else if (file.$type === "image") {
-        return "image";
-      }
-
-      return null;
-    },
   },
+  methods: {},
 };
 </script>
 

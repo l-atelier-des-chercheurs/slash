@@ -49,7 +49,6 @@ export default {
       this.selected_project_path = projectPath;
     },
     async linkProject() {
-      debugger;
       await this.$api.updateMeta({
         path: this.path,
         new_meta: {
