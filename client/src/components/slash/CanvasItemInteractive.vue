@@ -33,23 +33,23 @@ export default {
       type: Object,
       required: true,
     },
-    canvasScrollLeft: {
+    canvas_scroll_left: {
       type: Number,
       default: 0,
     },
-    canvasScrollTop: {
+    canvas_scroll_top: {
       type: Number,
       default: 0,
     },
-    canvasWidth: {
+    canvas_width: {
       type: Number,
       default: 10000,
     },
-    canvasHeight: {
+    canvas_height: {
       type: Number,
       default: 10000,
     },
-    canvasZoom: {
+    canvas_zoom: {
       type: Number,
       default: 1,
     },
@@ -89,8 +89,8 @@ export default {
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
 
-      const clampedX = Math.max(0, Math.min(x, this.canvasWidth - width));
-      const clampedY = Math.max(0, Math.min(y, this.canvasHeight - height));
+      const clampedX = Math.max(0, Math.min(x, this.canvas_width - width));
+      const clampedY = Math.max(0, Math.min(y, this.canvas_height - height));
 
       const style = {
         left: `${clampedX}px`,
@@ -113,7 +113,7 @@ export default {
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
       // Calculate displayed width (item width * zoom level)
-      const displayedWidth = itemWidth * this.canvasZoom;
+      const displayedWidth = itemWidth * this.canvas_zoom;
 
       // Account for device pixel ratio (retina/high-DPI displays)
       const devicePixelRatio = window.devicePixelRatio || 1;
@@ -182,9 +182,9 @@ export default {
       const mouseScreenX = this.dragStartX - canvasRect.left;
       const mouseScreenY = this.dragStartY - canvasRect.top;
       const mouseCanvasX =
-        mouseScreenX / this.canvasZoom + this.canvasScrollLeft;
+        mouseScreenX / this.canvas_zoom + this.canvas_scroll_left;
       const mouseCanvasY =
-        mouseScreenY / this.canvasZoom + this.canvasScrollTop;
+        mouseScreenY / this.canvas_zoom + this.canvas_scroll_top;
 
       // Calculate offset from mouse to item top-left corner in canvas coordinates
       this.dragOffsetX = mouseCanvasX - this.dragStartFileX;
@@ -194,7 +194,7 @@ export default {
       if (this.isResizing) {
         // Mouse delta in screen pixels; convert to canvas coordinates using zoom
         const deltaX = event.clientX - this.resizeStartX;
-        const adjustedDeltaX = deltaX / this.canvasZoom;
+        const adjustedDeltaX = deltaX / this.canvas_zoom;
 
         // Calculate new width (in canvas coordinates)
         let newWidth = Math.max(50, this.resizeStartWidth + adjustedDeltaX);
@@ -225,8 +225,8 @@ export default {
       // Calculate mouse position relative to canvas, accounting for zoom and scroll
       const mouseScreenX = event.clientX - canvasRect.left;
       const mouseScreenY = event.clientY - canvasRect.top;
-      const mouseX = mouseScreenX / this.canvasZoom + this.canvasScrollLeft;
-      const mouseY = mouseScreenY / this.canvasZoom + this.canvasScrollTop;
+      const mouseX = mouseScreenX / this.canvas_zoom + this.canvas_scroll_left;
+      const mouseY = mouseScreenY / this.canvas_zoom + this.canvas_scroll_top;
 
       // Calculate new file position (mouse position minus offset)
       // Clamp to >= 0 so content stays within canvas (no negative coords)
@@ -239,8 +239,8 @@ export default {
       const ratio = this.file.$infos?.ratio;
       const currentHeight = ratio ? currentWidth * ratio : 160;
 
-      newX = Math.min(newX, this.canvasWidth - currentWidth);
-      newY = Math.min(newY, this.canvasHeight - currentHeight);
+      newX = Math.min(newX, this.canvas_width - currentWidth);
+      newY = Math.min(newY, this.canvas_height - currentHeight);
 
       this.currentX = newX;
       this.currentY = newY;
@@ -291,8 +291,8 @@ export default {
       let finalX = this.currentX !== null ? this.currentX : this.file.x || 0;
       let finalY = this.currentY !== null ? this.currentY : this.file.y || 0;
 
-      finalX = Math.max(0, Math.min(finalX, this.canvasWidth - currentWidth));
-      finalY = Math.max(0, Math.min(finalY, this.canvasHeight - currentHeight));
+      finalX = Math.max(0, Math.min(finalX, this.canvas_width - currentWidth));
+      finalY = Math.max(0, Math.min(finalY, this.canvas_height - currentHeight));
 
       // Clear current position to use file position
       this.currentX = null;

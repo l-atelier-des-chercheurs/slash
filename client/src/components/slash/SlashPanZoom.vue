@@ -3,25 +3,13 @@
     ref="infiniteviewer"
     class="viewer"
     :class="{
-      'is--drag-to-pan': enableDragToPan && !isPanning,
-      'is--panning': enableDragToPan && isPanning,
+      'is--drag-to-pan': enable_drag_to_pan && !isPanning,
+      'is--panning': enable_drag_to_pan && isPanning,
     }"
   >
     <div class="_pzViewport" ref="viewport">
       <slot />
     </div>
-
-    <transition name="fade">
-      <button
-        v-if="!isContentVisible"
-        class="u-button u-button_bleuvert _showOriginBtn"
-        type="button"
-        @click="scrollToOrigin"
-      >
-        <b-icon icon="house" />
-        {{ $t("back_to_content") }}
-      </button>
-    </transition>
   </div>
 </template>
 <script>
@@ -30,22 +18,13 @@ import InfiniteViewer from "infinite-viewer";
 export default {
   props: {
     zoom: Number,
-    contentWidth: Number,
-    contentHeight: Number,
-    marginAroundContent: {
+    content_width: Number,
+    content_height: Number,
+    margin_around_content: {
       type: Number,
       default: 0,
     },
-    limitRange: {
-      type: Boolean,
-      default: false,
-    },
-    magnification: Number,
-    layout_mode: {
-      type: String,
-      default: "screen",
-    },
-    enableDragToPan: {
+    enable_drag_to_pan: {
       type: Boolean,
       default: true,
     },
@@ -53,21 +32,10 @@ export default {
   data() {
     return {
       infiniteviewer: null,
-
-      scroll_left: undefined,
-      scroll_top: undefined,
-
-      debounce_zoom: undefined,
       debounce_interaction: undefined,
-      debounce_content_visibility: undefined,
-      is_zooming: false,
-
-      contentOffset: { x: 0, y: 0 },
-      isContentVisible: true,
       isPanning: false,
     };
   },
-  created() {},
   mounted() {
     this.initInfiniteViewer();
 
@@ -75,7 +43,6 @@ export default {
   },
   beforeDestroy() {
     if (this.infiniteviewer) {
-      // Remove event listeners
       this.infiniteviewer.off("scroll", this.onScroll);
       this.infiniteviewer.off("dragStart", this.dragStart);
       this.infiniteviewer.off("dragEnd", this.dragEnd);
@@ -83,9 +50,6 @@ export default {
       this.infiniteviewer.off("abortPinch", this.abortPinch);
       this.infiniteviewer.off("pinch", this.pinch);
       this.infiniteviewer.destroy();
-    }
-    if (this.debounce_content_visibility) {
-      clearTimeout(this.debounce_content_visibility);
     }
     if (this.debounce_interaction) {
       clearTimeout(this.debounce_interaction);
@@ -95,25 +59,14 @@ export default {
   watch: {
     zoom() {
       this.setZoom(this.zoom);
-      this.updateViewerOptions();
     },
-    contentWidth() {
-      this.updateViewerOptions();
-    },
-    contentHeight() {
-      this.updateViewerOptions();
-    },
-    magnification() {
-      this.updateViewerOptions();
-    },
-    enableDragToPan(newValue) {
+    enable_drag_to_pan(newValue) {
       // Update drag-to-pan option dynamically
       if (this.infiniteviewer) {
         this.infiniteviewer.useMouseDrag = newValue;
       }
     },
   },
-  computed: {},
   methods: {
     initInfiniteViewer() {
       if (!this.$refs.infiniteviewer || !this.$refs.viewport) return;
@@ -133,75 +86,9 @@ export default {
       this.infiniteviewer.on("abortPinch", this.abortPinch);
       this.infiniteviewer.on("pinch", this.pinch);
     },
-    getContentOffset() {
-      // Get the offset where the actual content starts in scroll coordinates
-      // This accounts for margins, padding, or positioning of content within the viewport
-      if (!this.$refs.viewport || !this.infiniteviewer) return { x: 0, y: 0 };
-
-      const viewport = this.$refs.viewport;
-
-      // Try to find the first content element to determine where content starts
-      // For PagedViewer, look for the first page
-      const firstPage = viewport.querySelector(
-        ".pagedjs_first_page, .pagedjs_page, [data-page-number]"
-      );
-      if (firstPage) {
-        // Use offsetLeft/offsetTop which gives position relative to offsetParent (viewport)
-        // This is the position in the scrollable coordinate space
-        let offsetX = firstPage.offsetLeft;
-        let offsetY = firstPage.offsetTop;
-
-        // If the element has a positioned parent, we need to account for that
-        let parent = firstPage.offsetParent;
-        while (
-          parent &&
-          parent !== viewport &&
-          parent !== this.$refs.infiniteviewer
-        ) {
-          offsetX += parent.offsetLeft;
-          offsetY += parent.offsetTop;
-          parent = parent.offsetParent;
-        }
-
-        return {
-          x: offsetX,
-          y: offsetY,
-        };
-      }
-
-      // Fallback: check if viewport has any positioned children
-      const firstChild = viewport.firstElementChild;
-      if (firstChild) {
-        return {
-          x: firstChild.offsetLeft || 0,
-          y: firstChild.offsetTop || 0,
-        };
-      }
-
-      return { x: 0, y: 0 };
-    },
     getViewerOptions() {
-      // Set ranges to prevent scrolling to negative values (less than 0)
-      // but allow unlimited positive scrolling
-
-      let rangeX = undefined;
-      let rangeY = undefined;
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-
-      if (this.limitRange) {
-        rangeX = [
-          -this.marginAroundContent,
-          this.contentWidth - windowWidth + this.marginAroundContent,
-        ];
-        rangeY = [
-          -this.marginAroundContent,
-          this.contentHeight - windowHeight + this.marginAroundContent,
-        ];
-      }
-
       return {
-        useMouseDrag: this.enableDragToPan,
+        useMouseDrag: this.enable_drag_to_pan,
         useWheelScroll: true,
         useAutoZoom: true,
         margin: 0,
@@ -209,14 +96,7 @@ export default {
         maxPinchWheel: 10,
         displayVerticalScroll: true,
         displayHorizontalScroll: true,
-        // rangeX: rangeX,
-        // rangeY: rangeY,
       };
-    },
-    updateViewerOptions() {
-      // Since we're not using ranges, we don't need to recreate the viewer
-      // when content dimensions change. The viewer will handle it automatically.
-      // This method is kept for API compatibility but doesn't need to do anything.
     },
     handleInteractionEnd() {
       if (this.debounce_interaction) clearTimeout(this.debounce_interaction);
@@ -249,23 +129,6 @@ export default {
     },
     panTo({ x, y }) {
       this.scrollToCorner({ x, y, animate: true });
-    },
-    scrollToOrigin() {
-      // Scroll to content origin (0, 0)
-      // Account for content offset to show the actual content origin
-      if (!this.infiniteviewer) return;
-
-      // Recalculate offset to ensure it's current
-      const offset = this.getContentOffset();
-
-      // Scroll to the content origin position
-      this.scrollToCorner({
-        x: offset.x || 0,
-        y: offset.y || 0,
-        animate: false,
-      });
-      // Clamp disabled - allow scrolling after going to origin
-      // this.clampScrollToContent();
     },
     scrollToCorner({ x, y, animate }) {
       if (!this.infiniteviewer) return;
@@ -308,9 +171,6 @@ export default {
         this.infiniteviewer.setZoom(zoom, options);
       }
     },
-    onWheel(event) {
-      this.handleInteractionEnd();
-    },
   },
 };
 </script>
@@ -329,12 +189,5 @@ export default {
 }
 ._pzViewport {
   position: relative;
-}
-._showOriginBtn {
-  position: absolute;
-  bottom: calc(var(--spacing) * 2);
-  right: calc(var(--spacing) * 2);
-  z-index: 100;
-  pointer-events: auto;
 }
 </style>

@@ -57,8 +57,8 @@
           >
             <PanZoom3
               :scale.sync="scale"
-              :content-width="page_width"
-              :content-height="page_height"
+              :content_width="page_width"
+              :content_height="page_height"
               :magnification="current_page_magnification"
               :layout_mode="layout_mode"
             >
