@@ -3,6 +3,7 @@
     <SlashPanZoom
       ref="viewer"
       :zoom="zoom"
+      :zoom_range="zoom_range"
       :content_width="canvasSize"
       :content_height="canvasSize"
       :enable_drag_to_pan="true"
@@ -49,6 +50,7 @@ export default {
       type: Number,
       default: 1,
     },
+    zoom_range: Array,
   },
   components: {
     SlashPanZoom,

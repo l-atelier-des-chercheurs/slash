@@ -62,8 +62,8 @@
         type="range"
         class="_viewModeBar--zoomSlider"
         :value="canvasZoom"
-        min="0.1"
-        max="10"
+        :min="zoom_range[0]"
+        :max="zoom_range[1]"
         step="0.01"
         aria-label="Canvas zoom"
         @input="onZoomInput"
@@ -83,6 +83,7 @@ export default {
       type: Boolean,
       default: false,
     },
+    zoom_range: Array,
     canvasZoom: {
       type: Number,
       default: 1,

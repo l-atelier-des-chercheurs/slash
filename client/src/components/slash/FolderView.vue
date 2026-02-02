@@ -9,6 +9,7 @@
         :value="viewMode"
         :filter-open="filterBarOpen"
         :canvas-zoom="canvasZoom"
+        :zoom_range="zoom_range"
         @input="switchViewMode"
         @toggle-filter="filterBarOpen = !filterBarOpen"
         @update:canvasZoom="canvasZoom = $event"
@@ -17,6 +18,7 @@
         v-show="viewMode === 'canvas'"
         :files="filteredFiles"
         :zoom="canvasZoom"
+        :zoom_range="zoom_range"
         @update:zoom="canvasZoom = $event"
         @update:scroll="canvasScroll = $event"
       />
@@ -59,6 +61,7 @@ export default {
       mediaTypeFilter: null,
       canvasZoom: 1,
       canvasScroll: { x: 0, y: 0 },
+      zoom_range: [0.01, 1],
     };
   },
   async created() {

@@ -18,6 +18,10 @@ import InfiniteViewer from "infinite-viewer";
 export default {
   props: {
     zoom: Number,
+    zoom_range: {
+      type: Array,
+      default: () => [0.01, 1],
+    },
     content_width: Number,
     content_height: Number,
     margin_around_content: {
@@ -92,7 +96,7 @@ export default {
         useWheelScroll: true,
         useAutoZoom: true,
         margin: 0,
-        zoomRange: [0.1, 50],
+        zoomRange: this.zoom_range,
         maxPinchWheel: 10,
         displayVerticalScroll: true,
         displayHorizontalScroll: true,
