@@ -4,13 +4,19 @@
       ref="viewer"
       :zoom="zoom"
       :zoom_range="zoom_range"
-      :content_width="canvasSize"
-      :content_height="canvasSize"
+      :content_width="canvas_width"
+      :content_height="canvas_height"
       :enable_drag_to_pan="true"
       :margin_around_content="200"
       @scroll-end="updateScrollAndZoom"
     >
-      <div class="_canvasContent" :style="canvasContentStyle">
+      <div
+        class="_canvasContent"
+        :style="{
+          width: `${canvas_width}px`,
+          height: `${canvas_height}px`,
+        }"
+      >
         <CanvasItemInteractive
           v-for="file in files"
           :key="file.$path"
@@ -19,8 +25,8 @@
           :data-file-path="file.$path"
           :canvas_scroll_left="canvasScrollLeft"
           :canvas_scroll_top="canvasScrollTop"
-          :canvas_width="canvasSize"
-          :canvas_height="canvasSize"
+          :canvas_width="canvas_width"
+          :canvas_height="canvas_height"
           :canvas_zoom="zoom"
           @position-update="handlePositionUpdate"
           @width-update="handleWidthUpdate"
@@ -62,28 +68,43 @@ export default {
       canvasScrollTop: 0,
       canvasViewedCenterX: 0,
       canvasViewedCenterY: 0,
-      canvasSize: 1500,
+
+      min_canvas_width: 1600,
+      min_canvas_height: 1000,
+
       lastLogTime: 0,
       saveStateTimeout: null,
     };
   },
   computed: {
-    canvasContentStyle() {
-      return {
-        width: `${this.canvasSize}px`,
-        height: `${this.canvasSize}px`,
-      };
+    canvas_width() {
+      const padding = 200;
+      if (!this.files || this.files.length === 0) {
+        return this.min_canvas_width;
+      }
+      let right_edge = 0;
+      this.files.forEach((file) => {
+        const { width } = this.getFileDimensions(file);
+        const x = file.x || 0;
+        right_edge = Math.max(right_edge, x + width);
+      });
+      return Math.max(this.min_canvas_width, right_edge + padding);
+    },
+    canvas_height() {
+      const padding = 200;
+      if (!this.files || this.files.length === 0) {
+        return this.min_canvas_height;
+      }
+      let bottom_edge = 0;
+      this.files.forEach((file) => {
+        const { height } = this.getFileDimensions(file);
+        const y = file.y || 0;
+        bottom_edge = Math.max(bottom_edge, y + height);
+      });
+      return Math.max(this.min_canvas_height, bottom_edge + padding);
     },
   },
-  watch: {
-    files: {
-      handler() {
-        this.checkAllFilesForExpansion();
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
+  watch: {},
   mounted() {
     this.restoreStateFromLocalStorage();
   },
@@ -124,29 +145,9 @@ export default {
       const neededWidth = x + width + 200;
       const neededHeight = y + height + 200;
       const neededSize = Math.max(neededWidth, neededHeight);
-
-      if (neededSize > this.canvasSize) {
-        this.canvasSize = neededSize;
-      }
     },
     checkAllFilesForExpansion() {
-      if (!this.files || this.files.length === 0) return;
-
-      let maxNeededSize = 0;
-
-      this.files.forEach((file) => {
-        const { width, height } = this.getFileDimensions(file);
-        const x = file.x || 0;
-        const y = file.y || 0;
-        const neededSize = Math.max(x + width + 200, y + height + 200);
-        if (neededSize > maxNeededSize) {
-          maxNeededSize = neededSize;
-        }
-      });
-
-      if (maxNeededSize > this.canvasSize) {
-        this.canvasSize = maxNeededSize;
-      }
+      // Canvas size is now computed from rightmost/bottommost file edges + padding
     },
     getStorageKey() {
       const path = this.$route ? this.$route.path : window.location.pathname;
