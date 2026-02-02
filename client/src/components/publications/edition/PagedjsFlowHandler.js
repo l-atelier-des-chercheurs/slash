@@ -17,38 +17,43 @@ export class PagedjsFlowHandler extends Handler {
 
   handleAllChains(pages) {
     // 1. Collect all grid cells from all pages
-    const allCells = [];
+
     pages.forEach((page) => {
+      const pageCells = [];
       const pageElement = page.element; // Access the DOM element of the page
       const cells = pageElement.querySelectorAll(".grid-cell");
-      cells.forEach((cell) => allCells.push(cell));
-    });
+      cells.forEach((cell) => pageCells.push(cell));
 
-    // 2. Group cells by their Chain ID (data-grid-area-id)
-    const chains = {};
+      // 2. Group cells by their Chain ID (data-grid-area-id)
+      const chains = {};
 
-    allCells.forEach((cell) => {
-      const chainId = cell.getAttribute("data-grid-area-id");
-      if (!chainId) return;
+      pageCells.forEach((cell) => {
+        const chainId = cell.getAttribute("data-grid-area-id");
+        if (!chainId) return;
 
-      if (!chains[chainId]) {
-        chains[chainId] = [];
-      }
-      chains[chainId].push(cell);
-    });
+        if (!chains[chainId]) {
+          chains[chainId] = [];
+        }
+        chains[chainId].push(cell);
+      });
 
-    console.log(
-      `PagedjsFlowHandler: Found ${Object.keys(chains).length} chains`,
-      Object.keys(chains)
-    );
+      const page_number = page.position + 1;
 
-    // 3. Process each chain
-    Object.keys(chains).forEach((chainId) => {
-      this.processChain(chains[chainId], chainId);
+      console.log(
+        `PagedjsFlowHandler: Page ${page_number} found ${
+          Object.keys(chains).length
+        } chains`,
+        Object.keys(chains)
+      );
+
+      // 3. Process each chain
+      Object.keys(chains).forEach((chainId) => {
+        this.processChain(chains[chainId], chainId, page_number);
+      });
     });
   }
 
-  processChain(cells, chainId) {
+  processChain(cells, chainId, pageNumber) {
     console.groupCollapsed(`PagedjsFlowHandler: Processing chain ${chainId}`);
     // Sort cells by chain index
     cells.sort((a, b) => {
@@ -62,7 +67,7 @@ export class PagedjsFlowHandler extends Handler {
     });
 
     console.log(
-      `Processing chain ${chainId} with ${cells.length} cells across pages.`
+      `PagedjsFlowHandler: Page ${pageNumber} processing chain ${chainId} with ${cells.length} cells across pages.`
     );
 
     // Flow content through the chain
@@ -86,7 +91,7 @@ export class PagedjsFlowHandler extends Handler {
       // Check overflow
       if (checkCellOverflow(currentCell)) {
         console.log(
-          `Cell ${i} of chain ${chainId} has overflow. Moving to next.`
+          `PagedjsFlowHandler: Page ${pageNumber} cell ${i} of chain ${chainId} has overflow. Moving to next.`
         );
         const moved = moveOverflowToNextCell(currentCell, nextCell);
 
