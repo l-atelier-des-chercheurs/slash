@@ -2,41 +2,78 @@
   <BaseModal2 :title="'Hello Slashers!'" :is_closable="is_logged_in">
     <div>
       <p class="u-spacingBottom">
-        Before using the app, please pick your name in this list so all your
-        contributions are credited to you. If your name is missing, you can
-        create a new account below.
+        Before using the app, please pick your name and structure/role so all
+        your contributions are credited to you. Choose an existing account or
+        create a new one below.
       </p>
 
-      <div class="u-spacingBottom" v-if="!is_logged_in">
-        <label class="u-label">Choose an existing account</label>
-        <select v-model="selected_author" class="u-input">
-          <option disabled value="">Identify yourself here</option>
-          <optgroup
-            v-for="category in all_contributors"
-            :label="category.category"
-            :key="category.category"
-          >
+      <div v-if="!is_logged_in">
+        <!-- Create new account: Name or pseudo + Role -->
+        <div v-if="show_create" class="_loginRow u-spacingBottom">
+          <div class="_loginRow__name">
+            <label class="u-label">Name or pseudo</label>
+            <input
+              v-model="new_author_name"
+              type="text"
+              class="u-input"
+              :placeholder="name_placeholder"
+            />
+          </div>
+          <div class="_loginRow__role">
+            <label class="u-label">Role</label>
+            <select v-model="selected_structure_role" class="u-input">
+              <option disabled value="">Choose…</option>
+              <option
+                v-for="opt in structure_role_options"
+                :key="opt"
+                :value="opt"
+              >
+                {{ opt }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Login with existing account: list of all created accounts from path authors -->
+        <div v-else class="u-spacingBottom">
+          <label class="u-label">Choose an existing account</label>
+          <select v-model="selected_author" class="u-input">
+            <option disabled value="">Identify yourself here</option>
             <option
-              v-for="author in category.authors"
+              v-for="author in authors_from_api"
               :key="author.path"
               :value="author"
             >
-              {{ author.name }}
+              {{ author.name
+              }}{{
+                (author.group || []).length
+                  ? " (" + (author.group || []).join(", ") + ")"
+                  : ""
+              }}
             </option>
-          </optgroup>
-        </select>
+          </select>
+        </div>
       </div>
       <div v-else class="u-spacingBottom">
         <p>
           You are currently logged in as
           <strong>{{ connected_as.name }}</strong
+          ><span v-if="connected_as_group.length">
+            ({{ connected_as_group }})</span
           >.
         </p>
       </div>
     </div>
 
     <template slot="footer">
-      <div />
+      <button
+        v-if="!is_logged_in"
+        type="button"
+        class="u-button u-button_white u-button_small"
+        @click="show_create = !show_create"
+      >
+        {{ show_create ? "Choose existing account" : "Create new account" }}
+      </button>
       <button
         v-if="is_logged_in"
         type="button"
@@ -45,15 +82,26 @@
       >
         Logout
       </button>
-      <button
-        v-else
-        type="button"
-        class="u-button u-button_bleuvert"
-        :disabled="!selected_author"
-        @click="login()"
-      >
-        Login
-      </button>
+      <template v-else>
+        <button
+          v-if="show_create"
+          type="button"
+          class="u-button u-button_bleuvert"
+          :disabled="!can_create"
+          @click="createAccount()"
+        >
+          Create account
+        </button>
+        <button
+          v-else
+          type="button"
+          class="u-button u-button_bleuvert"
+          :disabled="!can_login"
+          @click="login()"
+        >
+          Login
+        </button>
+      </template>
     </template>
   </BaseModal2>
 </template>
@@ -72,9 +120,20 @@ export default {
     }
     return {
       selected_author: saved_author || "",
+      selected_structure_role: "",
       show_create: false,
       new_author_name: "",
       authors_from_api: [],
+      structure_role_options: [
+        "Artist",
+        "L’École de Design Nantes Atlantique",
+        "L’Art Rue",
+        "Casa De Capitão",
+        "Mutant Radio",
+        "OpenSpace",
+        "Trempo",
+        "Other",
+      ],
     };
   },
   async created() {
@@ -87,36 +146,21 @@ export default {
     is_logged_in() {
       return !!this.connected_as;
     },
-    all_contributors() {
-      // Create a deep copy of the hardcoded list to avoid mutating the original
-      let all = JSON.parse(JSON.stringify(this.$root.slash_contributors_list));
-      const api_authors = [...this.authors_from_api];
-
-      // Mark authors that exist in API
-      all.forEach((cat) => {
-        cat.authors.forEach((author) => {
-          const matching_api_author_index = api_authors.findIndex(
-            (api_a) => api_a.path === author.path
-          );
-          if (matching_api_author_index !== -1) {
-            author.exists = true;
-            // Remove from api_authors to track which ones are left (new ones)
-            api_authors.splice(matching_api_author_index, 1);
-          } else {
-            author.exists = false;
-          }
-        });
-      });
-
-      // Add remaining API authors to a new category
-      if (api_authors.length > 0) {
-        all.push({
-          category: "Others",
-          authors: api_authors.map((a) => ({ ...a, exists: true })),
-        });
-      }
-
-      return all;
+    connected_as_group() {
+      const g = this.connected_as?.group;
+      return Array.isArray(g) && g.length ? g.join(", ") : "";
+    },
+    name_placeholder() {
+      return "Your name or pseudonym";
+    },
+    can_login() {
+      return !!this.selected_author;
+    },
+    can_create() {
+      return (
+        (this.new_author_name || "").trim().length > 0 &&
+        !!this.selected_structure_role
+      );
     },
   },
   methods: {
@@ -126,69 +170,80 @@ export default {
         this.authors_from_api = folders.map((f) => ({
           name: f.name,
           path: f.$path,
+          group: f.group || [],
         }));
       } catch (e) {
         console.error("Failed to fetch authors", e);
       }
+    },
+    _group_from_role() {
+      return this.selected_structure_role ? [this.selected_structure_role] : [];
     },
     async login() {
       if (!this.selected_author) return;
 
       const default_password = "slash";
 
-      // If author doesn't exist on backend (from hardcoded list), create it
-      if (this.selected_author.exists === false) {
-        try {
-          // Try to use the hardcoded slug if possible
-          let requested_slug = undefined;
-          if (this.selected_author.path) {
-            const parts = this.selected_author.path.split("/");
-            if (parts.length > 1) requested_slug = parts[parts.length - 1];
-          }
-
-          const new_folder_slug = await this.$api.createFolder({
-            path: "authors",
-            additional_meta: {
-              name: this.selected_author.name,
-              $password: default_password,
-              requested_slug,
-            },
-          });
-          await this.$api.loginToFolder({
-            path: `authors/${new_folder_slug}`,
-            password: default_password,
-          });
-
-          this.$alertify.success(
-            `Account created for ${this.selected_author.name}`
-          );
-        } catch (e) {
-          console.error(e);
-          this.$alertify.error("Failed to create account: " + e.message);
-          return;
-        }
-      } else {
-        await this.$api.loginToFolder({
-          path: this.selected_author.path,
-          password: default_password,
-        });
-      }
+      await this.$api.loginToFolder({
+        path: this.selected_author.path,
+        password: default_password,
+      });
 
       this.$alertify.success("Logged in");
-
       this.$emit("close");
+    },
+    async createAccount() {
+      if (!this.can_create) return;
+
+      const default_password = "slash";
+      const name = (this.new_author_name || "").trim();
+
+      try {
+        const new_folder_slug = await this.$api.createFolder({
+          path: "authors",
+          additional_meta: {
+            name,
+            $password: default_password,
+            requested_slug: name,
+            group: this._group_from_role(),
+          },
+        });
+        await this.$api.loginToFolder({
+          path: `authors/${new_folder_slug}`,
+          password: default_password,
+        });
+
+        this.$alertify.success(`Account created for ${name}`);
+        this.$emit("close");
+      } catch (e) {
+        console.error(e);
+        this.$alertify.error("Failed to create account: " + (e.message || e));
+      }
     },
     async logout() {
       if (this.$api.tokenpath.token_path) {
         await this.$api.logoutFromFolder();
       }
       this.selected_author = "";
+      this.selected_structure_role = "";
       this.$alertify.success("Logged out");
     },
   },
 };
 </script>
 <style lang="scss" scoped>
+._loginRow {
+  display: flex;
+  gap: var(--spacing);
+  align-items: flex-end;
+}
+._loginRow__name {
+  flex: 1;
+  min-width: 0;
+}
+._loginRow__role {
+  flex: 0 0 180px;
+}
 .u-label {
   display: block;
   margin-bottom: calc(var(--spacing) / 4);
