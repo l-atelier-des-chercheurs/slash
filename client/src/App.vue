@@ -154,7 +154,7 @@ export default {
   --g-500: hsl(0, 0%, 60%);
   --g-600: hsl(0, 0%, 45%);
 
-  --color-rule: #d2d2d2;
+  --color-rule: #999;
 
   --c-vert: hsl(143, 69%, 55%);
   --c-vert_fonce: hsl(143, 69%, 40%);
