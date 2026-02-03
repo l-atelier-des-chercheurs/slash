@@ -279,11 +279,17 @@ export default {
       this.editor.focus();
     }
 
-    this.$eventHub.$on("media.enableEditor." + this.path, this.enableEditor);
+    this.$eventHub.$on(
+      "media.enableEditor." + this.path,
+      this.startEditorFromButton
+    );
     this.$eventHub.$on("media.disableEditor." + this.path, this.disableEditor);
   },
   beforeDestroy() {
-    this.$eventHub.$off("media.enableEditor." + this.path, this.enableEditor);
+    this.$eventHub.$off(
+      "media.enableEditor." + this.path,
+      this.startEditorFromButton
+    );
     this.$eventHub.$off("media.disableEditor." + this.path, this.disableEditor);
     this.disableEditor();
   },

@@ -11,9 +11,8 @@ const writeFileAtomic = require("write-file-atomic");
 
 const utils = require("../core2/utils"),
   notifier = require("../core2/notifier"),
-  cacheManager = require("../core2/cache-manager"),
   journal = require("../core2/journal"),
-  ffmpegTracker = require("../core2/ffmpeg-tracker");
+  exitHandler = require("../core2/exit-handler");
 
 // Set command line switches before app is ready
 try {
@@ -78,7 +77,6 @@ module.exports = (function () {
           // On macOS it is common for applications and their menu bar
           // to stay active until the user quits explicitly with Cmd + Q
           // if (process.platform !== 'darwin') {
-          ffmpegTracker.killAllProcesses();
           app.quit();
           // }
         });
@@ -107,14 +105,12 @@ module.exports = (function () {
           }
         );
 
-        // Add cleanup on app quit
+        // Add cleanup on app quit (bin cleanup, cache manager, ffmpeg tracker)
         app.on("before-quit", async () => {
           try {
-            // Kill any running ffmpeg processes
-            ffmpegTracker.killAllProcesses();
-            cacheManager.handleExit();
+            await exitHandler.runExitCleanup();
           } catch (err) {
-            dev.error("Error during cache cleanup on quit:", err);
+            dev.error("Error during exit cleanup on quit:", err);
           }
         });
       });
@@ -279,7 +275,7 @@ module.exports = (function () {
 
       // Emitted when the window is closed.
       win.on("closed", () => {
-        dev.log(`ELECTRON — createWindow : closed`);
+        dev.logverbose(`ELECTRON — createWindow : closed`);
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
@@ -475,7 +471,6 @@ module.exports = (function () {
             label: "Quitter",
             accelerator: process.platform === "darwin" ? "Command+Q" : "Ctrl+Q",
             click: function () {
-              ffmpegTracker.killAllProcesses();
               app.quit();
             },
           },

@@ -136,18 +136,15 @@
 
       <div class="_content">
         <template v-if="chapter.section_type === 'text'">
-          <template v-if="chapter._main_text">
-            <MainText
-              :text_file="chapter._main_text"
-              :medias_holder="chapter"
-              :publication_path="publication.$path"
-            />
-          </template>
-          <template v-else>
-            <div class="u-instructions">
-              {{ $t("no_content") }}
-            </div>
-          </template>
+          <MainText
+            v-if="chapter._main_text"
+            :text_file="chapter._main_text"
+            :medias_holder="chapter"
+            :publication_path="publication.$path"
+          />
+          <div v-else class="u-instructions">
+            {{ $t("no_content") }}
+          </div>
         </template>
         <template v-if="chapter.section_type === 'gallery'">
           <GalleryChapter :chapter="chapter" :publication="publication" />

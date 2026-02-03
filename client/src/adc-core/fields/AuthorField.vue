@@ -136,7 +136,9 @@ export default {
       default: false,
     },
   },
-  components: {},
+  components: {
+    AuthorPicker: () => import("@/adc-core/inputs/AuthorPicker.vue"),
+  },
   data() {
     return {
       edit_mode: false,

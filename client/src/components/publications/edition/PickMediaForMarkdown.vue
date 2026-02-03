@@ -268,8 +268,6 @@ export default {
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = html;
 
-      debugger;
-
       let md = "";
       const paragraphs = tempDiv.querySelectorAll("p");
 

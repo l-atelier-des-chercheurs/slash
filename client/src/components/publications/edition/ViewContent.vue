@@ -589,24 +589,25 @@ export default {
         let cell = document.createElement("div");
         cell.className = "grid-cell";
 
-        // cell ID is A, B, C, etc. even if original is A1, B2, C3, etc.
-        const cell_id = area.id.substring(0, 1);
+        // Parse ID to get letter part and number part
+        const match = area.id.match(/^([A-Z]+)(\d*)$/);
+        const cell_id = match ? match[1] : area.id;
+        const chain_index = match && match[2] ? parseInt(match[2]) : 0;
+
         cell.setAttribute("data-grid-area-id", cell_id);
 
         if (media && media.$type) {
           cell.setAttribute("data-grid-area-type", media.$type);
         }
 
-        // check if the cell is part of a chain (more than 2 areas have the same first character)
+        // check if the cell is part of a chain
         const is_part_of_chain =
-          grid_areas.filter((a) => a.id.startsWith(cell_id)).length > 1;
+          grid_areas.filter((a) => {
+            const m = a.id.match(/^([A-Z]+)(\d*)$/);
+            return m && m[1] === cell_id;
+          }).length > 1;
+
         if (is_part_of_chain) {
-          let chain_index = 0;
-          if (area.id.length > 1) {
-            // get everything after the first character
-            chain_index = area.id.substring(1);
-          }
-          // item A is cell 0, item A1 is cell 1, item A2 is cell 2, etc.
           cell.setAttribute("data-grid-area-is-chain-index", chain_index);
         }
         cell.style.gridColumnStart = area.column_start;

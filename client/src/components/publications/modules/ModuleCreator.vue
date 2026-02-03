@@ -128,6 +128,7 @@
         :files_to_import="files_to_import"
         :path="project_path"
         :allow_caption_edition="true"
+        :additional_meta="{ $origin: 'collect' }"
         @importedMedias="mediaJustImported($event)"
         @close="files_to_import = []"
       />

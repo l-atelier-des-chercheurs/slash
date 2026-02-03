@@ -40,13 +40,15 @@
           v-for="(area, index) in grid_areas"
           :key="area.id"
           :area="area"
+          :area_type="getAreaFileType(area)"
+          :is_last_of_text_chain="isLastOfTextChain(area)"
+          :is_being_chained="toggle_chain_area_id === area.id"
           :selected-area-id="selected_area_id"
           :dragging-area-id="dragging_area_id"
           :updating-area-id="updating_area_id"
           :publication="publication"
           :column-count="column_count"
           :row-count="row_count"
-          :is_being_chained="toggle_chain_area_id === area.id"
           @select="selectArea"
           @drag-start="startDrag"
           @resize-start="startResize"
@@ -67,8 +69,10 @@
 
 <script>
 import GridArea from "./GridArea.vue";
+import Medias from "../../../mixins/Medias.js";
 
 export default {
+  mixins: [Medias],
   props: {
     chapter: {
       type: Object,
@@ -154,6 +158,32 @@ export default {
       }
       return letter;
     },
+    getAreaMediaFileType(area) {
+      const source_media = area.source_medias?.[0];
+      if (!source_media) return null;
+
+      const file = this.getSourceMedia({
+        source_media,
+        folder_path: this.publication.$path,
+      });
+
+      if (!file) return null;
+
+      if (file.$type === "text" || file.content_type === "markdown") {
+        return "text";
+      } else if (file.$type === "image") {
+        return "image";
+      }
+      return null;
+    },
+    getAreaFileType(area) {
+      // if area is part of a text chain, return text
+      if (this.isLastOfTextChain(area)) {
+        return "text";
+      }
+
+      return this.getAreaMediaFileType(area);
+    },
     getCellPosition(cellIndex) {
       // Convert 1-based cellIndex to column and row (1-based for CSS Grid)
       const row = Math.ceil(cellIndex / this.column_count);
@@ -224,7 +254,31 @@ export default {
       let new_area_id;
 
       if (this.toggle_chain_area_id) {
-        new_area_id = this.toggle_chain_area_id + "1";
+        // Find the last area in this chain
+        const match = this.toggle_chain_area_id.match(/^([A-Z]+)(\d*)$/);
+
+        if (match) {
+          const letterPart = match[1];
+          const chain = this.grid_areas.filter((a) => {
+            const m = a.id.match(/^([A-Z]+)(\d*)$/);
+            return m && m[1] === letterPart;
+          });
+
+          // Calculate max index
+          let maxIndex = 0;
+          chain.forEach((a) => {
+            const m = a.id.match(/^([A-Z]+)(\d*)$/);
+            if (m && m[2]) {
+              const idx = parseInt(m[2]);
+              if (!isNaN(idx) && idx > maxIndex) maxIndex = idx;
+            }
+          });
+
+          new_area_id = letterPart + (maxIndex + 1);
+        } else {
+          // Fallback if ID doesn't match expected pattern
+          new_area_id = this.generateNextLetterId();
+        }
         this.toggle_chain_area_id = null;
       } else {
         new_area_id = this.generateNextLetterId();
@@ -466,6 +520,55 @@ export default {
       } else {
         this.toggle_chain_area_id = areaId;
       }
+    },
+    // check if part of chain, if it is get the first area type
+    getFirstAreaTypeInChain(area) {
+      const match = area.id.match(/^([A-Z]+)(\d*)$/);
+      if (!match) return null;
+      const letterPart = match[1];
+      const chain = this.grid_areas.filter((a) => {
+        const m = a.id.match(/^([A-Z]+)(\d*)$/);
+        return m && m[1] === letterPart;
+      });
+
+      if (chain.length === 0) return null;
+
+      // Sort to find the first one
+      chain.sort((a, b) => {
+        const matchA = a.id.match(/^([A-Z]+)(\d*)$/);
+        const matchB = b.id.match(/^([A-Z]+)(\d*)$/);
+        const numA = matchA[2] ? parseInt(matchA[2]) : 0;
+        const numB = matchB[2] ? parseInt(matchB[2]) : 0;
+        return numA - numB;
+      });
+
+      return this.getAreaMediaFileType(chain[0]);
+    },
+    isLastOfTextChain(area) {
+      if (this.getFirstAreaTypeInChain(area) !== "text") return false;
+
+      const match = area.id.match(/^([A-Z]+)(\d*)$/);
+      if (!match) return false;
+      const letterPart = match[1];
+      const chain = this.grid_areas.filter((a) => {
+        const m = a.id.match(/^([A-Z]+)(\d*)$/);
+        return m && m[1] === letterPart;
+      });
+
+      if (chain.length <= 1) return true;
+
+      // Sort by suffix numeric value
+      chain.sort((a, b) => {
+        const matchA = a.id.match(/^([A-Z]+)(\d*)$/);
+        const matchB = b.id.match(/^([A-Z]+)(\d*)$/);
+
+        const numA = matchA[2] ? parseInt(matchA[2]) : 0;
+        const numB = matchB[2] ? parseInt(matchB[2]) : 0;
+        return numA - numB;
+      });
+
+      const last = chain[chain.length - 1];
+      return last.id === area.id;
     },
   },
   beforeDestroy() {

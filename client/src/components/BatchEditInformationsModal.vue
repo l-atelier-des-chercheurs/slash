@@ -111,7 +111,9 @@ export default {
       required: true,
     },
   },
-  components: {},
+  components: {
+    PositionPicker: () => import("@/adc-core/inputs/PositionPicker.vue"),
+  },
   data() {
     return {
       saving_media_index: null,

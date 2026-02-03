@@ -210,7 +210,6 @@ export default {
       this.upload_percentage = 0;
 
       let additional_meta = {};
-      // additional_meta.$origin = "collect";
 
       if (this.additional_meta) {
         Object.assign(additional_meta, this.additional_meta);

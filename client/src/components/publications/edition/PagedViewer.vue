@@ -10,15 +10,20 @@
     <div
       class=""
       ref="bookrender"
-      style="opacity: 0; visibility: hidden; pointer-events: none"
+      style="
+        position: absolute;
+        top: 0;
+        left: -200vw;
+        pointer-events: none;
+        opacity: 0;
+      "
     />
     <PanZoom3
       v-if="viewer_type === 'infinite-viewer'"
       ref="panzoom3"
-      :scale="current_zoom"
-      :show_rules="true"
+      :zoom="current_zoom"
       :layout_mode="'print'"
-      @update:scale="current_zoom = $event"
+      @scroll-end="onScrollEnd"
     >
       <div class="" ref="bookpreview" />
     </PanZoom3>
@@ -30,11 +35,7 @@
 </template>
 <script>
 import { Handler, Previewer } from "pagedjs";
-import {
-  handleChainOverflow,
-  checkCellOverflow,
-  showOverflowWarning,
-} from "./chainOverflowHandler.js";
+import { PagedjsFlowHandler } from "./PagedjsFlowHandler.js";
 import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
 
 export default {
@@ -176,6 +177,10 @@ export default {
         ];
 
         const bookrender = this.$refs.bookrender;
+
+        // Register the Flow Handler
+        paged.registerHandlers(PagedjsFlowHandler);
+
         paged.preview(pagedjs_html, theme_styles, bookrender).then((flow) => {
           bookpreview.innerHTML = "";
           bookpreview.appendChild(flow.pagesArea);
@@ -183,7 +188,6 @@ export default {
 
           this.$nextTick(() => {
             this.showOnlyPages();
-            this.handleCellOverflow();
             if (this.can_edit) {
               this.addChapterShortcuts();
               this.reportChapterPositions();
@@ -307,6 +311,9 @@ export default {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
     },
+    onScrollEnd({ zoom }) {
+      this.current_zoom = zoom;
+    },
     async zoomToSection(meta_filename) {
       if (!meta_filename) return;
 
@@ -353,43 +360,6 @@ export default {
           absolute: true,
         }
       );
-    },
-    handleCellOverflow() {
-      const bookpreview = this.$refs.bookpreview;
-      if (!bookpreview) return;
-
-      // Process each page separately
-      const pages = bookpreview.querySelectorAll(".pagedjs_page");
-      console.log("handleCellOverflow");
-
-      pages.forEach((page) => {
-        // Find all grid cells within this page
-        const gridCells = page.querySelectorAll(
-          ".grid-cell[data-grid-area-type='text']"
-        );
-
-        gridCells.forEach((cell) => {
-          // Check for overflow
-          const hasOverflow = checkCellOverflow(cell);
-
-          if (hasOverflow) {
-            if (cell.getAttribute("data-grid-area-is-chain-index")) {
-              this.handleChainOverflow(cell, page);
-            } else {
-              showOverflowWarning(cell, this.$t("text_overflow"));
-            }
-          }
-        });
-      });
-    },
-    handleChainOverflow(cell, page) {
-      if (!page) {
-        // Fallback: find the page containing the cell
-        page = cell.closest(".pagedjs_page");
-      }
-      if (!page) return;
-
-      handleChainOverflow(cell, page, this.$t("text_overflow"));
     },
     beforePrint() {
       // Handler for beforeprint event

@@ -407,7 +407,7 @@ export default {
     async loadChat() {
       const chat = await this.$api
         .getFolder({
-          path: "/chats/" + this.chat_slug,
+          path: "chats/" + this.chat_slug,
         })
         .catch((err) => {
           this.err_loading_chat = err.message || err.code;
