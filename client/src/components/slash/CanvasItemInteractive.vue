@@ -84,17 +84,20 @@ export default {
       const x = this.currentX !== null ? this.currentX : this.file.x || 0;
       const y = this.currentY !== null ? this.currentY : this.file.y || 0;
       // Clamp for display as well
-      const width =
+      let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+
+      // max width is 2000px
+      const max_width = 2000;
+      const max_height = 1000;
+      width = Math.min(width, max_width);
+
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
 
-      const clampedX = Math.max(0, Math.min(x, this.canvas_width - width));
-      const clampedY = Math.max(0, Math.min(y, this.canvas_height - height));
-
       const style = {
-        left: `${clampedX}px`,
-        top: `${clampedY}px`,
+        left: `${x}px`,
+        top: `${y}px`,
         width: `${width}px`,
       };
 
@@ -292,7 +295,10 @@ export default {
       let finalY = this.currentY !== null ? this.currentY : this.file.y || 0;
 
       finalX = Math.max(0, Math.min(finalX, this.canvas_width - currentWidth));
-      finalY = Math.max(0, Math.min(finalY, this.canvas_height - currentHeight));
+      finalY = Math.max(
+        0,
+        Math.min(finalY, this.canvas_height - currentHeight)
+      );
 
       // Clear current position to use file position
       this.currentX = null;

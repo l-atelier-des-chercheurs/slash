@@ -107,18 +107,18 @@ export default {
           icon: "file-earmark",
           accept: "*/*",
         },
-        {
-          id: "video",
-          label: this.$t("video"),
-          icon: "play-fill",
-          accept: "video/*",
-        },
-        {
-          id: "image",
-          label: this.$t("image"),
-          icon: "image",
-          accept: "image/*",
-        },
+        // {
+        //   id: "video",
+        //   label: this.$t("video"),
+        //   icon: "play-fill",
+        //   accept: "video/*",
+        // },
+        // {
+        //   id: "image",
+        //   label: this.$t("image"),
+        //   icon: "image",
+        //   accept: "image/*",
+        // },
       ],
     };
   },
@@ -287,6 +287,7 @@ $_peach_dark: #e8bc85;
   padding: 8px;
   cursor: pointer;
   color: var(--c-noir);
+  background: white;
   font-size: 1.25rem;
   font-weight: 500;
   text-transform: lowercase;
