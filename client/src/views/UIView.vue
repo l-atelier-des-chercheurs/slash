@@ -17,10 +17,52 @@
       </div>
     </div>
 
-    <DLabel
-      str="Donec fait un test.On fait un test.On fait un test.On fait un test.On fait un test."
-      icon="info-circle"
-    />
+    <h2>DLabel Demo</h2>
+
+    <h3>Basic</h3>
+    <div class="_labelsDemo">
+      <DLabel str="Simple label text" />
+    </div>
+
+    <h3>With icon</h3>
+    <div class="_labelsDemo">
+      <DLabel str="Label with icon" icon="info-circle" />
+      <DLabel str="Label with pencil icon" icon="pencil" />
+    </div>
+
+    <h3>With instructions</h3>
+    <div class="_labelsDemo">
+      <DLabel
+        str="Label with instructions (click info to toggle)"
+        instructions="<strong>Instructions:</strong> This helper text appears when you click the info icon."
+      />
+    </div>
+
+    <h3>With icon and instructions</h3>
+    <div class="_labelsDemo">
+      <DLabel
+        str="Full variant: icon + instructions"
+        icon="info-circle"
+        instructions="Helper text shown below when expanded."
+      />
+    </div>
+
+    <h3>Tag variants</h3>
+    <div class="_labelsDemo">
+      <DLabel str="As &lt;label&gt; (default)" tag="label" />
+      <DLabel str="As &lt;span&gt;" tag="span" />
+    </div>
+
+    <h3>With for_input</h3>
+    <div class="_labelsDemo">
+      <DLabel str="Label linked to input" for_input="dlabel-demo-input" />
+      <input
+        id="dlabel-demo-input"
+        type="text"
+        placeholder="Focus via label click"
+        class="u-input"
+      />
+    </div>
 
     <h2>Buttons Demo</h2>
 
@@ -1065,6 +1107,14 @@ export default {
   display: flex;
   flex-flow: row wrap;
   align-items: center;
+  gap: calc(var(--spacing) / 2);
+  margin-bottom: calc(var(--spacing) / 2);
+}
+
+._labelsDemo {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
   gap: calc(var(--spacing) / 2);
   margin-bottom: calc(var(--spacing) / 2);
 }
