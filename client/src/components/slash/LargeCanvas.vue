@@ -135,7 +135,10 @@ export default {
     getFileDimensions(file) {
       const width = file.width || 160;
       const ratio = file.$infos && file.$infos.ratio;
-      const height = ratio ? width * ratio : 160;
+      // PDF and embed have fixed aspect ratio in UI (e.g. 16/9); use default when no ratio
+      const default_ratio = 9 / 16; // height/width for 16:9
+      const effective_ratio = ratio !== undefined ? ratio : default_ratio;
+      const height = width * effective_ratio;
       return { width, height };
     },
     checkFileForExpansion(file) {
