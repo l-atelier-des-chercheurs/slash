@@ -19,6 +19,7 @@
     <div
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
+      :style="'--scale-factor: ' + canvas_zoom"
       @mousedown.stop="handleResizeStart"
     />
   </div>
@@ -377,7 +378,7 @@ export default {
   }
 
   ._canvasItem--resizeHandle {
-    --button-size: 36px;
+    --button-size: 24px;
 
     position: absolute;
     right: calc(var(--button-size) / -2);
@@ -395,15 +396,18 @@ export default {
     pointer-events: auto;
     opacity: 0;
 
+    transform: scale(calc(1 / var(--scale-factor)));
+    transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
     &::before {
       content: "";
       display: block;
       width: var(--button-size);
       height: calc(var(--button-size) / 2.5);
       transform: rotate(90deg);
-      background-color: black;
+      background-color: transparent;
       border-radius: calc(var(--button-size) / 2);
-      box-shadow: 0 0 0px calc(var(--button-size) / 10) white;
+      box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
       transform: rotate(45deg);
       transition: all 0.2s;
     }
@@ -419,10 +423,18 @@ export default {
     }
 
     &:hover::before {
-      background-color: white;
-      box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
+      background-color: black;
+      // box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
     }
   }
+
+  &.is--resizing {
+    ._canvasItem--resizeHandle::before {
+      background-color: black;
+      // box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
+    }
+  }
+
   &:hover,
   &.is--dragging,
   &.is--resizing {

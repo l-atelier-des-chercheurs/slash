@@ -105,11 +105,21 @@ export default {
     handleInteractionEnd() {
       if (this.debounce_interaction) clearTimeout(this.debounce_interaction);
       this.debounce_interaction = setTimeout(() => {
-        const x = this.infiniteviewer.getScrollLeft();
-        const y = this.infiniteviewer.getScrollTop();
+        const left = this.infiniteviewer.getScrollLeft();
+        const top = this.infiniteviewer.getScrollTop();
         const zoom = this.infiniteviewer.getZoom();
-        console.log("handleInteractionEnd", x, y, zoom);
-        this.$emit("scroll-end", { x, y, zoom });
+
+        const infiniteviewer = this.$refs.infiniteviewer;
+        const infiniteviewer_w = infiniteviewer
+          ? infiniteviewer.offsetWidth
+          : 0;
+        const infiniteviewer_h = infiniteviewer
+          ? infiniteviewer.offsetHeight
+          : 0;
+        const x = left + infiniteviewer_w / (2 * zoom);
+        const y = top + infiniteviewer_h / (2 * zoom);
+
+        this.$emit("scroll-end", { zoom, x, y });
       }, 200);
     },
     dragStart(event) {

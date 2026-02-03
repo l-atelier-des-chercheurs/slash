@@ -23,8 +23,8 @@
           :file="file"
           class="_canvasItem"
           :data-file-path="file.$path"
-          :canvas_scroll_left="canvasScrollLeft"
-          :canvas_scroll_top="canvasScrollTop"
+          :canvas_scroll_left="canvasScrollX"
+          :canvas_scroll_top="canvasScrollY"
           :canvas_width="canvas_width"
           :canvas_height="canvas_height"
           :canvas_zoom="zoom"
@@ -35,9 +35,10 @@
 
       <div
         class="_currentCenterDot"
+        v-if="false"
         :style="{
-          left: canvasScrollLeft + 'px',
-          top: canvasScrollTop + 'px',
+          left: canvasScrollX + 'px',
+          top: canvasScrollY + 'px',
         }"
       ></div>
     </SlashPanZoom>
@@ -64,8 +65,8 @@ export default {
   },
   data() {
     return {
-      canvasScrollLeft: 0,
-      canvasScrollTop: 0,
+      canvasScrollX: 0,
+      canvasScrollY: 0,
       canvasViewedCenterX: 0,
       canvasViewedCenterY: 0,
 
@@ -111,8 +112,8 @@ export default {
   beforeDestroy() {},
   methods: {
     updateScrollAndZoom({ x, y, zoom } = {}) {
-      this.canvasScrollLeft = x;
-      this.canvasScrollTop = y;
+      this.canvasScrollX = x;
+      this.canvasScrollY = y;
       this.$emit("update:zoom", zoom);
       this.$emit("update:scroll", { x, y });
       this.saveStateToLocalStorage();
@@ -157,8 +158,8 @@ export default {
       if (this.saveStateTimeout) clearTimeout(this.saveStateTimeout);
       this.saveStateTimeout = setTimeout(() => {
         const state = {
-          x: this.canvasScrollLeft,
-          y: this.canvasScrollTop,
+          x: this.canvasScrollX,
+          y: this.canvasScrollY,
           zoom: this.zoom,
         };
         localStorage.setItem(this.getStorageKey(), JSON.stringify(state));
