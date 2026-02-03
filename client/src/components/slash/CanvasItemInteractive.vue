@@ -100,6 +100,7 @@ export default {
         left: `${x}px`,
         top: `${y}px`,
         width: `${width}px`,
+        "--scale-factor": this.canvas_zoom,
       };
 
       if (ratio) {

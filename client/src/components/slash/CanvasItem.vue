@@ -183,7 +183,13 @@ export default {
   background: var(--c-noir);
   cursor: pointer;
   // opacity: 0.7;
-  transition: opacity 0.15s;
+
+  // transform: scale(calc(1 / var(--scale-factor, 1)));
+  // limit scale transform to maximum 5
+  transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
+
+  transform-origin: top right;
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.15s;
 
   &:hover {
     opacity: 1;
