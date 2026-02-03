@@ -124,13 +124,10 @@ export default {
       const clampedY = Math.max(0, y);
       this.$set(file, "x", clampedX);
       this.$set(file, "y", clampedY);
-
-      this.checkFileForExpansion(file);
     },
     handleWidthUpdate({ file, width }) {
       // Update file width locally
       this.$set(file, "width", width);
-      this.checkFileForExpansion(file);
     },
     getFileDimensions(file) {
       const width = file.width || 160;
@@ -140,18 +137,6 @@ export default {
       const effective_ratio = ratio !== undefined ? ratio : default_ratio;
       const height = width * effective_ratio;
       return { width, height };
-    },
-    checkFileForExpansion(file) {
-      const { width, height } = this.getFileDimensions(file);
-      const x = file.x || 0;
-      const y = file.y || 0;
-
-      const neededWidth = x + width + 200;
-      const neededHeight = y + height + 200;
-      const neededSize = Math.max(neededWidth, neededHeight);
-    },
-    checkAllFilesForExpansion() {
-      // Canvas size is now computed from rightmost/bottommost file edges + padding
     },
     getStorageKey() {
       const path = this.$route ? this.$route.path : window.location.pathname;
