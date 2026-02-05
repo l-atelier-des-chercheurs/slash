@@ -117,6 +117,8 @@ export default {
       updating_area_id: null,
       toggle_chain_area_id: null,
       is_mounted: false,
+      container_size: { width: 0, height: 0 },
+      resize_observer: null,
     };
   },
   computed: {
@@ -143,6 +145,10 @@ export default {
       if (!container) {
         return [];
       }
+
+      // Access container_size to make this computed property reactive to resize changes
+      // eslint-disable-next-line no-unused-vars
+      const _ = this.container_size.width + this.container_size.height;
 
       // Get all text chains and generate links between consecutive areas
       const links = [];
@@ -711,6 +717,21 @@ export default {
     // Wait for DOM to be fully rendered before calculating link positions
     this.$nextTick(() => {
       this.is_mounted = true;
+
+      // Set up ResizeObserver to watch for grid container size changes
+      const container = this.$el?.querySelector("._gridOverlay");
+      if (container && window.ResizeObserver) {
+        this.resize_observer = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            // Update container_size to trigger recalculation of text_chain_links
+            this.container_size = {
+              width: entry.contentRect.width,
+              height: entry.contentRect.height,
+            };
+          }
+        });
+        this.resize_observer.observe(container);
+      }
     });
   },
   beforeDestroy() {
@@ -718,6 +739,12 @@ export default {
     document.removeEventListener("mouseup", this.stopResize);
     document.removeEventListener("mousemove", this.handleDrag);
     document.removeEventListener("mouseup", this.stopDrag);
+
+    // Clean up ResizeObserver
+    if (this.resize_observer) {
+      this.resize_observer.disconnect();
+      this.resize_observer = null;
+    }
   },
 };
 </script>
