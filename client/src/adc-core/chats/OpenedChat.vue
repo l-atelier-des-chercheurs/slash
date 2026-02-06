@@ -148,7 +148,6 @@
               <div
                 v-if="
                   initial_unread_count > 0 &&
-                  initial_mapped_read_index !== null &&
                   message._index === initial_mapped_read_index
                 "
                 class="_unreadMessages"
@@ -294,42 +293,35 @@ export default {
       initial_unread_count: 0,
     };
   },
-  created() {},
+  async created() {},
   async mounted() {
     await this.loadChat();
-    // await new Promise((resolve) => setTimeout(resolve, 200));
+    this.$api.join({ room: this.chat.$path });
     this.is_loading = false;
 
-    // Store initial read index and unread count when chat is opened
-    // This ensures the notice stays fixed and doesn't move when new messages arrive
-    this.$nextTick(() => {
-      this.initial_mapped_read_index = this.mapped_read_index;
-      this.initial_unread_count = this.unread_since_last_visit;
-      // Only show notice if there were unread messages when chat was opened
-      if (this.initial_unread_count === 0) {
-        this.initial_mapped_read_index = null;
-      }
+    await this.$nextTick();
 
-      // Wait for DOM to update with the notice, then scroll
-      this.$nextTick(() => {
-        if (this.initial_unread_count > 0) {
-          // Use a small delay to ensure all rendering is complete
-          setTimeout(() => {
-            this.scrollToUnread();
-          }, 50);
-        }
-      });
-    });
+    this.initial_unread_count = this.unread_since_last_visit;
+    if (this.initial_unread_count === 0) {
+      this.initial_mapped_read_index = null;
+    } else {
+      this.initial_mapped_read_index = this.mapped_read_index;
+    }
 
     if (this.unread_since_last_visit > this.max_messages_to_display) {
       this.max_messages_to_display = this.unread_since_last_visit + 10;
+      await this.$nextTick();
     }
 
-    this.$api.join({ room: this.chat.$path });
+    await setTimeout(() => {}, 200);
 
-    if (this.pane_scroll_until_end < 100) {
-      this.updateAuthorReadCount();
+    if (this.initial_unread_count > 0) {
+      this.scrollToUnread();
+    } else {
+      this.scrollToLatest();
     }
+
+    this.updateAuthorReadCount();
 
     this.$eventHub.$on("file.created", this.newMessagePosted);
   },
@@ -349,9 +341,7 @@ export default {
     },
     pane_scroll_until_end: {
       handler() {
-        if (this.pane_scroll_until_end < 100) {
-          this.updateAuthorReadCount();
-        }
+        this.updateAuthorReadCount();
       },
     },
   },
@@ -435,22 +425,10 @@ export default {
     newMessagePosted({ meta }) {
       this.$nextTick(() => {
         this.scrollToLatest("smooth");
-        // Update read count when new messages arrive
-        // This handles both messages posted by the user and by others
         this.updateAuthorReadCount();
       });
     },
-    // checkForNewMessages({ meta }) {
-    //   if (meta.$path.startsWith(this.chat.$path)) {
-    //     this.$nextTick(() => {
-    //       this.scrollToMessage(meta.$path);
-    //       this.updateAuthorReadCount();
-    //     });
-    //   }
-    // },
     async updateAuthorReadCount() {
-      // Use chat.$files_count to match what unread_since_last_visit uses
-      // This ensures consistency even if some messages don't have $content loaded
       const read_index = this.chat.$files_count;
       await this.updateAuthorLastReadMessage({
         chat_path: this.chat.$path,
