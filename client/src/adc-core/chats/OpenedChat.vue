@@ -209,6 +209,7 @@
           <TextInput
             :content.sync="new_message"
             :autofocus="true"
+            class="_newMessageInput"
             ref="textInput"
             :input_type="'editor'"
             :placeholder="$t('write_a_message')"
@@ -731,6 +732,12 @@ export default {
   position: relative;
   width: 1.5rem;
   height: 1.5rem;
+}
+
+._newMessageInput {
+  ::v-deep .ql-editor {
+    min-height: 2rem !important;
+  }
 }
 </style>
 <style lang="scss">
