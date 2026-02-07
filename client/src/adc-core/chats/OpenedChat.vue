@@ -469,7 +469,7 @@ export default {
 
       this.is_posting_message = true;
       const filename = "message-" + +new Date() + ".txt";
-      // not using content, to improve performance loading thousands of messages
+      // not using $content, to improve performance for loading thousands of messages
       //   const { meta_filename } = await this.$api.uploadText({
       //   path: this.chat.$path,
       //   filename,
