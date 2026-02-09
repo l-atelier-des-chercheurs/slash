@@ -95,6 +95,7 @@
           v-if="show_export_pdf_modal"
           :modal_title="$t('export_publi', { name: publication.title })"
           :publication="publication"
+          :can_save_to_project="true"
           :pane_infos="pane_infos"
           @close="show_export_pdf_modal = false"
         />

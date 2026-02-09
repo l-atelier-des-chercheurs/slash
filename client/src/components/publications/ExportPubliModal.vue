@@ -103,6 +103,7 @@
     <ExportItemAndSaveOrDownload
       v-if="task_instructions"
       :publication_path="publication.$path"
+      :can_save_to_project="can_save_to_project"
       :instructions="task_instructions"
       @close="task_instructions = false"
     />
@@ -116,6 +117,7 @@ export default {
     modal_title: String,
     publication: Object,
     pane_infos: Object,
+    can_save_to_project: Boolean,
   },
   components: {
     ExportItemAndSaveOrDownload,
