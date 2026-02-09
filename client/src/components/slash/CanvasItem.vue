@@ -6,7 +6,11 @@
   >
     <div class="_canvasItem--shadow" />
 
-    <div class="_canvasItem--content" :data-filetype="file.$type">
+    <div
+      class="_canvasItem--content"
+      :data-filetype="file.$type"
+      @click.stop="handleClick"
+    >
       <MediaContent
         :file="file"
         :context="'full'"
@@ -30,6 +34,12 @@
         @close="showPathModal = false"
       />
     </div>
+
+    <ItemModal
+      v-if="show_item_modal"
+      :file="file"
+      @close="show_item_modal = false"
+    />
   </div>
 </template>
 
@@ -55,10 +65,12 @@ export default {
   },
   components: {
     ItemChat: () => import("@/components/slash/ItemChat.vue"),
+    ItemModal: () => import("@/components/slash/ItemModal.vue"),
   },
   data() {
     return {
       showPathModal: false,
+      show_item_modal: false,
     };
   },
   computed: {
@@ -96,6 +108,11 @@ export default {
         return style;
       }
       return {};
+    },
+  },
+  methods: {
+    handleClick(event) {
+      this.show_item_modal = true;
     },
   },
 };
@@ -172,20 +189,15 @@ export default {
   align-items: center;
   justify-content: center;
 
-  width: 28px;
-  height: 28px;
-  padding: 10px;
+  width: 2rem;
+  height: 2rem;
   border: none;
   border-radius: calc(var(--border-radius) - 2px);
+  color: var(--g-800);
 
   background: transparent;
-  color: white;
-  background: var(--c-noir);
   cursor: pointer;
-  // opacity: 0.7;
 
-  // transform: scale(calc(1 / var(--scale-factor, 1)));
-  // limit scale transform to maximum 5
   transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
 
   transform-origin: top right;
@@ -194,6 +206,10 @@ export default {
   &:hover {
     opacity: 1;
     background: rgba(0, 0, 0, 0.7);
+  }
+
+  > .b-icon.bi {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
 }
 
