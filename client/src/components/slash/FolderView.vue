@@ -16,16 +16,19 @@
       />
       <LargeCanvas
         v-show="viewMode === 'canvas'"
-        :files="filteredFiles"
+        :files="filtered_files"
         :zoom="canvasZoom"
         :zoom_range="zoom_range"
         @update:zoom="canvasZoom = $event"
         @update:scroll="canvasScroll = $event"
       />
-      <GeoMapView v-show="viewMode === 'map'" :files="filteredFiles" />
-      <TimelineView v-show="viewMode === 'timeline'" :files="filteredFiles" />
-      <MediaGridView v-show="viewMode === 'grid'" :files="filteredFiles" />
+      <GeoMapView v-show="viewMode === 'map'" :files="filtered_files" />
+      <TimelineView v-show="viewMode === 'timeline'" :files="filtered_files" />
+      <MediaGridView v-show="viewMode === 'grid'" :files="filtered_files" />
     </div>
+
+    <ItemModal v-if="opened_file" :file="opened_file" @close="closeItemModal" />
+
     <DropMenu
       class="_dropMenu"
       :folder_path="default_folder.$path"
@@ -42,6 +45,8 @@ import LargeCanvas from "@/components/slash/LargeCanvas.vue";
 import MediaGridView from "@/components/slash/MediaGridView.vue";
 import TimelineView from "@/components/slash/TimelineView.vue";
 import ViewModeBar from "@/components/slash/ViewModeBar.vue";
+import ItemModal from "@/components/slash/ItemModal.vue";
+
 export default {
   props: {},
   components: {
@@ -52,6 +57,7 @@ export default {
     MediaGridView,
     TimelineView,
     ViewModeBar,
+    ItemModal,
   },
   data() {
     return {
@@ -83,8 +89,12 @@ export default {
       this.$api.join({ room: this.default_folder.$path });
     }
   },
-  mounted() {},
-  beforeDestroy() {},
+  mounted() {
+    this.$eventHub.$on("canvasItem.open", this.openItemModal);
+  },
+  beforeDestroy() {
+    this.$eventHub.$off("canvasItem.open", this.openItemModal);
+  },
   watch: {
     // Watch for route changes to sync view mode from URL
     "$route.query.view"(newView) {
@@ -98,7 +108,14 @@ export default {
     },
   },
   computed: {
-    filteredFiles() {
+    opened_file() {
+      if (!this.$route.query.file) return null;
+      const metafilename = this.$route.query.file;
+      return this.filtered_files.find((f) =>
+        f.$path.endsWith("/" + metafilename)
+      );
+    },
+    filtered_files() {
       if (!this.default_folder || !Array.isArray(this.default_folder.$files)) {
         return [];
       }
@@ -299,6 +316,24 @@ export default {
             el.style.transform = "none";
           }
         });
+      });
+    },
+    openItemModal(path) {
+      // get metafilename, store in url as file=
+      const metafilename = this.getFilename(path);
+      this.$router.push({
+        query: {
+          ...this.$route.query,
+          file: metafilename,
+        },
+      });
+    },
+    closeItemModal() {
+      this.$router.push({
+        query: {
+          ...this.$route.query,
+          file: null,
+        },
       });
     },
   },

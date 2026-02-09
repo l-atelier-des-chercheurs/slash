@@ -1,25 +1,18 @@
 <template>
-  <BaseModal2
-    :title="$t('chats')"
-    :is_closable="true"
-    @close="$emit('close')"
-    :size="chat_slug ? 'large' : undefined"
-  >
-    <div v-if="is_loading" class="_loader">
-      <LoaderSpinner />
-    </div>
-    <div v-else-if="!chat_slug">
-      <!-- <p class="_itemChat--pathContent">{{ file.$path }}</p> -->
-      <!-- <br /> -->
-      <button type="button" class="u-button" @click="createChat">
-        <b-icon icon="chat-left-text" />
-        {{ $t("comment") || "Comment" }}
-      </button>
-    </div>
-    <div v-else class="_chatWrapper">
-      <OpenedChat :chat_slug="chat_slug" @close="chat_slug = null" />
-    </div>
-  </BaseModal2>
+  <div v-if="is_loading" class="_loader">
+    <LoaderSpinner />
+  </div>
+  <div v-else-if="!chat_slug">
+    <!-- <p class="_itemChat--pathContent">{{ file.$path }}</p> -->
+    <!-- <br /> -->
+    <button type="button" class="u-button" @click="createChat">
+      <b-icon icon="chat-left-text" />
+      {{ $t("comment") || "Comment" }}
+    </button>
+  </div>
+  <div v-else class="_chatWrapper">
+    <OpenedChat :chat_slug="chat_slug" @close="chat_slug = null" />
+  </div>
 </template>
 <script>
 import OpenedChat from "../../adc-core/chats/OpenedChat.vue";

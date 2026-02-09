@@ -9,7 +9,7 @@
     <div
       class="_canvasItem--content"
       :data-filetype="file.$type"
-      @click.stop="handleClick"
+      @click.stop="openItemModal"
     >
       <MediaContent
         :file="file"
@@ -34,12 +34,6 @@
         @close="showPathModal = false"
       />
     </div>
-
-    <ItemModal
-      v-if="show_item_modal"
-      :file="file"
-      @close="show_item_modal = false"
-    />
   </div>
 </template>
 
@@ -111,8 +105,8 @@ export default {
     },
   },
   methods: {
-    handleClick(event) {
-      this.show_item_modal = true;
+    openItemModal(event) {
+      this.$eventHub.$emit("canvasItem.open", this.file.$path);
     },
   },
 };
