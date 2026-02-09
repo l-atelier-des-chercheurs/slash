@@ -1,6 +1,7 @@
 <template>
   <div class="_grid">
     <!-- Grid container wrapper -->
+
     <div class="_gridWrapper">
       <!-- Background grid for visual reference -->
       <div
@@ -56,6 +57,24 @@
           @delete="deleteArea"
         />
       </div>
+
+      <!-- SVG overlay for drawing links between chained areas -->
+      <svg
+        v-if="text_chain_links.length > 0"
+        class="_linksOverlay"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          v-for="(link, index) in text_chain_links"
+          :key="`link-${index}`"
+          :d="link.path"
+          fill="none"
+          stroke="var(--c-bleuvert)"
+          stroke-width="2"
+          stroke-linecap="round"
+          opacity="0.6"
+        />
+      </svg>
     </div>
 
     <!-- Add new area button (optional fallback) -->
@@ -97,6 +116,9 @@ export default {
       temp_grid_areas: null,
       updating_area_id: null,
       toggle_chain_area_id: null,
+      is_mounted: false,
+      container_size: { width: 0, height: 0 },
+      resize_observer: null,
     };
   },
   computed: {
@@ -111,6 +133,51 @@ export default {
       const areas = this.temp_grid_areas || this.chapter.grid_areas || [];
       // Clamp all areas to grid bounds
       return areas.map((area) => this.clampAreaToBounds(area));
+    },
+    text_chain_links() {
+      // Don't calculate links until DOM is ready
+      if (!this.is_mounted || !this.$el) {
+        return [];
+      }
+
+      // Verify the grid overlay container exists
+      const container = this.$el.querySelector("._gridOverlay");
+      if (!container) {
+        return [];
+      }
+
+      // Access container_size to make this computed property reactive to resize changes
+      // eslint-disable-next-line no-unused-vars
+      const _ = this.container_size.width + this.container_size.height;
+
+      // Get all text chains and generate links between consecutive areas
+      const links = [];
+      const text_chains = this.getTextChains();
+
+      text_chains.forEach((chain) => {
+        if (chain.length < 2) return;
+
+        // Sort chain by numeric suffix
+        const sorted_chain = [...chain].sort((a, b) => {
+          const matchA = a.id.match(/^([A-Z]+)(\d*)$/);
+          const matchB = b.id.match(/^([A-Z]+)(\d*)$/);
+          const numA = matchA[2] ? parseInt(matchA[2]) : 0;
+          const numB = matchB[2] ? parseInt(matchB[2]) : 0;
+          return numA - numB;
+        });
+
+        // Generate links between consecutive areas
+        for (let i = 0; i < sorted_chain.length - 1; i++) {
+          const from_area = sorted_chain[i];
+          const to_area = sorted_chain[i + 1];
+          const path = this.generateLinkPath(from_area, to_area);
+          if (path) {
+            links.push({ path, from: from_area.id, to: to_area.id });
+          }
+        }
+      });
+
+      return links;
     },
   },
   methods: {
@@ -178,7 +245,7 @@ export default {
     },
     getAreaFileType(area) {
       // if area is part of a text chain, return text
-      if (this.isLastOfTextChain(area)) {
+      if (this.isPartOfTextChain(area)) {
         return "text";
       }
 
@@ -544,6 +611,9 @@ export default {
 
       return this.getAreaMediaFileType(chain[0]);
     },
+    isPartOfTextChain(area) {
+      return this.getFirstAreaTypeInChain(area) === "text";
+    },
     isLastOfTextChain(area) {
       if (this.getFirstAreaTypeInChain(area) !== "text") return false;
 
@@ -570,12 +640,111 @@ export default {
       const last = chain[chain.length - 1];
       return last.id === area.id;
     },
+    getTextChains() {
+      // Group areas by their chain letter prefix
+      const chains_map = {};
+
+      this.grid_areas.forEach((area) => {
+        if (!this.isPartOfTextChain(area)) return;
+
+        const match = area.id.match(/^([A-Z]+)(\d*)$/);
+        if (!match) return;
+
+        const letterPart = match[1];
+        if (!chains_map[letterPart]) {
+          chains_map[letterPart] = [];
+        }
+        chains_map[letterPart].push(area);
+      });
+
+      return Object.values(chains_map);
+    },
+    getAreaPixelPosition(area) {
+      // Calculate pixel position of an area based on grid layout
+      const container = this.$el?.querySelector("._gridOverlay");
+      if (!container) return null;
+
+      const rect = container.getBoundingClientRect();
+      const gap_str = getComputedStyle(container).gap || "0px";
+      const gap = parseFloat(gap_str.replace("px", "")) || 0;
+      const cell_width =
+        (rect.width - gap * (this.column_count - 1)) / this.column_count;
+      const cell_height =
+        (rect.height - gap * (this.row_count - 1)) / this.row_count;
+
+      // Calculate position relative to the grid overlay (which is the same as SVG container)
+      const x = (area.column_start - 1) * (cell_width + gap);
+      const y = (area.row_start - 1) * (cell_height + gap);
+
+      const width =
+        (area.column_end - area.column_start) * cell_width +
+        gap * (area.column_end - area.column_start - 1);
+      const height =
+        (area.row_end - area.row_start) * cell_height +
+        gap * (area.row_end - area.row_start - 1);
+
+      return { x, y, width, height };
+    },
+    generateLinkPath(from_area, to_area) {
+      const from_pos = this.getAreaPixelPosition(from_area);
+      const to_pos = this.getAreaPixelPosition(to_area);
+
+      if (!from_pos || !to_pos) return null;
+
+      // Calculate connection points
+      // Exit point: right edge center of from_area
+      const exit_x = from_pos.x + from_pos.width;
+      const exit_y = from_pos.y + from_pos.height / 2;
+
+      // Entry point: left edge center of to_area
+      const entry_x = to_pos.x;
+      const entry_y = to_pos.y + to_pos.height / 2;
+
+      // Calculate control points for bezier curve
+      const dx = entry_x - exit_x;
+      const control_offset = Math.abs(dx) * 0.5; // Adjust curve intensity
+
+      const cp1_x = exit_x + control_offset;
+      const cp1_y = exit_y;
+      const cp2_x = entry_x - control_offset;
+      const cp2_y = entry_y;
+
+      // Generate SVG path with bezier curve
+      return `M ${exit_x} ${exit_y} C ${cp1_x} ${cp1_y}, ${cp2_x} ${cp2_y}, ${entry_x} ${entry_y}`;
+    },
+  },
+  mounted() {
+    // Wait for DOM to be fully rendered before calculating link positions
+    this.$nextTick(() => {
+      this.is_mounted = true;
+
+      // Set up ResizeObserver to watch for grid container size changes
+      const container = this.$el?.querySelector("._gridOverlay");
+      if (container && window.ResizeObserver) {
+        this.resize_observer = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            // Update container_size to trigger recalculation of text_chain_links
+            this.container_size = {
+              width: entry.contentRect.width,
+              height: entry.contentRect.height,
+            };
+          }
+        });
+        this.resize_observer.observe(container);
+      }
+    });
   },
   beforeDestroy() {
     document.removeEventListener("mousemove", this.handleResize);
     document.removeEventListener("mouseup", this.stopResize);
     document.removeEventListener("mousemove", this.handleDrag);
     document.removeEventListener("mouseup", this.stopDrag);
+
+    // Clean up ResizeObserver
+    if (this.resize_observer) {
+      this.resize_observer.disconnect();
+      this.resize_observer = null;
+    }
   },
 };
 </script>
@@ -642,6 +811,17 @@ export default {
   bottom: 0;
   z-index: 2;
   pointer-events: none;
+}
+
+._linksOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  overflow: visible;
 }
 
 ._addAreaButton {

@@ -252,8 +252,15 @@ export default {
       this.$route.path;
       return window.location.href;
     },
+    visible_chats() {
+      return this.chats.filter((chat) =>
+        this.canLoggedinSeeFolder({
+          folder: chat,
+        })
+      );
+    },
     chats_total_unread() {
-      return this.chats.reduce((acc, chat) => {
+      return this.visible_chats.reduce((acc, chat) => {
         const index = this.getIndexFromChatPath(chat.$path);
         if (index) {
           const unread = chat.$files_count - index;

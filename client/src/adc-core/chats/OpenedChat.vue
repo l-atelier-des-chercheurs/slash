@@ -146,14 +146,17 @@
             </div>
             <template v-for="(message, index) in day.messages">
               <div
-                v-if="message._index === last_message_read_index"
+                v-if="
+                  initial_unread_count > 0 &&
+                  message._index === initial_mapped_read_index
+                "
                 class="_unreadMessages"
                 ref="unreadMessagesNotice"
               >
                 <b-icon icon="arrow-down-short" />
                 {{
-                  $tc("new_messages", unread_since_last_visit, {
-                    count: unread_since_last_visit,
+                  $tc("new_messages", initial_unread_count, {
+                    count: initial_unread_count,
                   }).toLowerCase()
                 }}
                 <b-icon icon="arrow-down-short" />
@@ -206,6 +209,7 @@
           <TextInput
             :content.sync="new_message"
             :autofocus="true"
+            class="_newMessageInput"
             ref="textInput"
             :input_type="'editor'"
             :placeholder="$t('write_a_message')"
@@ -282,32 +286,43 @@ export default {
 
       is_posting_message: false,
 
-      last_message_read_index: 0,
       max_message_length: 300,
 
       allow_send: false,
+
+      initial_mapped_read_index: null,
+      initial_unread_count: 0,
     };
   },
-  created() {},
+  async created() {},
   async mounted() {
     await this.loadChat();
-    this.last_message_read_index = this.getIndexFromChatPath(this.chat.$path);
-    // await new Promise((resolve) => setTimeout(resolve, 200));
+    this.$api.join({ room: this.chat.$path });
     this.is_loading = false;
+
+    await this.$nextTick();
+
+    this.initial_unread_count = this.unread_since_last_visit;
+    if (this.initial_unread_count === 0) {
+      this.initial_mapped_read_index = null;
+    } else {
+      this.initial_mapped_read_index = this.mapped_read_index;
+    }
 
     if (this.unread_since_last_visit > this.max_messages_to_display) {
       this.max_messages_to_display = this.unread_since_last_visit + 10;
+      await this.$nextTick();
     }
 
-    this.$api.join({ room: this.chat.$path });
+    await setTimeout(() => {}, 200);
 
-    if (this.pane_scroll_until_end < 100) {
-      this.updateAuthorReadCount();
-    }
-
-    setTimeout(() => {
+    if (this.initial_unread_count > 0) {
       this.scrollToUnread();
-    }, 100);
+    } else {
+      this.scrollToLatest();
+    }
+
+    this.updateAuthorReadCount();
 
     this.$eventHub.$on("file.created", this.newMessagePosted);
   },
@@ -327,19 +342,44 @@ export default {
     },
     pane_scroll_until_end: {
       handler() {
-        if (this.pane_scroll_until_end < 100) {
-          this.updateAuthorReadCount();
-        }
+        this.updateAuthorReadCount();
       },
     },
   },
   computed: {
+    last_message_read_index() {
+      return this.getIndexFromChatPath(this.chat?.$path) || 0;
+    },
     unread_since_last_visit() {
-      return this.chat.$files_count - this.last_message_read_index;
+      if (!this.chat) return 0;
+      return Math.max(this.chat.$files_count - this.last_message_read_index, 0);
     },
     messages() {
       if (!this.chat || !this.chat.$files) return [];
       return this.chat.$files.filter((file) => file.hasOwnProperty("$content"));
+    },
+    mapped_read_index() {
+      // Map read index to the filtered messages array
+      // last_message_read_index is based on chat.$files_count (all files)
+      // but we need to find the corresponding index in the filtered messages array
+      if (!this.chat || !this.chat.$files) return 0;
+
+      const all_files_sorted = this.chat.$files.slice().sort((a, b) => {
+        return +new Date(a.$date_uploaded) - +new Date(b.$date_uploaded);
+      });
+
+      let read_count_in_filtered = 0;
+      for (
+        let i = 0;
+        i < this.last_message_read_index && i < all_files_sorted.length;
+        i++
+      ) {
+        if (all_files_sorted[i].hasOwnProperty("$content")) {
+          read_count_in_filtered++;
+        }
+      }
+
+      return read_count_in_filtered;
     },
     sorted_messages() {
       let messages = this.messages.slice().sort((a, b) => {
@@ -389,20 +429,12 @@ export default {
         this.updateAuthorReadCount();
       });
     },
-    // checkForNewMessages({ meta }) {
-    //   if (meta.$path.startsWith(this.chat.$path)) {
-    //     this.$nextTick(() => {
-    //       this.scrollToMessage(meta.$path);
-    //       this.updateAuthorReadCount();
-    //     });
-    //   }
-    // },
     async updateAuthorReadCount() {
+      const read_index = this.chat.$files_count;
       await this.updateAuthorLastReadMessage({
         chat_path: this.chat.$path,
-        chat_read_index: this.messages.length,
+        chat_read_index: read_index,
       });
-      // this.last_message_read_index = this.getIndexFromChatPath(this.chat.$path);
     },
     async loadChat() {
       const chat = await this.$api
@@ -437,7 +469,7 @@ export default {
 
       this.is_posting_message = true;
       const filename = "message-" + +new Date() + ".txt";
-      // not using content, to improve performance loading thousands of messages
+      // not using $content, to improve performance for loading thousands of messages
       //   const { meta_filename } = await this.$api.uploadText({
       //   path: this.chat.$path,
       //   filename,
@@ -464,7 +496,12 @@ export default {
 
       const last_message_date = new Date().toISOString();
       const last_message_count = this.messages.length;
-      this.last_message_read_index += 1;
+      // Note: updateAuthorReadCount() will be called again by newMessagePosted
+      // when the socket event fires, which ensures we use the updated chat.$files_count
+      // But we also call it here to handle the case where the socket event is delayed
+      this.$nextTick(() => {
+        this.updateAuthorReadCount();
+      });
 
       this.$nextTick(() => {
         try {
@@ -489,8 +526,10 @@ export default {
       if (!this.$refs.unreadMessagesNotice?.[0])
         return this.scrollToLatest("instant");
 
-      return this.$refs.unreadMessagesNotice?.[0]?.scrollIntoView({
+      // Use scrollIntoView to align the notice to the top of the scrollable container
+      this.$refs.unreadMessagesNotice[0].scrollIntoView({
         behavior: "instant",
+        block: "start",
       });
     },
     openLinkedProject() {
@@ -693,6 +732,12 @@ export default {
   position: relative;
   width: 1.5rem;
   height: 1.5rem;
+}
+
+._newMessageInput {
+  ::v-deep .ql-editor {
+    min-height: 2rem !important;
+  }
 }
 </style>
 <style lang="scss">

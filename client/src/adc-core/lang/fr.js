@@ -163,7 +163,7 @@ export default {
   signup_password_users_instructions:
     "Si vous ne connaissez pas le mot de passe, vous pouvez le demander par courriel à l’adresse suivante",
 
-  login: "se connecter",
+  login: "Se Connecter",
   logout: "se déconnecter",
   logging_out: "Déconnexion en cours…",
   name_or_pseudonym: "Nom ou pseudonyme",
@@ -178,7 +178,7 @@ export default {
   admin: "Administrateur·rice",
   create: "Créer",
   existing: "Existant",
-  create_account: "créer un compte",
+  create_account: "Créer un compte",
   your_account: "Votre compte",
   new_account: "Nouveau compte",
   account_group: "Groupe (pour les comptes)",
