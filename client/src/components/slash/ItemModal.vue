@@ -6,14 +6,16 @@
         <div class="_meta--buttons">
           <button
             type="button"
-            class="u-button"
+            class="u-button u-button_icon"
+            :class="{ 'is--active': current_view === 'informations' }"
             @click="current_view = 'informations'"
             :title="$t('informations')"
           >
             <b-icon icon="info-circle" />
           </button>
           <button
-            class="u-button"
+            class="u-button u-button_icon"
+            :class="{ 'is--active': current_view === 'chats' }"
             @click="current_view = 'chats'"
             :title="$t('chats')"
           >

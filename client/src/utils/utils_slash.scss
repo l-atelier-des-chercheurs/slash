@@ -214,3 +214,65 @@ input[type="file"] {
 .u-spacingBottom {
   margin-bottom: calc(var(--spacing));
 }
+
+.u-button {
+  padding: calc(var(--spacing) / 2);
+  background: var(--c-gris_clair);
+  border: none;
+  color: inherit;
+
+  &:hover,
+  &:active,
+  &:focus-visible {
+    &:not([disabled]) {
+      background-color: var(--c-gris);
+    }
+  }
+
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--active-color);
+      color: white;
+
+      &:hover,
+      &:active,
+      &:focus-visible {
+        background-color: var(--c-gris_fonce);
+      }
+    }
+  }
+}
+
+.u-button_icon {
+  padding: calc(var(--spacing) / 2);
+  background: transparent;
+  border-radius: 50%;
+  border: none;
+  color: inherit;
+
+  > svg {
+    display: block;
+  }
+
+  &:hover,
+  &:active,
+  &:focus-visible {
+    &:not([disabled]) {
+      // color: var(--active-color);
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &.u-button_small {
+    padding: calc(var(--spacing) / 4);
+    .b-icon.bi {
+      width: 1em;
+      height: 1em;
+    }
+  }
+}
+
+.b-icon.bi {
+  width: 1.35em;
+  height: 1.35em;
+}
