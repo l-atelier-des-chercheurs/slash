@@ -306,10 +306,8 @@ export default {
         wrapper_height = wrapper.offsetHeight;
       }
 
-      const scaled_m = margin * zoom;
-
-      const max_left = Math.max(0, w * zoom + scaled_m - wrapper_width);
-      const max_top = Math.max(0, h * zoom + scaled_m - wrapper_height);
+      const max_left = Math.max(0, w * zoom + margin - wrapper_width);
+      const max_top = Math.max(0, h * zoom + margin - wrapper_height);
 
       // Visible viewport size in content coordinates (wrapper size / zoom)
       // Fixed margin in content coords: allow at most this much empty space around content

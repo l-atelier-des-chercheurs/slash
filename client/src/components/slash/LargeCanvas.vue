@@ -35,7 +35,6 @@
 
       <div
         class="_currentCenterDot"
-        v-if="false"
         :style="{
           left: canvasScrollX + 'px',
           top: canvasScrollY + 'px',
@@ -199,8 +198,8 @@ export default {
   // Dot grid pattern with --color-rule; pans with content (this div is inside the panned viewport)
   --rule-color: var(--color-rule);
   --background-color: white;
-  --rule-size: 48px;
-  --dot-size: 2px;
+  --rule-size: 100px;
+  --dot-size: 4px;
 
   // border: var(--dot-size) solid var(--rule-color);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
@@ -212,7 +211,7 @@ export default {
     var(--background-color) var(--dot-size)
   );
   background-size: var(--rule-size) var(--rule-size);
-  background-position: 0 0;
+  background-position: calc(var(--rule-size) / 2) calc(var(--rule-size) / 2);
 
   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     background-image: radial-gradient(
@@ -226,8 +225,8 @@ export default {
 
 ._currentCenterDot {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   background: var(--c-orange);
   border-radius: 50%;
   z-index: 1000;
