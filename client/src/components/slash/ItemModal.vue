@@ -1,6 +1,6 @@
 <template>
   <div class="_itemModal">
-    <div class="_itemModal--overlay" />
+    <div class="_itemModal--overlay" @click="closeModal" />
     <div class="_itemModal--contentWrapper">
       <div class="_meta">
         <div class="_meta--buttons">
@@ -33,40 +33,59 @@
                 :aria-hidden="current_view !== 'informations'"
               >
                 <div class="_meta--content--informations">
-                  Non ex, non tempor consectetur. Tempor consectetur tempor
-                  veniam occaecat sunt labore laboris. Tempor veniam occaecat
-                  sunt labore laboris, deserunt mollit. Sunt labore laboris
-                  deserunt mollit ut, elit. Deserunt mollit ut elit nisi
-                  proident cillum voluptate. Ut elit nisi proident cillum. Nisi
-                  proident, cillum voluptate non. Voluptate non aute elit. Aute
-                  elit ut, cillum. Cillum ut incididunt, non. Non ex, non tempor
-                  consectetur. Tempor consectetur tempor veniam occaecat sunt
-                  labore laboris. Tempor veniam occaecat sunt labore laboris,
-                  deserunt mollit. Sunt labore laboris deserunt mollit ut, elit.
-                  Deserunt mollit ut elit nisi proident cillum voluptate. Ut
-                  elit nisi proident cillum. Nisi proident, cillum voluptate
-                  non. Voluptate non aute elit. Aute elit ut, cillum. Cillum ut
-                  incididunt, non. Non ex, non tempor consectetur. Tempor
-                  consectetur tempor veniam occaecat sunt labore laboris. Tempor
-                  veniam occaecat sunt labore laboris, deserunt mollit. Sunt
-                  labore laboris deserunt mollit ut, elit. Deserunt mollit ut
-                  elit nisi proident cillum voluptate. Ut elit nisi proident
-                  cillum. Nisi proident, cillum voluptate non. Voluptate non
-                  aute elit. Aute elit ut, cillum. Cillum ut incididunt, non.
-                  Non ex, non tempor consectetur. Tempor consectetur tempor
-                  veniam occaecat sunt labore laboris. Tempor veniam occaecat
-                  sunt labore laboris, deserunt mollit. Sunt labore laboris
-                  deserunt mollit ut, elit. Deserunt mollit ut elit nisi
-                  proident cillum voluptate. Ut elit nisi proident cillum. Nisi
-                  proident, cillum voluptate non. Voluptate non aute elit. Aute
-                  elit ut, cillum. Cillum ut incididunt, non. Non ex, non tempor
-                  consectetur. Tempor consectetur tempor veniam occaecat sunt
-                  labore laboris. Tempor veniam occaecat sunt labore laboris,
-                  deserunt mollit. Sunt labore laboris deserunt mollit ut, elit.
-                  Deserunt mollit ut elit nisi proident cillum voluptate. Ut
-                  elit nisi proident cillum. Nisi proident, cillum voluptate
-                  non. Voluptate non aute elit. Aute elit ut, cillum. Cillum ut
-                  incididunt, non.
+                  <div class="u-spacingBottom" v-if="file.caption">
+                    <DLabel :str="$t('caption')" />
+                    <div class="_metaFieldValue" v-html="file.caption" />
+                  </div>
+
+                  <div class="u-spacingBottom">
+                    <TagsField
+                      :label="$t('keywords')"
+                      :field_name="'keywords'"
+                      :tag_type="'keywords'"
+                      :local_suggestions="keywords_suggestions"
+                      :content="file.keywords"
+                      :path="file.$path"
+                      :can_edit="true"
+                    />
+                  </div>
+
+                  <div class="u-spacingBottom" v-if="authors_path !== 'noone'">
+                    <AuthorField
+                      :label="$t('authors')"
+                      :field="'$authors'"
+                      :authors_paths="authors_path"
+                      :path="file.$path"
+                      :can_edit="false"
+                      :instructions="$t('file_author_instructions')"
+                      :no_options="true"
+                    />
+                  </div>
+
+                  <div
+                    class="u-spacingBottom"
+                    v-if="file.$infos && file.$infos.hasOwnProperty('size')"
+                  >
+                    <SizeDisplay :size="file.$infos.size" />
+                  </div>
+
+                  <div
+                    class="u-spacingBottom"
+                    v-if="file.$infos && file.$infos.hasOwnProperty('duration')"
+                  >
+                    <DurationDisplay
+                      :title="$t('duration')"
+                      :duration="file.$infos.duration"
+                    />
+                  </div>
+
+                  <PositionPicker
+                    :label="$t('location')"
+                    :field_name="'$location'"
+                    :content="file.$location"
+                    :path="file.$path"
+                    :can_edit="true"
+                  />
                 </div>
               </section>
               <section
@@ -99,6 +118,7 @@
 </template>
 <script>
 import ItemChat from "./ItemChat.vue";
+import PositionPicker from "@/adc-core/inputs/PositionPicker.vue";
 export default {
   props: {
     file: {
@@ -108,6 +128,7 @@ export default {
   },
   components: {
     ItemChat,
+    PositionPicker,
   },
   data() {
     return {
@@ -123,10 +144,24 @@ export default {
       if (new_view === "chats") this.has_opened_chats = true;
     },
   },
-  computed: {},
+  computed: {
+    authors_path() {
+      return this.file.$authors || "noone";
+    },
+    has_geolocation() {
+      return (
+        !!this.file.$location &&
+        !!this.file.$location.latitude &&
+        !!this.file.$location.longitude
+      );
+    },
+  },
   methods: {
     setView(view_name) {
       this.current_view = view_name;
+    },
+    closeModal() {
+      this.$emit("close");
     },
   },
 };
@@ -148,18 +183,25 @@ export default {
   height: 100%;
   background: rgba(241, 241, 241, 0.85);
   z-index: -1;
+  cursor: crosshair;
 }
 ._itemModal--contentWrapper {
   display: flex;
   flex-flow: row nowrap;
   height: 100%;
+  pointer-events: none;
 
   ._file {
     flex: 1;
+
+    ::v-deep ._mediaContent {
+      pointer-events: auto;
+    }
   }
 
   ._meta {
     flex: 0 0 320px;
+    pointer-events: auto;
   }
 }
 
