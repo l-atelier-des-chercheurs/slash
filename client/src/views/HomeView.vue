@@ -121,7 +121,6 @@
 </template>
 
 <script>
-// import SocketStatus from "@/components/.vue";
 import SpacesList from "@/components/space/SpacesList.vue";
 import AllProjects from "@/components/project/AllProjects.vue";
 import DodocLogo from "@/components/nav/DodocLogo.vue";
