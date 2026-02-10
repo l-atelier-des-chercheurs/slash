@@ -2,41 +2,27 @@
   <div class="_viewModeBar">
     <div class="_viewModeBar--row">
       <button
+        v-for="mode in ['canvas', 'grid', 'map', 'timeline']"
+        :key="mode"
         type="button"
-        class="_viewModeBar--btn"
-        :class="{ 'is--active': value === 'canvas' }"
-        :aria-pressed="value === 'canvas'"
-        @click="$emit('input', 'canvas')"
+        class="u-button u-button_icon u-button_glass"
+        :class="{ 'is--active': value === mode }"
+        :aria-pressed="value === mode"
+        @click="$emit('input', mode)"
       >
-        <b-icon icon="layout-wtf" />
+        <b-icon
+          :icon="
+            mode === 'canvas'
+              ? 'layout-wtf'
+              : mode === 'grid'
+              ? 'grid'
+              : mode === 'map'
+              ? 'map'
+              : 'calendar-day'
+          "
+        />
       </button>
-      <button
-        type="button"
-        class="_viewModeBar--btn"
-        :class="{ 'is--active': value === 'grid' }"
-        :aria-pressed="value === 'grid'"
-        @click="$emit('input', 'grid')"
-      >
-        <b-icon icon="grid" />
-      </button>
-      <button
-        type="button"
-        class="_viewModeBar--btn"
-        :class="{ 'is--active': value === 'map' }"
-        :aria-pressed="value === 'map'"
-        @click="$emit('input', 'map')"
-      >
-        <b-icon icon="map" />
-      </button>
-      <button
-        type="button"
-        class="_viewModeBar--btn"
-        :class="{ 'is--active': value === 'timeline' }"
-        :aria-pressed="value === 'timeline'"
-        @click="$emit('input', 'timeline')"
-      >
-        <b-icon icon="calendar-day" />
-      </button>
+
       <div class="_viewModeBar--divider"></div>
 
       <button
@@ -195,10 +181,10 @@ export default {
     color: inherit;
   }
 
-  &.is--active {
-    background: var(--c-bleuvert, #2a9d8f);
-    color: white;
-  }
+  // &.is--active {
+  //   background: var(--c-bleuvert, #2a9d8f);
+  //   color: white;
+  // }
 
   .b-icon {
     font-size: 1.25rem;

@@ -76,6 +76,7 @@ export default {
 
   border: 1px solid var(--c-gris);
   backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.5);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
 }
 </style>

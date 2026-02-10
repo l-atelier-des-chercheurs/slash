@@ -231,7 +231,7 @@ input[type="file"] {
 
   &.is--active {
     &:not([disabled]) {
-      background-color: var(--active-color);
+      background-color: var(--g-600);
       color: white;
 
       &:hover,
@@ -282,7 +282,7 @@ input[type="file"] {
   pointer-events: auto;
   background: rgba(255, 255, 255, 1);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  // border: 1px solid rgba(255, 255, 255, 0.4);
 
   transition: all 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
