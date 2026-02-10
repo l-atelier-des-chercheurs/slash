@@ -89,7 +89,8 @@ export default {
         const x = file.x || 0;
         right_edge = Math.max(right_edge, x + width);
       });
-      return Math.max(this.min_canvas_width, right_edge + padding);
+      const cw = Math.round(right_edge + padding);
+      return Math.max(this.min_canvas_width, cw);
     },
     canvas_height() {
       const padding = 200;
@@ -102,7 +103,8 @@ export default {
         const y = file.y || 0;
         bottom_edge = Math.max(bottom_edge, y + height);
       });
-      return Math.max(this.min_canvas_height, bottom_edge + padding);
+      const ch = Math.round(bottom_edge + padding);
+      return Math.max(this.min_canvas_height, ch);
     },
   },
   watch: {},
@@ -200,7 +202,10 @@ export default {
   --rule-size: 48px;
   --dot-size: 2px;
 
-  border: var(--dot-size) solid var(--rule-color);
+  // border: var(--dot-size) solid var(--rule-color);
+  box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius);
+  overflow: hidden;
   background-image: radial-gradient(
     circle,
     var(--rule-color) var(--dot-size),

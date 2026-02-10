@@ -2,7 +2,7 @@
   <div
     class="_canvasItem is--canvas panzoom-exclude"
     :class="{
-      'is--dragging': isDragging,
+      'is--dragging': has_dragged,
       'is--resizing': isResizing,
     }"
     :style="itemStyle"
@@ -62,6 +62,8 @@ export default {
     return {
       isDragging: false,
       isResizing: false,
+      has_dragged: false,
+      drag_threshold: 3,
       dragStartX: 0,
       dragStartY: 0,
       dragStartFileX: 0,
@@ -168,6 +170,7 @@ export default {
       event.stopPropagation();
 
       this.isDragging = true;
+      this.has_dragged = false;
 
       // Get canvas container
       const canvasContainer = this.$el.closest("._largeCanvas");
@@ -220,6 +223,19 @@ export default {
       }
 
       if (!this.isDragging) return;
+
+      const delta_x = event.clientX - this.dragStartX;
+      const delta_y = event.clientY - this.dragStartY;
+      const distance_squared = delta_x * delta_x + delta_y * delta_y;
+      const threshold = this.drag_threshold;
+      const threshold_squared = threshold * threshold;
+
+      if (!this.has_dragged) {
+        if (distance_squared < threshold_squared) {
+          return;
+        }
+        this.has_dragged = true;
+      }
 
       // Get canvas container
       const canvasContainer = this.$el.closest("._largeCanvas");
@@ -285,6 +301,15 @@ export default {
       if (!this.isDragging) return;
 
       this.isDragging = false;
+
+      if (!this.has_dragged) {
+        this.has_dragged = false;
+        this.currentX = null;
+        this.currentY = null;
+        return;
+      }
+
+      this.has_dragged = false;
 
       // Save final position
       // Re-clamp just in case
@@ -358,6 +383,10 @@ export default {
   &.is--dragging {
     cursor: pointer;
     z-index: 1000;
+
+    ._canvasItemContent {
+      pointer-events: none;
+    }
   }
   &.is--resizing {
     cursor: ew-resize;

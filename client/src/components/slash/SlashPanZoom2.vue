@@ -16,6 +16,19 @@
     <div class="_pzViewport" ref="viewport" :style="viewportStyle">
       <slot />
     </div>
+    <div class="_panzoomDebug">
+      <div>zoom: {{ current_zoom.toFixed(2) }}</div>
+      <div>
+        scroll: {{ Math.round(scroll_left) }}, {{ Math.round(scroll_top) }}
+      </div>
+      <div>
+        content: {{ content_width || "auto" }} x
+        {{ content_height || "auto" }}
+      </div>
+      <div>
+        {{ getScrollBounds() }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -128,6 +141,7 @@ export default {
       const scale = this.current_zoom || 1;
       this.scroll_left = this.drag_start_scroll_left - dx / scale;
       this.scroll_top = this.drag_start_scroll_top - dy / scale;
+      this.clampScroll();
     },
     onMouseUp(event) {
       if (!this.is_panning) return;
@@ -170,6 +184,7 @@ export default {
         this.current_zoom = new_zoom;
         this.scroll_left = content_x - cursor_x / new_zoom;
         this.scroll_top = content_y - cursor_y / new_zoom;
+        this.clampScroll();
         this.handleInteractionEnd();
         return;
       }
@@ -178,6 +193,7 @@ export default {
       const scale = this.current_zoom || 1;
       this.scroll_left += event.deltaX / scale;
       this.scroll_top += event.deltaY / scale;
+      this.clampScroll();
       this.handleInteractionEnd();
     },
     onTouchStart(event) {
@@ -232,6 +248,7 @@ export default {
       this.current_zoom = new_zoom;
       this.scroll_left = content_center_x - center_client_x / new_zoom;
       this.scroll_top = content_center_y - center_client_y / new_zoom;
+      this.clampScroll();
 
       this.handleInteractionEnd();
     },
@@ -276,6 +293,40 @@ export default {
     disableActiveModule() {
       this.$eventHub.$emit("module.setActive", false);
     },
+    getScrollBounds() {
+      const wrapper = this.$refs.wrapper;
+      const zoom = this.current_zoom || 1;
+      const w = this.content_width;
+      const h = this.content_height;
+      const margin = this.margin_around_content || 0;
+
+      let wrapper_width = 0;
+      let wrapper_height = 0;
+      if (wrapper) {
+        debugger;
+        wrapper_width = wrapper.offsetWidth;
+        wrapper_height = wrapper.offsetHeight;
+      }
+
+      // Visible viewport size in content coordinates (wrapper size / zoom)
+      // Fixed margin in content coords: allow at most this much empty space around content
+      return {
+        min_left: -margin,
+        max_left: w + margin - wrapper_width,
+        min_top: -margin,
+        max_top: h + margin - wrapper_height,
+      };
+    },
+    clampScroll() {
+      const { min_left, max_left, min_top, max_top } = this.getScrollBounds();
+      // Use min/max so clamping works when content is smaller than view (reversed bounds)
+      const left_lo = Math.min(min_left, max_left);
+      const left_hi = Math.max(min_left, max_left);
+      const top_lo = Math.min(min_top, max_top);
+      const top_hi = Math.max(min_top, max_top);
+      this.scroll_left = Math.min(Math.max(this.scroll_left, left_lo), left_hi);
+      this.scroll_top = Math.min(Math.max(this.scroll_top, top_lo), top_hi);
+    },
     // Public API: getters
     getZoom() {
       return this.current_zoom || 1;
@@ -293,14 +344,24 @@ export default {
       if (!duration) {
         this.scroll_left = x || 0;
         this.scroll_top = y || 0;
+        this.clampScroll();
         this.handleInteractionEnd();
         return;
       }
 
       const start_left = this.scroll_left;
       const start_top = this.scroll_top;
-      const target_left = x || 0;
-      const target_top = y || 0;
+      let target_left = x || 0;
+      let target_top = y || 0;
+      const bounds = this.getScrollBounds();
+      target_left = Math.min(
+        Math.max(target_left, bounds.min_left),
+        bounds.max_left
+      );
+      target_top = Math.min(
+        Math.max(target_top, bounds.min_top),
+        bounds.max_top
+      );
       const start_time = performance.now();
 
       const animate = (now) => {
@@ -310,6 +371,7 @@ export default {
 
         this.scroll_left = start_left + (target_left - start_left) * ease;
         this.scroll_top = start_top + (target_top - start_top) * ease;
+        this.clampScroll();
 
         if (t < 1) {
           requestAnimationFrame(animate);
@@ -352,5 +414,22 @@ export default {
 
 ._pzViewport {
   position: relative;
+}
+
+._panzoomDebug {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  z-index: 9999;
+  pointer-events: none;
+  max-width: 260px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
 }
 </style>

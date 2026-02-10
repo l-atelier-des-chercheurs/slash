@@ -88,7 +88,7 @@ export default {
     },
   },
   methods: {
-    openItemModal(event) {
+    openItemModal() {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
   },
