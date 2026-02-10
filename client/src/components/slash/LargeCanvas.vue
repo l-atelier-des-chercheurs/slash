@@ -1,6 +1,6 @@
 <template>
   <div class="_largeCanvas">
-    <SlashPanZoom
+    <SlashPanZoom2
       ref="viewer"
       :zoom="zoom"
       :zoom_range="zoom_range"
@@ -41,11 +41,11 @@
           top: canvasScrollY + 'px',
         }"
       ></div>
-    </SlashPanZoom>
+    </SlashPanZoom2>
   </div>
 </template>
 <script>
-import SlashPanZoom from "@/components/slash/SlashPanZoom.vue";
+import SlashPanZoom2 from "@/components/slash/SlashPanZoom2.vue";
 import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue";
 export default {
   props: {
@@ -60,7 +60,7 @@ export default {
     zoom_range: Array,
   },
   components: {
-    SlashPanZoom,
+    SlashPanZoom2,
     CanvasItemInteractive,
   },
   data() {
