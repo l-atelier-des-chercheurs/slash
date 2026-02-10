@@ -16,7 +16,7 @@
     <div class="_pzViewport" ref="viewport" :style="viewportStyle">
       <slot />
     </div>
-    <!-- <div class="_panzoomDebug">
+    <div class="_panzoomDebug">
       <div>zoom: {{ current_zoom.toFixed(2) }}</div>
       <div>
         scroll: {{ Math.round(scroll_left) }}, {{ Math.round(scroll_top) }}
@@ -26,7 +26,8 @@
         {{ content_height || "auto" }}
       </div>
       <div>center: {{ center_x }}, {{ center_y }}</div>
-    </div> -->
+      <div>topleft: {{ topleft_x }}, {{ topleft_y }}</div>
+    </div>
   </div>
 </template>
 
@@ -82,16 +83,20 @@ export default {
     };
   },
   computed: {
+    topleft_x() {
+      return this.scroll_left / this.current_zoom;
+    },
+    topleft_y() {
+      return this.scroll_top / this.current_zoom;
+    },
     center_x() {
-      const zoom = this.current_zoom || 1;
-      const raw = (this.scroll_left + this.wrapper_ow / 2) / zoom;
+      const raw = (this.scroll_left + this.wrapper_ow / 2) / this.current_zoom;
       const w = this.content_width;
       if (w == null) return raw;
       return Math.min(Math.max(raw, 0), w);
     },
     center_y() {
-      const zoom = this.current_zoom || 1;
-      const raw = (this.scroll_top + this.wrapper_oh / 2) / zoom;
+      const raw = (this.scroll_top + this.wrapper_oh / 2) / this.current_zoom;
       const h = this.content_height;
       if (h == null) return raw;
       return Math.min(Math.max(raw, 0), h);
@@ -281,8 +286,10 @@ export default {
         const zoom = this.current_zoom || 1;
         this.$emit("scroll-end", {
           zoom,
-          x: this.center_x,
-          y: this.center_y,
+          center_x: this.center_x,
+          center_y: this.center_y,
+          topleft_x: this.topleft_x,
+          topleft_y: this.topleft_y,
         });
       }, 200);
     },

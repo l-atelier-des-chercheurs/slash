@@ -17,16 +17,24 @@
       <LargeCanvas
         v-show="viewMode === 'canvas'"
         :files="filtered_files"
-        :shapes="shapes"
         :zoom="canvasZoom"
         :zoom_range="zoom_range"
         :folder_path="default_folder.$path"
         @update:zoom="canvasZoom = $event"
         @update:scroll="canvasScroll = $event"
       />
-      <GeoMapView v-show="viewMode === 'map'" :files="filtered_files" />
-      <TimelineView v-show="viewMode === 'timeline'" :files="filtered_files" />
-      <MediaGridView v-show="viewMode === 'grid'" :files="filtered_files" />
+      <GeoMapView
+        v-show="viewMode === 'map'"
+        :files="filtered_files_without_shapes"
+      />
+      <TimelineView
+        v-show="viewMode === 'timeline'"
+        :files="filtered_files_without_shapes"
+      />
+      <MediaGridView
+        v-show="viewMode === 'grid'"
+        :files="filtered_files_without_shapes"
+      />
     </div>
 
     <ItemModal
@@ -136,8 +144,6 @@ export default {
       const type = this.mediaTypeFilter;
       let files = this.default_folder.$files;
 
-      files = files.filter((f) => f.$type !== "shape");
-
       if (!type) return files;
 
       if (type === "3d") {
@@ -145,8 +151,8 @@ export default {
       }
       return files.filter((f) => f.$type === type);
     },
-    shapes() {
-      return this.default_folder.$files.filter((f) => f.$type === "shape");
+    filtered_files_without_shapes() {
+      return this.filtered_files.filter((f) => f.$type !== "shape");
     },
   },
   methods: {

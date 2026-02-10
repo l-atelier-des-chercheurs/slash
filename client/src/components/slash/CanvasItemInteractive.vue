@@ -9,7 +9,11 @@
     @mousedown="handleMouseDown"
     :data-file-path="file.$path"
   >
+    <template v-if="file.$type === 'shape'">
+      <div v-html="file.shape_svg" />
+    </template>
     <CanvasItem
+      v-else
       :file="file"
       :resolution="optimalResolution"
       :mode="'canvas'"
@@ -17,6 +21,7 @@
     />
 
     <div
+      v-if="file.$type !== 'shape'"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
@@ -34,11 +39,11 @@ export default {
       type: Object,
       required: true,
     },
-    canvas_scroll_left: {
+    canvas_topleft_x: {
       type: Number,
       default: 0,
     },
-    canvas_scroll_top: {
+    canvas_topleft_y: {
       type: Number,
       default: 0,
     },
@@ -190,9 +195,9 @@ export default {
       const mouseScreenX = this.dragStartX - canvasRect.left;
       const mouseScreenY = this.dragStartY - canvasRect.top;
       const mouseCanvasX =
-        mouseScreenX / this.canvas_zoom + this.canvas_scroll_left;
+        mouseScreenX / this.canvas_zoom + this.canvas_topleft_x;
       const mouseCanvasY =
-        mouseScreenY / this.canvas_zoom + this.canvas_scroll_top;
+        mouseScreenY / this.canvas_zoom + this.canvas_topleft_y;
 
       // Calculate offset from mouse to item top-left corner in canvas coordinates
       this.dragOffsetX = mouseCanvasX - this.dragStartFileX;
@@ -246,8 +251,8 @@ export default {
       // Calculate mouse position relative to canvas, accounting for zoom and scroll
       const mouseScreenX = event.clientX - canvasRect.left;
       const mouseScreenY = event.clientY - canvasRect.top;
-      const mouseX = mouseScreenX / this.canvas_zoom + this.canvas_scroll_left;
-      const mouseY = mouseScreenY / this.canvas_zoom + this.canvas_scroll_top;
+      const mouseX = mouseScreenX / this.canvas_zoom + this.canvas_topleft_x;
+      const mouseY = mouseScreenY / this.canvas_zoom + this.canvas_topleft_y;
 
       // Calculate new file position (mouse position minus offset)
       // Clamp to >= 0 so content stays within canvas (no negative coords)
@@ -371,7 +376,6 @@ export default {
   position: absolute;
   width: 160px;
   height: auto;
-  z-index: 10;
 
   overflow: visible;
 
