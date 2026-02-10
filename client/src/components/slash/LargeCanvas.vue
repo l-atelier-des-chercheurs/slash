@@ -32,7 +32,6 @@
           @width-update="handleWidthUpdate"
         />
       </div>
-
       <!-- <div
         class="_currentCenterDot"
         :style="{
@@ -41,7 +40,7 @@
         }"
       ></div> -->
     </SlashPanZoom2>
-    <LeftToolbar />
+    <LeftToolbar :current_mode.sync="current_mode" />
   </div>
 </template>
 <script>
@@ -69,8 +68,8 @@ export default {
     return {
       canvasScrollX: 0,
       canvasScrollY: 0,
-      canvasViewedCenterX: 0,
-      canvasViewedCenterY: 0,
+
+      current_mode: "pan-zoom",
 
       min_canvas_width: 1600,
       min_canvas_height: 1000,

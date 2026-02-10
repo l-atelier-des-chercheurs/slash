@@ -2,12 +2,22 @@
   <div class="_leftToolbar">
     <div class="_leftToolbar--content">
       <div>
-        <button type="button" class="u-button u-button_icon u-button_glass">
-          <b-icon icon="arrow" />
+        <button
+          type="button"
+          class="u-button u-button_icon u-button_glass"
+          :class="{ 'is--active': current_mode === 'pan-zoom' }"
+          @click="selectMode('pan-zoom')"
+        >
+          <b-icon icon="hand-index" />
         </button>
       </div>
       <div>
-        <button type="button" class="u-button u-button_icon u-button_glass">
+        <button
+          type="button"
+          class="u-button u-button_icon u-button_glass"
+          :class="{ 'is--active': current_mode === 'draw' }"
+          @click="selectMode('draw')"
+        >
           <b-icon icon="pencil" />
         </button>
       </div>
@@ -16,7 +26,13 @@
 </template>
 <script>
 export default {
-  props: {},
+  props: {
+    current_mode: {
+      type: String,
+      default: "pan-zoom",
+      validator: (v) => ["pan-zoom", "draw"].includes(v),
+    },
+  },
   components: {},
   data() {
     return {};
@@ -26,7 +42,11 @@ export default {
   beforeDestroy() {},
   watch: {},
   computed: {},
-  methods: {},
+  methods: {
+    selectMode(mode) {
+      this.$emit("update:current_mode", mode);
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>
