@@ -18,21 +18,9 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
 
-      <button
-        type="button"
-        class="_canvasItem--chatBubble"
-        :aria-label="$t('chats')"
-        @mousedown.stop
-        @click.stop="showPathModal = true"
-      >
+      <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
         <b-icon icon="chat-left-text-fill" />
-      </button>
-
-      <ItemChat
-        v-if="showPathModal"
-        :file="file"
-        @close="showPathModal = false"
-      />
+      </span>
     </div>
   </div>
 </template>
@@ -57,15 +45,9 @@ export default {
       default: null,
     },
   },
-  components: {
-    ItemChat: () => import("@/components/slash/ItemChat.vue"),
-    ItemModal: () => import("@/components/slash/ItemModal.vue"),
-  },
+  components: {},
   data() {
-    return {
-      showPathModal: false,
-      show_item_modal: false,
-    };
+    return {};
   },
   computed: {
     wrapperClasses() {

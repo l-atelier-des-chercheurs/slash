@@ -23,7 +23,10 @@
           </button>
         </div>
         <div class="_meta--content">
-          <div v-if="current_view === 'informations'">
+          <div
+            v-if="current_view === 'informations'"
+            class="_meta--content--informations"
+          >
             Non ex, non tempor consectetur. Tempor consectetur tempor veniam
             occaecat sunt labore laboris. Tempor veniam occaecat sunt labore
             laboris, deserunt mollit. Sunt labore laboris deserunt mollit ut,
@@ -80,7 +83,6 @@ export default {
   width: 100%;
   height: 100%;
   padding: calc(var(--spacing) * 2);
-  border-radius: var(--border-radius);
   overflow: hidden;
   z-index: 10001;
 }
@@ -104,7 +106,7 @@ export default {
   }
 
   ._meta {
-    flex: 0 1 280px;
+    flex: 0 0 320px;
   }
 }
 
@@ -122,8 +124,14 @@ export default {
 }
 ._meta--content {
   background: white;
-  padding: calc(var(--spacing) * 1);
+
   border-radius: var(--border-radius);
+}
+
+._meta--content--informations {
+  height: 100%;
+  overflow: auto;
+  padding: calc(var(--spacing) * 1);
 }
 
 ._file {
