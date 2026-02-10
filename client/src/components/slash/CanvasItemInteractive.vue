@@ -6,6 +6,7 @@
       'is--resizing': isResizing,
     }"
     :style="itemStyle"
+    :data-file-type="file.$type"
     @mousedown="handleMouseDown"
     :data-file-path="file.$path"
   >
@@ -406,6 +407,10 @@ export default {
     }
   }
 
+  &[data-file-type="shape"] {
+    pointer-events: none;
+  }
+
   ._canvasItemContent {
     width: 100%;
     height: 100%;
@@ -484,6 +489,20 @@ export default {
 }
 
 ._canvasItem--shape {
-  border: 1px solid red;
+  ::v-deep {
+    svg {
+      overflow: visible;
+      path {
+        pointer-events: auto;
+        stroke-width: 4px;
+      }
+    }
+  }
+
+  &:hover {
+    ::v-deep path {
+      stroke-width: 6px;
+    }
+  }
 }
 </style>

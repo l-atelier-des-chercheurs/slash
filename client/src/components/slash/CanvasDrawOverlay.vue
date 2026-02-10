@@ -17,10 +17,7 @@
       <path
         v-if="draw_path_d"
         :d="draw_path_d"
-        stroke="var(--c-noir)"
-        fill="none"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        class="_drawPath"
         :stroke-width="draw_stroke_width"
       />
     </svg>
@@ -180,5 +177,13 @@ export default {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+._drawPath {
+  stroke: var(--c-noir);
+  stroke-width: 2px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 </style>

@@ -68,9 +68,14 @@ export default {
 }
 
 ._leftToolbar--content {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 2);
   padding: calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
-  background: white;
+
+  border: 1px solid var(--c-gris);
+  backdrop-filter: blur(10px);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
 }
 </style>
