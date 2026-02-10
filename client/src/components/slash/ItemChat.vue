@@ -70,8 +70,7 @@ export default {
 }
 ._chatWrapper {
   position: relative;
-  height: 70vh;
-  min-height: 400px;
+  height: 100%;
 }
 ._loader {
   display: flex;

@@ -246,7 +246,7 @@ input[type="file"] {
 .u-button_icon {
   padding: calc(var(--spacing) / 2);
   background: transparent;
-  border-radius: calc(var(--spacing) / 2);
+  border-radius: var(--border-radius);
   border: none;
   color: inherit;
 
