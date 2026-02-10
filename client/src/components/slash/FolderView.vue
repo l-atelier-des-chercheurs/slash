@@ -27,7 +27,11 @@
       <MediaGridView v-show="viewMode === 'grid'" :files="filtered_files" />
     </div>
 
-    <ItemModal v-if="opened_file" :file="opened_file" @close="closeItemModal" />
+    <ItemModal
+      v-if="opened_file"
+      :file="opened_file"
+      @close="closeItemModalWithTransition"
+    />
 
     <DropMenu
       class="_dropMenu"
@@ -214,6 +218,78 @@ export default {
       // 5. Animate to new positions
       this.animateTransitions(firstPositions);
     },
+    async closeItemModalWithTransition() {
+      const current_file = this.opened_file;
+      if (!current_file) {
+        this.closeItemModal();
+        return;
+      }
+
+      // 1. Capture positions of items in current view
+      const positions = this.capturePositions();
+      const target = positions.get(current_file.$path);
+
+      // If item is not visible in current view, just close without animation
+      if (!target) {
+        this.closeItemModal();
+        return;
+      }
+
+      // 2. Get modal media element (source state)
+      const modalEl = this.$el.querySelector("._itemModal");
+      const mediaEl = modalEl
+        ? modalEl.querySelector("._file ._mediaContent")
+        : null;
+
+      if (!modalEl || !mediaEl) {
+        this.closeItemModal();
+        return;
+      }
+
+      const first = mediaEl.getBoundingClientRect();
+      const last = target;
+      if (!first.width || !first.height || !last.width || !last.height) {
+        this.closeItemModal();
+        return;
+      }
+
+      // 3. Compute deltas from modal to item in view
+      const deltaX = last.left - first.left;
+      const deltaY = last.top - first.top;
+      // Use a uniform scale factor to avoid object-fit stretching artefacts
+      const scale = last.width / first.width;
+
+      // 4. Animate from identity to the target transform, then close
+      // Prepare modal for fade-out
+      modalEl.style.opacity = "1";
+
+      mediaEl.style.transition = "none";
+      mediaEl.style.transformOrigin = "top left";
+      mediaEl.style.transform = "none";
+
+      // Force reflow
+      // eslint-disable-next-line no-unused-expressions
+      document.body.offsetHeight;
+
+      const onTransitionEnd = () => {
+        mediaEl.style.transition = "";
+        mediaEl.style.transform = "";
+        mediaEl.style.transformOrigin = "";
+        mediaEl.removeEventListener("transitionend", onTransitionEnd);
+        modalEl.style.opacity = "";
+        this.closeItemModal();
+      };
+
+      mediaEl.addEventListener("transitionend", onTransitionEnd);
+
+      requestAnimationFrame(() => {
+        // Play both transform and modal fade-out
+        modalEl.style.opacity = "0";
+        mediaEl.style.transition =
+          "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+        mediaEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
+      });
+    },
     async switchToFileWithTransition(path) {
       // 1. Capture initial rect of clicked item in current view
       const firstPositions = this.capturePositions();
@@ -241,25 +317,30 @@ export default {
         return;
       }
 
+      // Prepare modal for fade-in
+      modalEl.style.opacity = "0";
+
       const last = mediaEl.getBoundingClientRect();
       if (!last.width || !last.height) return;
 
       // 5. Compute deltas
       const deltaX = first.left - last.left;
       const deltaY = first.top - last.top;
-      const deltaW = first.width / last.width;
-      const deltaH = first.height / last.height;
+      // Use a uniform scale factor to avoid object-fit stretching artefacts
+      const scale = first.width / last.width;
 
       // 6. Apply inverted transform and animate to identity
       mediaEl.style.transition = "none";
       mediaEl.style.transformOrigin = "top left";
-      mediaEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+      mediaEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
 
       // Force reflow
       // eslint-disable-next-line no-unused-expressions
       document.body.offsetHeight;
 
       requestAnimationFrame(() => {
+        // Play both transform and modal fade-in
+        modalEl.style.opacity = "1";
         mediaEl.style.transition =
           "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
         mediaEl.style.transform = "none";

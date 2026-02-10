@@ -60,23 +60,11 @@
             :key="`gap-${element.key}`"
             class="_timelineView--gap"
           >
-            <svg
+            <div
               class="_timelineView--wave"
-              width="60"
-              height="12"
-              viewBox="0 0 60 12"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <!-- Half circles linked: bottom, top, bottom, top, bottom -->
-              <path
-                d="M 0 6 A 6 6 0 0 1 12 6 A 6 6 0 0 0 24 6 A 6 6 0 0 1 36 6 A 6 6 0 0 0 48 6 A 6 6 0 0 1 60 6"
-                stroke="#CCCCCC"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+              v-for="i in 6"
+              :key="`wave-${i}`"
+            ></div>
             <div class="_timelineView--gapLabel">{{ element.label }}</div>
           </div>
         </template>
@@ -402,20 +390,32 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  flex-shrink: 0;
   height: 100%;
+  padding: 0 var(--spacing);
   pointer-events: none;
 }
 
 ._timelineView--wave {
-  width: 60px;
+  width: calc(var(--spacing) * 1.5);
+  height: calc(var(--spacing) * 1.5);
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-bottom-color: #ccc;
+  border-right-color: #ccc;
+  transform: rotate(225deg);
   flex-shrink: 0;
+  margin-left: -1px;
+
+  &:nth-child(2n) {
+    margin-top: -1px;
+    transform: rotate(45deg);
+  }
 }
 
 ._timelineView--gapLabel {
   background: transparent;
   padding: 0;
+  padding-left: calc(var(--spacing) * 1);
   border: none;
   font-family: var(--sl-font-mono, monospace);
   font-size: 1.1rem;

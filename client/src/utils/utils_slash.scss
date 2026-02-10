@@ -296,3 +296,9 @@ input[type="file"] {
     }
   }
 }
+
+.fieldCaption {
+  font-weight: 500;
+  font-size: var(--sl-font-size-x-small);
+  font-family: var(--sl-font-mono);
+}

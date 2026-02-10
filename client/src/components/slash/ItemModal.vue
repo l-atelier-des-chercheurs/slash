@@ -128,6 +128,7 @@
 <script>
 import ItemChat from "./ItemChat.vue";
 import PositionPicker from "@/adc-core/inputs/PositionPicker.vue";
+
 export default {
   props: {
     file: {
@@ -187,9 +188,10 @@ export default {
   position: fixed;
   width: 100%;
   height: 100%;
-  padding: calc(var(--spacing) * 2);
+  padding: 5vmin;
   overflow: hidden;
   z-index: 10001;
+  transition: opacity 0.3s ease;
 }
 ._itemModal--overlay {
   position: absolute;
@@ -198,8 +200,15 @@ export default {
   width: 100%;
   height: 100%;
   background: rgba(241, 241, 241, 0.85);
+  backdrop-filter: blur(10px);
   z-index: -1;
-  cursor: crosshair;
+  cursor: pointer;
+
+  transition: backdrop-filter 0.3s ease;
+
+  &:hover {
+    backdrop-filter: blur(2px);
+  }
 }
 ._itemModal--contentWrapper {
   display: flex;
@@ -212,7 +221,7 @@ export default {
     flex: 1;
     background: white;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 
     ::v-deep ._mediaContent {
       pointer-events: auto;
@@ -236,7 +245,6 @@ export default {
 
   ._meta {
     flex: 0 0 320px;
-    pointer-events: auto;
   }
 }
 
@@ -252,6 +260,10 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   gap: calc(var(--spacing) / 2);
+
+  > button {
+    pointer-events: auto;
+  }
 }
 ._meta--content {
   position: relative;
@@ -265,14 +277,15 @@ export default {
   background: white;
   border-radius: var(--border-radius);
   overflow: auto;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
   padding: calc(var(--spacing) * 1);
 }
 
 ._meta--content--chats {
   height: 100%;
   border-radius: var(--border-radius);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  background: var(--c-noir);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
 ._flipCard {
@@ -285,7 +298,7 @@ export default {
 ._flipCard--inner {
   position: absolute;
   inset: 0;
-  transition: transform 1420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   transform-style: preserve-3d;
   will-change: transform;
 }

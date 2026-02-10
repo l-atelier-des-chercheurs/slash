@@ -55,6 +55,7 @@ export default {
         path: "chats",
         additional_meta: {
           $contributors: "everyone",
+          $status: "public",
           linked_file_path: this.file.$path,
         },
       });
@@ -71,6 +72,23 @@ export default {
 ._chatWrapper {
   position: relative;
   height: 100%;
+
+  ::v-deep {
+    ._openedChat {
+      border: none;
+      background: transparent;
+    }
+    ._openedChat--content,
+    ._dayTitle {
+      background: var(--c-gris);
+    }
+    ._openedChat--footer {
+      background: white;
+    }
+    ._openedChat--header {
+      display: none;
+    }
+  }
 }
 ._loader {
   display: flex;

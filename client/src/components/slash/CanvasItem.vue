@@ -123,6 +123,7 @@ export default {
   transition: transform 0.12s cubic-bezier(0.19, 1, 0.22, 1);
   height: 100%;
   width: 100%;
+  cursor: pointer;
 
   &:not([data-filetype="audio"]) {
     // not audio because we need to keep the controls tooltip when hovering the seek bar
