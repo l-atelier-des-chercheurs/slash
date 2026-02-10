@@ -16,7 +16,7 @@
     <div class="_pzViewport" ref="viewport" :style="viewportStyle">
       <slot />
     </div>
-    <div class="_panzoomDebug">
+    <!-- <div class="_panzoomDebug">
       <div>zoom: {{ current_zoom.toFixed(2) }}</div>
       <div>
         scroll: {{ Math.round(scroll_left) }}, {{ Math.round(scroll_top) }}
@@ -26,10 +26,7 @@
         {{ content_height || "auto" }}
       </div>
       <div>center: {{ center_x }}, {{ center_y }}</div>
-      <!-- <div>
-        {{ getScrollBounds() }}
-      </div> -->
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -195,13 +192,6 @@ export default {
     onWheel(event) {
       // Trackpad pinch-to-zoom: browsers send wheel with ctrlKey
       if (event.ctrlKey) {
-        const wrapper = this.$refs.wrapper;
-        if (!wrapper) return;
-
-        const rect = wrapper.getBoundingClientRect();
-        const cursor_x = event.clientX - rect.left;
-        const cursor_y = event.clientY - rect.top;
-
         const zoom_delta = -event.deltaY * 0.005;
         const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
         const current_zoom = this.current_zoom || 1;
@@ -210,12 +200,13 @@ export default {
           max_zoom
         );
 
-        // Keep point under cursor fixed
-        const content_x = this.scroll_left + cursor_x / current_zoom;
-        const content_y = this.scroll_top + cursor_y / current_zoom;
+        // Zoom around the current viewport center (center_x, center_y)
+        const center_x = this.center_x;
+        const center_y = this.center_y;
+
         this.current_zoom = new_zoom;
-        this.scroll_left = content_x - cursor_x / new_zoom;
-        this.scroll_top = content_y - cursor_y / new_zoom;
+        this.scroll_left = center_x * new_zoom - this.wrapper_ow / 2;
+        this.scroll_top = center_y * new_zoom - this.wrapper_oh / 2;
         this.clampScroll();
         this.handleInteractionEnd();
         return;
@@ -254,13 +245,6 @@ export default {
       const dy = t1.clientY - t2.clientY;
       const distance = Math.hypot(dx, dy) || 1;
 
-      // Center point between touches in wrapper coordinates
-      const wrapper_rect = this.$refs.wrapper
-        ? this.$refs.wrapper.getBoundingClientRect()
-        : { left: 0, top: 0 };
-      const center_client_x = (t1.clientX + t2.clientX) / 2 - wrapper_rect.left;
-      const center_client_y = (t1.clientY + t2.clientY) / 2 - wrapper_rect.top;
-
       // Compute new zoom based on pinch scale
       const scale_factor = distance / this.pinch_start_distance;
       const target_zoom = this.pinch_start_zoom * scale_factor;
@@ -268,17 +252,13 @@ export default {
       const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
       const new_zoom = Math.min(Math.max(target_zoom, min_zoom), max_zoom);
 
-      const current_zoom = this.current_zoom || 1;
+      // Zoom around the current viewport center (center_x, center_y)
+      const center_x = this.center_x;
+      const center_y = this.center_y;
 
-      // Content coordinates of the point under the pinch center before zoom
-      const content_center_x =
-        this.scroll_left + center_client_x / current_zoom;
-      const content_center_y = this.scroll_top + center_client_y / current_zoom;
-
-      // Adjust scroll so the same content point stays under the pinch center
       this.current_zoom = new_zoom;
-      this.scroll_left = content_center_x - center_client_x / new_zoom;
-      this.scroll_top = content_center_y - center_client_y / new_zoom;
+      this.scroll_left = center_x * new_zoom - this.wrapper_ow / 2;
+      this.scroll_top = center_y * new_zoom - this.wrapper_oh / 2;
       this.clampScroll();
 
       this.handleInteractionEnd();

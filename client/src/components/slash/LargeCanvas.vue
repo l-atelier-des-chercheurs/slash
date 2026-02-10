@@ -33,19 +33,21 @@
         />
       </div>
 
-      <div
+      <!-- <div
         class="_currentCenterDot"
         :style="{
           left: canvasScrollX + 'px',
           top: canvasScrollY + 'px',
         }"
-      ></div>
+      ></div> -->
     </SlashPanZoom2>
+    <LeftToolbar />
   </div>
 </template>
 <script>
 import SlashPanZoom2 from "@/components/slash/SlashPanZoom2.vue";
 import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue";
+import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 export default {
   props: {
     files: {
@@ -61,6 +63,7 @@ export default {
   components: {
     SlashPanZoom2,
     CanvasItemInteractive,
+    LeftToolbar,
   },
   data() {
     return {
