@@ -1,22 +1,48 @@
 <template>
-  <div class="_largeCanvas">
+  <div
+    class="_largeCanvas"
+    :class="{
+      'is--drawMode': current_mode === 'draw',
+    }"
+  >
     <SlashPanZoom2
       ref="viewer"
       :zoom="zoom"
       :zoom_range="zoom_range"
       :content_width="canvas_width"
       :content_height="canvas_height"
-      :enable_drag_to_pan="true"
+      :enable_drag_to_pan="current_mode === 'pan-zoom'"
       :margin_around_content="200"
       @scroll-end="updateScrollAndZoom"
     >
       <div
         class="_canvasContent"
+        :class="{
+          'is--drawMode': current_mode === 'draw',
+        }"
         :style="{
           width: `${canvas_width}px`,
           height: `${canvas_height}px`,
         }"
+        @mousedown="handleCanvasMouseDown"
       >
+        <svg
+          v-if="draw_points.length > 1"
+          class="_drawOverlay"
+          :width="canvas_width"
+          :height="canvas_height"
+          :viewBox="`0 0 ${canvas_width} ${canvas_height}`"
+        >
+          <path
+            v-if="draw_path_d"
+            :d="draw_path_d"
+            stroke="var(--c-noir)"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            :stroke-width="draw_stroke_width"
+          />
+        </svg>
         <CanvasItemInteractive
           v-for="file in files"
           :key="file.$path"
@@ -58,6 +84,8 @@ export default {
       default: 1,
     },
     zoom_range: Array,
+    folder_path: String,
+    shapes: Array,
   },
   components: {
     SlashPanZoom2,
@@ -76,9 +104,18 @@ export default {
 
       lastLogTime: 0,
       saveStateTimeout: null,
+
+      // Drawing state
+      draw_points: [],
+      draw_stroke_width: 4,
+      draw_min_distance: 2,
     };
   },
   computed: {
+    draw_path_d() {
+      if (!this.draw_points || this.draw_points.length === 0) return "";
+      return this.pointsToSvgPath(this.draw_points);
+    },
     canvas_width() {
       const padding = 200;
       if (!this.files || this.files.length === 0) {
@@ -115,8 +152,14 @@ export default {
   beforeDestroy() {},
   methods: {
     updateScrollAndZoom({ x, y, zoom } = {}) {
-      this.canvasScrollX = x;
-      this.canvasScrollY = y;
+      if (this.$refs.viewer && this.$refs.viewer.getScrollLeft) {
+        this.canvasScrollX = this.$refs.viewer.getScrollLeft();
+        this.canvasScrollY = this.$refs.viewer.getScrollTop();
+      } else {
+        // Fallback to provided values if viewer API is unavailable
+        this.canvasScrollX = x;
+        this.canvasScrollY = y;
+      }
       this.$emit("update:zoom", zoom);
       this.$emit("update:scroll", { x, y });
       this.saveStateToLocalStorage();
@@ -183,6 +226,144 @@ export default {
         }
       });
     },
+
+    getCanvasCoordinatesFromEvent(event) {
+      if (!this.$refs.viewer || !this.$refs.viewer.getZoom) return null;
+
+      const zoom = this.$refs.viewer.getZoom();
+      const scroll_left = this.$refs.viewer.getScrollLeft();
+      const scroll_top = this.$refs.viewer.getScrollTop();
+
+      const canvas_rect = this.$el.getBoundingClientRect();
+      const mouse_screen_x = event.clientX - canvas_rect.left;
+      const mouse_screen_y = event.clientY - canvas_rect.top;
+
+      const x = scroll_left + mouse_screen_x / zoom;
+      const y = scroll_top + mouse_screen_y / zoom;
+
+      const clamped_x = Math.max(0, Math.min(x, this.canvas_width));
+      const clamped_y = Math.max(0, Math.min(y, this.canvas_height));
+
+      return { x: clamped_x, y: clamped_y };
+    },
+
+    handleCanvasMouseDown(event) {
+      if (this.current_mode !== "draw") return;
+      if (event.button !== 0) return;
+
+      const point = this.getCanvasCoordinatesFromEvent(event);
+      if (!point) return;
+
+      this.draw_points = [point];
+
+      const moveHandler = (move_event) => {
+        if (this.current_mode !== "draw") return;
+        const next_point = this.getCanvasCoordinatesFromEvent(move_event);
+        if (!next_point) return;
+
+        const last_point =
+          this.draw_points[this.draw_points.length - 1] || next_point;
+        const dx = next_point.x - last_point.x;
+        const dy = next_point.y - last_point.y;
+        const distance_sq = dx * dx + dy * dy;
+        const min_distance_sq = this.draw_min_distance * this.draw_min_distance;
+
+        if (distance_sq >= min_distance_sq) {
+          this.draw_points.push(next_point);
+        }
+      };
+
+      const upHandler = () => {
+        window.removeEventListener("mousemove", moveHandler);
+        window.removeEventListener("mouseup", upHandler);
+        this.finishDrawingShape();
+      };
+
+      window.addEventListener("mousemove", moveHandler);
+      window.addEventListener("mouseup", upHandler);
+    },
+
+    pointsToSvgPath(points) {
+      if (!points || points.length === 0) return "";
+      const [first, ...rest] = points;
+      let d = `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`;
+      rest.forEach((point) => {
+        d += ` L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+      });
+      return d;
+    },
+
+    async finishDrawingShape() {
+      if (!this.draw_points || this.draw_points.length < 2) {
+        this.draw_points = [];
+        return;
+      }
+
+      if (!this.folder_path) {
+        // Folder path is required to create a new media
+        console.error("LargeCanvas: missing folder_path for shape creation");
+        this.draw_points = [];
+        return;
+      }
+
+      let min_x = Infinity;
+      let max_x = -Infinity;
+      let min_y = Infinity;
+      let max_y = -Infinity;
+
+      this.draw_points.forEach((point) => {
+        min_x = Math.min(min_x, point.x);
+        max_x = Math.max(max_x, point.x);
+        min_y = Math.min(min_y, point.y);
+        max_y = Math.max(max_y, point.y);
+      });
+
+      if (!isFinite(min_x) || !isFinite(min_y)) {
+        this.draw_points = [];
+        return;
+      }
+
+      const width = Math.max(max_x - min_x, 1);
+      const height = Math.max(max_y - min_y, 1);
+
+      const normalized_points = this.draw_points.map((point) => ({
+        x: point.x - min_x,
+        y: point.y - min_y,
+      }));
+
+      const path_d = this.pointsToSvgPath(normalized_points);
+
+      const rounded_width = Math.round(width);
+      const rounded_height = Math.round(height);
+
+      const svg_content = `<svg xmlns="http://www.w3.org/2000/svg" width="${rounded_width}" height="${rounded_height}" viewBox="0 0 ${width} ${height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${this.draw_stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+
+      const random_suffix = (
+        Math.random().toString(36) + "00000000000000000"
+      ).slice(2, 5);
+
+      const requested_slug = `shape-${random_suffix}`;
+
+      const additional_meta = {
+        $type: "shape",
+        shape_svg: svg_content,
+        x: Math.round(min_x),
+        y: Math.round(min_y),
+        width: rounded_width,
+        requested_slug,
+      };
+
+      try {
+        await this.$api.uploadFile({
+          path: this.folder_path,
+          additional_meta,
+        });
+      } catch (err) {
+        console.error("Failed to create shape media:", err);
+      } finally {
+        this.draw_points = [];
+      }
+    },
   },
 };
 </script>
@@ -223,6 +404,26 @@ export default {
     );
     background-size: var(--rule-size) var(--rule-size);
   }
+}
+
+._largeCanvas.is--drawMode {
+  cursor: crosshair;
+}
+
+._canvasContent.is--drawMode {
+  cursor: crosshair;
+  user-select: none;
+}
+
+._canvasContent.is--drawMode ._canvasItem,
+._canvasContent.is--drawMode ._canvasItemContent {
+  pointer-events: none;
+}
+
+._drawOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 ._currentCenterDot {

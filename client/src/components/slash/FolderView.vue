@@ -17,8 +17,10 @@
       <LargeCanvas
         v-show="viewMode === 'canvas'"
         :files="filtered_files"
+        :shapes="shapes"
         :zoom="canvasZoom"
         :zoom_range="zoom_range"
+        :folder_path="default_folder.$path"
         @update:zoom="canvasZoom = $event"
         @update:scroll="canvasScroll = $event"
       />
@@ -132,13 +134,19 @@ export default {
         return [];
       }
       const type = this.mediaTypeFilter;
-      if (!type) return this.default_folder.$files;
+      let files = this.default_folder.$files;
+
+      files = files.filter((f) => f.$type !== "shape");
+
+      if (!type) return files;
+
       if (type === "3d") {
-        return this.default_folder.$files.filter(
-          (f) => f.$type === "stl" || f.$type === "obj"
-        );
+        return files.filter((f) => f.$type === "stl" || f.$type === "obj");
       }
-      return this.default_folder.$files.filter((f) => f.$type === type);
+      return files.filter((f) => f.$type === type);
+    },
+    shapes() {
+      return this.default_folder.$files.filter((f) => f.$type === "shape");
     },
   },
   methods: {

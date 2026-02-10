@@ -150,6 +150,9 @@
             },
             "height": {
               "type": "number"
+            },
+            "shape_svg": {
+              "type": "string"
             }
           }
         }
