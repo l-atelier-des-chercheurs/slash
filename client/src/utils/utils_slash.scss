@@ -250,7 +250,8 @@ input[type="file"] {
   border: none;
   color: inherit;
 
-  > svg {
+  > svg,
+  .b-icon.bi {
     display: block;
   }
 
@@ -275,4 +276,23 @@ input[type="file"] {
 .b-icon.bi {
   width: 1.35em;
   height: 1.35em;
+}
+
+.u-button_glass {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+
+  transition: all 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
+  &:hover,
+  &:focus-visible {
+    &:not([disabled]):not(.is--active) {
+      background: rgba(255, 255, 255, 1);
+      color: var(--c-noir);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+  }
 }

@@ -1,6 +1,15 @@
 <template>
   <div class="_itemModal">
     <div class="_itemModal--overlay" @click="closeModal" />
+    <button
+      type="button"
+      class="u-button u-button_icon u-button_glass _closeBtn"
+      @click="$emit('close')"
+      :title="$t('close')"
+    >
+      <b-icon icon="x-lg" />
+    </button>
+
     <div class="_itemModal--contentWrapper">
       <div class="_meta">
         <div class="_meta--buttons">
@@ -167,6 +176,13 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+._closeBtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: var(--spacing);
+  z-index: 1;
+}
 ._itemModal {
   position: fixed;
   width: 100%;
