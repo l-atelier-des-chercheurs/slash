@@ -138,9 +138,8 @@ export default {
       const dy = event.clientY - this.drag_start_client_y;
 
       // Convert screen-space movement to content-space movement
-      const scale = this.current_zoom || 1;
-      this.scroll_left = this.drag_start_scroll_left - dx / scale;
-      this.scroll_top = this.drag_start_scroll_top - dy / scale;
+      this.scroll_left = this.drag_start_scroll_left - dx;
+      this.scroll_top = this.drag_start_scroll_top - dy;
       this.clampScroll();
     },
     onMouseUp(event) {
@@ -190,7 +189,7 @@ export default {
       }
 
       // Scroll-to-pan: use wheel deltas to move the viewport
-      const scale = this.current_zoom || 1;
+      const scale = 1;
       this.scroll_left += event.deltaX / scale;
       this.scroll_top += event.deltaY / scale;
       this.clampScroll();
@@ -303,18 +302,22 @@ export default {
       let wrapper_width = 0;
       let wrapper_height = 0;
       if (wrapper) {
-        debugger;
         wrapper_width = wrapper.offsetWidth;
         wrapper_height = wrapper.offsetHeight;
       }
+
+      const scaled_m = margin * zoom;
+
+      const max_left = Math.max(0, w * zoom + scaled_m - wrapper_width);
+      const max_top = Math.max(0, h * zoom + scaled_m - wrapper_height);
 
       // Visible viewport size in content coordinates (wrapper size / zoom)
       // Fixed margin in content coords: allow at most this much empty space around content
       return {
         min_left: -margin,
-        max_left: w + margin - wrapper_width,
+        max_left,
         min_top: -margin,
-        max_top: h + margin - wrapper_height,
+        max_top,
       };
     },
     clampScroll() {
