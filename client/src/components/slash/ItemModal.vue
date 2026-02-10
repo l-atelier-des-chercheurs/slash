@@ -43,7 +43,7 @@
                       :label="$t('keywords')"
                       :field_name="'keywords'"
                       :tag_type="'keywords'"
-                      :local_suggestions="keywords_suggestions"
+                      :local_suggestions="[]"
                       :content="file.keywords"
                       :path="file.$path"
                       :can_edit="true"
@@ -188,14 +188,33 @@ export default {
 ._itemModal--contentWrapper {
   display: flex;
   flex-flow: row nowrap;
+  gap: calc(var(--spacing) * 1);
   height: 100%;
   pointer-events: none;
 
   ._file {
     flex: 1;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 
     ::v-deep ._mediaContent {
       pointer-events: auto;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+
+      ._mediaContent--image {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+
+        object-fit: contain;
+        max-width: none;
+      }
     }
   }
 
@@ -209,7 +228,7 @@ export default {
   display: flex;
   flex-flow: column nowrap;
   gap: calc(var(--spacing) * 1);
-  padding: calc(var(--spacing) * 1);
+  // padding: calc(var(--spacing) * 1);
   height: 100%;
 }
 

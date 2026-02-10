@@ -91,9 +91,17 @@ export default {
   },
   mounted() {
     this.$eventHub.$on("canvasItem.open", this.openItemModal);
+    this.$eventHub.$on(
+      "canvasItem.openWithTransition",
+      this.switchToFileWithTransition
+    );
   },
   beforeDestroy() {
     this.$eventHub.$off("canvasItem.open", this.openItemModal);
+    this.$eventHub.$off(
+      "canvasItem.openWithTransition",
+      this.switchToFileWithTransition
+    );
   },
   watch: {
     // Watch for route changes to sync view mode from URL
@@ -205,6 +213,57 @@ export default {
 
       // 5. Animate to new positions
       this.animateTransitions(firstPositions);
+    },
+    async switchToFileWithTransition(path) {
+      // 1. Capture initial rect of clicked item in current view
+      const firstPositions = this.capturePositions();
+
+      // 2. Find rect for this specific file
+      const first = firstPositions.get(path);
+      if (!first) {
+        // Fallback: no FLIP data, just open directly
+        this.openItemModal(path);
+        return;
+      }
+
+      // 3. Open modal (updates route)
+      this.openItemModal(path);
+
+      // 4. Wait for modal to be in DOM and layout to settle
+      await this.$nextTick();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const modalEl = this.$el.querySelector("._itemModal");
+      const mediaEl = modalEl
+        ? modalEl.querySelector("._file ._mediaContent")
+        : null;
+      if (!modalEl || !mediaEl) {
+        return;
+      }
+
+      const last = mediaEl.getBoundingClientRect();
+      if (!last.width || !last.height) return;
+
+      // 5. Compute deltas
+      const deltaX = first.left - last.left;
+      const deltaY = first.top - last.top;
+      const deltaW = first.width / last.width;
+      const deltaH = first.height / last.height;
+
+      // 6. Apply inverted transform and animate to identity
+      mediaEl.style.transition = "none";
+      mediaEl.style.transformOrigin = "top left";
+      mediaEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+
+      // Force reflow
+      // eslint-disable-next-line no-unused-expressions
+      document.body.offsetHeight;
+
+      requestAnimationFrame(() => {
+        mediaEl.style.transition =
+          "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+        mediaEl.style.transform = "none";
+      });
     },
     getViewContainer(mode) {
       switch (mode) {

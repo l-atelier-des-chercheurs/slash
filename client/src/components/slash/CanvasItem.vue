@@ -10,6 +10,7 @@
       class="_canvasItem--content"
       :data-filetype="file.$type"
       @click.stop="openItemModal"
+      :data-file-path="file.$path"
     >
       <MediaContent
         :file="file"
@@ -88,7 +89,7 @@ export default {
   },
   methods: {
     openItemModal(event) {
-      this.$eventHub.$emit("canvasItem.open", this.file.$path);
+      this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
   },
 };
