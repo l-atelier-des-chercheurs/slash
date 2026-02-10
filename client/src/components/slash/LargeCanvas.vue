@@ -44,7 +44,7 @@
           :canvas_width="canvas_width"
           :canvas_height="canvas_height"
           :folder_path="folder_path"
-          :get_canvas_coords="getCanvasCoordinatesFromEvent"
+          :getCanvasCoords="getCanvasCoordinatesFromEvent"
         />
       </div>
       <div
@@ -214,9 +214,9 @@ export default {
     getCanvasCoordinatesFromEvent(event) {
       if (!this.$refs.viewer || !this.$refs.viewer.getZoom) return null;
 
-      const zoom = this.$refs.viewer.getZoom();
-      const scroll_left = this.$refs.viewer.getScrollLeft();
-      const scroll_top = this.$refs.viewer.getScrollTop();
+      const zoom = this.zoom;
+      const scroll_left = this.canvas_topleft_x;
+      const scroll_top = this.canvas_topleft_y;
 
       const canvas_rect = this.$el.getBoundingClientRect();
       const mouse_screen_x = event.clientX - canvas_rect.left;

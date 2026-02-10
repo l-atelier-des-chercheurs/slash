@@ -33,7 +33,7 @@ export default {
     canvas_width: { type: Number, required: true },
     canvas_height: { type: Number, required: true },
     folder_path: { type: String, default: "" },
-    get_canvas_coords: { type: Function, required: true },
+    getCanvasCoords: { type: Function, required: true },
   },
   data() {
     return {
@@ -52,13 +52,13 @@ export default {
     handleCanvasMouseDown(event) {
       if (event.button !== 0) return;
 
-      const point = this.get_canvas_coords(event);
+      const point = this.getCanvasCoords(event);
       if (!point) return;
 
       this.draw_points = [point];
 
       const moveHandler = (move_event) => {
-        const next_point = this.get_canvas_coords(move_event);
+        const next_point = this.getCanvasCoords(move_event);
         if (!next_point) return;
 
         const last_point =

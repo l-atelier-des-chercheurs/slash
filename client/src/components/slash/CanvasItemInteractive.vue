@@ -10,7 +10,7 @@
     :data-file-path="file.$path"
   >
     <template v-if="file.$type === 'shape'">
-      <div v-html="file.shape_svg" />
+      <div v-html="file.shape_svg" class="_canvasItem--shape" />
     </template>
     <CanvasItem
       v-else
@@ -481,5 +481,9 @@ export default {
       opacity: 1;
     }
   }
+}
+
+._canvasItem--shape {
+  border: 1px solid red;
 }
 </style>
