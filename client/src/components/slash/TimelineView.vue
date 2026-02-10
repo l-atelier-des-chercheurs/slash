@@ -74,8 +74,39 @@
 </template>
 
 <script>
-import moment from "moment";
 import CanvasItem from "@/components/slash/CanvasItem.vue";
+
+// Plain JS date helpers (no moment) — all in local time
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function endOfDay(d) {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+function formatYYYYMMDD(d) {
+  const x = new Date(d);
+  const y = x.getFullYear();
+  const m = String(x.getMonth() + 1).padStart(2, "0");
+  const day = String(x.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function formatDayLabel(d) {
+  return new Date(d)
+    .toLocaleDateString(undefined, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "2-digit",
+    })
+    .replace(", ", " ");
+}
+function diffDays(a, b) {
+  return Math.round((a.getTime() - b.getTime()) / (24 * 60 * 60 * 1000));
+}
 
 export default {
   props: {
@@ -143,13 +174,13 @@ export default {
     activeDays() {
       const groups = {};
       this.sortedFiles.forEach((f) => {
-        const d = moment(f.$date_created).startOf("day");
-        const key = d.format("YYYY-MM-DD");
+        const d = startOfDay(new Date(f.$date_created));
+        const key = formatYYYYMMDD(d);
         if (!groups[key]) groups[key] = { date: d, files: [] };
         groups[key].files.push(f);
       });
       return Object.values(groups).sort(
-        (a, b) => a.date.valueOf() - b.date.valueOf()
+        (a, b) => a.date.getTime() - b.date.getTime()
       );
     },
     timelineElements() {
@@ -173,10 +204,10 @@ export default {
         // Add gap if needed
         if (index > 0) {
           const prev = this.activeDays[index - 1];
-          const diffDays = day.date.diff(prev.date, "days");
+          const days_between = diffDays(day.date, prev.date);
 
-          if (diffDays > 1) {
-            const gapDays = diffDays - 1;
+          if (days_between > 1) {
+            const gapDays = days_between - 1;
             let label = "";
 
             if (gapDays >= 365) {
@@ -204,8 +235,8 @@ export default {
         // Add day block with label + media items (day contains its items)
         const mediaItems = [];
         day.files.forEach((file) => {
-          const fileMoment = moment(file.$date_created);
-          const fileEvent = this.getEventForDate(fileMoment);
+          const fileDate = new Date(file.$date_created);
+          const fileEvent = this.getEventForDate(fileDate);
           const phaseLabel = fileEvent ? fileEvent.label : null;
 
           let height = 224;
@@ -219,8 +250,8 @@ export default {
 
         elements.push({
           type: "day",
-          key: `day-${day.date.format("YYYY-MM-DD")}`,
-          label: day.date.format("dddd D MMMM YY"),
+          key: `day-${formatYYYYMMDD(day.date)}`,
+          label: formatDayLabel(day.date),
           mediaItems,
         });
       });
@@ -235,12 +266,12 @@ export default {
     toggleDayCollapsed(dayKey) {
       this.$set(this.collapsedDays, dayKey, !this.collapsedDays[dayKey]);
     },
-    getEventForDate(dateMoment) {
-      const d = dateMoment.valueOf();
+    getEventForDate(date) {
+      const d = new Date(date).getTime();
       for (let i = 0; i < this.slash_timeline_events.length; i++) {
         const ev = this.slash_timeline_events[i];
-        const from = moment(ev.from).startOf("day").valueOf();
-        const to = moment(ev.to).endOf("day").valueOf();
+        const from = startOfDay(new Date(ev.from)).getTime();
+        const to = endOfDay(new Date(ev.to)).getTime();
         if (d >= from && d <= to) {
           return { key: `${i}-${ev.from}`, label: ev.label };
         }
@@ -283,16 +314,16 @@ export default {
 ._timelineView--content {
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-flow: row nowrap;
   align-items: center;
   min-width: max-content;
-  min-height: 100%;
+  height: 100%;
 }
 
 ._timelineView--day {
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-flow: row nowrap;
   align-items: center;
   flex-shrink: 0;
   height: 100%;
@@ -344,9 +375,7 @@ export default {
 }
 
 ._timelineView--dayItems {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  columns: 2 auto;
   flex-shrink: 0;
   gap: 0;
   margin-left: 12px;
@@ -427,6 +456,5 @@ export default {
 
 ._timelineView--item {
   flex-shrink: 0;
-  margin-top: 50px;
 }
 </style>

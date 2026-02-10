@@ -16,7 +16,7 @@
     <div class="_pzViewport" ref="viewport" :style="viewportStyle">
       <slot />
     </div>
-    <div class="_panzoomDebug">
+    <!-- <div class="_panzoomDebug">
       <div>zoom: {{ current_zoom.toFixed(2) }}</div>
       <div>
         scroll: {{ Math.round(scroll_left) }}, {{ Math.round(scroll_top) }}
@@ -27,7 +27,7 @@
       </div>
       <div>center: {{ center_x }}, {{ center_y }}</div>
       <div>topleft: {{ topleft_x }}, {{ topleft_y }}</div>
-    </div>
+    </div> -->
   </div>
 </template>
 
