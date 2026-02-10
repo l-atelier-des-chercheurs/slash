@@ -41,61 +41,7 @@
                 class="_flipCard--face _flipCard--faceFront"
                 :aria-hidden="current_view !== 'informations'"
               >
-                <div class="_meta--content--informations">
-                  <div class="u-spacingBottom" v-if="file.caption">
-                    <DLabel :str="$t('caption')" />
-                    <div class="_metaFieldValue" v-html="file.caption" />
-                  </div>
-
-                  <div class="u-spacingBottom">
-                    <TagsField
-                      :label="$t('keywords')"
-                      :field_name="'keywords'"
-                      :tag_type="'keywords'"
-                      :local_suggestions="[]"
-                      :content="file.keywords"
-                      :path="file.$path"
-                      :can_edit="true"
-                    />
-                  </div>
-
-                  <div class="u-spacingBottom" v-if="authors_path !== 'noone'">
-                    <AuthorField
-                      :label="$t('authors')"
-                      :field="'$authors'"
-                      :authors_paths="authors_path"
-                      :path="file.$path"
-                      :can_edit="false"
-                      :instructions="$t('file_author_instructions')"
-                      :no_options="true"
-                    />
-                  </div>
-
-                  <div
-                    class="u-spacingBottom"
-                    v-if="file.$infos && file.$infos.hasOwnProperty('size')"
-                  >
-                    <SizeDisplay :size="file.$infos.size" />
-                  </div>
-
-                  <div
-                    class="u-spacingBottom"
-                    v-if="file.$infos && file.$infos.hasOwnProperty('duration')"
-                  >
-                    <DurationDisplay
-                      :title="$t('duration')"
-                      :duration="file.$infos.duration"
-                    />
-                  </div>
-
-                  <PositionPicker
-                    :label="$t('location')"
-                    :field_name="'$location'"
-                    :content="file.$location"
-                    :path="file.$path"
-                    :can_edit="true"
-                  />
-                </div>
+                <ItemMeta :file="file" />
               </section>
               <section
                 class="_flipCard--face _flipCard--faceBack"
@@ -127,7 +73,7 @@
 </template>
 <script>
 import ItemChat from "./ItemChat.vue";
-import PositionPicker from "@/adc-core/inputs/PositionPicker.vue";
+import ItemMeta from "./ItemMeta.vue";
 
 export default {
   props: {
@@ -138,7 +84,7 @@ export default {
   },
   components: {
     ItemChat,
-    PositionPicker,
+    ItemMeta,
   },
   data() {
     return {
@@ -155,9 +101,6 @@ export default {
     },
   },
   computed: {
-    authors_path() {
-      return this.file.$authors || "noone";
-    },
     has_geolocation() {
       return (
         !!this.file.$location &&
@@ -190,7 +133,7 @@ export default {
   height: 100%;
   padding: 5vmin;
   overflow: hidden;
-  z-index: 10001;
+  z-index: 1001;
   transition: opacity 0.3s ease;
 }
 ._itemModal--overlay {
@@ -270,15 +213,6 @@ export default {
   flex: 1;
   min-height: 0;
   overflow: visible;
-}
-
-._meta--content--informations {
-  height: 100%;
-  background: white;
-  border-radius: var(--border-radius);
-  overflow: auto;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-  padding: calc(var(--spacing) * 1);
 }
 
 ._meta--content--chats {
