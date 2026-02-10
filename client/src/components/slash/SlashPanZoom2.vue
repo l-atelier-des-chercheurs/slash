@@ -25,9 +25,10 @@
         content: {{ content_width || "auto" }} x
         {{ content_height || "auto" }}
       </div>
-      <div>
+      <div>current: {{ current_x }}, {{ current_y }}</div>
+      <!-- <div>
         {{ getScrollBounds() }}
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -56,9 +57,14 @@ export default {
   },
   data() {
     return {
+      // Wrapper size (updated by ResizeObserver)
+      wrapper_ow: 0,
+      wrapper_oh: 0,
+
       // Pan/scroll state in content coordinates
       scroll_left: 0,
       scroll_top: 0,
+
       current_zoom: this.zoom || 1,
 
       // Drag state
@@ -74,9 +80,19 @@ export default {
       pinch_start_zoom: 1,
 
       debounce_interaction: undefined,
+
+      resize_observer: null,
     };
   },
   computed: {
+    current_x() {
+      const zoom = this.current_zoom || 1;
+      return this.scroll_left + this.wrapper_ow / (2 * zoom);
+    },
+    current_y() {
+      const zoom = this.current_zoom || 1;
+      return this.scroll_top + this.wrapper_oh / (2 * zoom);
+    },
     viewportStyle() {
       const translate = `translate3d(${-this.scroll_left}px, ${-this
         .scroll_top}px, 0)`;
@@ -101,8 +117,19 @@ export default {
     window.addEventListener("mouseup", this.onMouseUp);
 
     this.$eventHub.$on(`panzoom.panTo`, this.panTo);
+
+    this.updateWrapperSize();
+    const wrapper = this.$refs.wrapper;
+    if (wrapper && typeof ResizeObserver !== "undefined") {
+      this.resize_observer = new ResizeObserver(() => this.updateWrapperSize());
+      this.resize_observer.observe(wrapper);
+    }
   },
   beforeDestroy() {
+    if (this.resize_observer && this.$refs.wrapper) {
+      this.resize_observer.unobserve(this.$refs.wrapper);
+      this.resize_observer = null;
+    }
     window.removeEventListener("mousemove", this.onMouseMove);
     window.removeEventListener("mouseup", this.onMouseUp);
 
@@ -257,20 +284,21 @@ export default {
       }
       this.handleInteractionEnd();
     },
+    updateWrapperSize() {
+      const wrapper = this.$refs.wrapper;
+      if (!wrapper) return;
+      this.wrapper_ow = wrapper.offsetWidth || 0;
+      this.wrapper_oh = wrapper.offsetHeight || 0;
+    },
     handleInteractionEnd() {
       if (this.debounce_interaction) clearTimeout(this.debounce_interaction);
       this.debounce_interaction = setTimeout(() => {
-        const wrapper = this.$refs.wrapper;
-        if (!wrapper) return;
-
-        const wrapper_width = wrapper.offsetWidth || 0;
-        const wrapper_height = wrapper.offsetHeight || 0;
         const zoom = this.current_zoom || 1;
-
-        const x = this.scroll_left + wrapper_width / (2 * zoom);
-        const y = this.scroll_top + wrapper_height / (2 * zoom);
-
-        this.$emit("scroll-end", { zoom, x, y });
+        this.$emit("scroll-end", {
+          zoom,
+          x: this.current_x,
+          y: this.current_y,
+        });
       }, 200);
     },
     panTo({ x, y }) {
@@ -293,21 +321,13 @@ export default {
       this.$eventHub.$emit("module.setActive", false);
     },
     getScrollBounds() {
-      const wrapper = this.$refs.wrapper;
       const zoom = this.current_zoom || 1;
       const w = this.content_width;
       const h = this.content_height;
       const margin = this.margin_around_content || 0;
 
-      let wrapper_width = 0;
-      let wrapper_height = 0;
-      if (wrapper) {
-        wrapper_width = wrapper.offsetWidth;
-        wrapper_height = wrapper.offsetHeight;
-      }
-
-      const max_left = Math.max(0, w * zoom + margin - wrapper_width);
-      const max_top = Math.max(0, h * zoom + margin - wrapper_height);
+      const max_left = Math.max(0, w * zoom + margin - this.wrapper_ow);
+      const max_top = Math.max(0, h * zoom + margin - this.wrapper_oh);
 
       // Visible viewport size in content coordinates (wrapper size / zoom)
       // Fixed margin in content coords: allow at most this much empty space around content
