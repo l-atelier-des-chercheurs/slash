@@ -117,9 +117,8 @@ export default {
 
   padding: 6px;
   background: var(--c-gris_clair, #ccc);
-  // border: 2px solid var(--c-gris, #ccc);
+  box-shadow: 0 4px 5px 0px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  // box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 ._viewModeBar--row {

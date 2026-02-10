@@ -25,7 +25,7 @@
         content: {{ content_width || "auto" }} x
         {{ content_height || "auto" }}
       </div>
-      <div>current: {{ current_x }}, {{ current_y }}</div>
+      <div>center: {{ center_x }}, {{ center_y }}</div>
       <!-- <div>
         {{ getScrollBounds() }}
       </div> -->
@@ -85,13 +85,19 @@ export default {
     };
   },
   computed: {
-    current_x() {
+    center_x() {
       const zoom = this.current_zoom || 1;
-      return this.scroll_left + this.wrapper_ow / (2 * zoom);
+      const raw = (this.scroll_left + this.wrapper_ow / 2) / zoom;
+      const w = this.content_width;
+      if (w == null) return raw;
+      return Math.min(Math.max(raw, 0), w);
     },
-    current_y() {
+    center_y() {
       const zoom = this.current_zoom || 1;
-      return this.scroll_top + this.wrapper_oh / (2 * zoom);
+      const raw = (this.scroll_top + this.wrapper_oh / 2) / zoom;
+      const h = this.content_height;
+      if (h == null) return raw;
+      return Math.min(Math.max(raw, 0), h);
     },
     viewportStyle() {
       const translate = `translate3d(${-this.scroll_left}px, ${-this
@@ -216,9 +222,8 @@ export default {
       }
 
       // Scroll-to-pan: use wheel deltas to move the viewport
-      const scale = 1;
-      this.scroll_left += event.deltaX / scale;
-      this.scroll_top += event.deltaY / scale;
+      this.scroll_left += event.deltaX;
+      this.scroll_top += event.deltaY;
       this.clampScroll();
       this.handleInteractionEnd();
     },
@@ -296,8 +301,8 @@ export default {
         const zoom = this.current_zoom || 1;
         this.$emit("scroll-end", {
           zoom,
-          x: this.current_x,
-          y: this.current_y,
+          x: this.center_x,
+          y: this.center_y,
         });
       }, 200);
     },
