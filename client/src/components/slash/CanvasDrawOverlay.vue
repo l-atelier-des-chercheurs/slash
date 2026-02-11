@@ -1,6 +1,7 @@
 <template>
   <div
     class="_drawOverlayWrap"
+    draggable="false"
     :style="{
       width: `${canvas_width}px`,
       height: `${canvas_height}px`,
