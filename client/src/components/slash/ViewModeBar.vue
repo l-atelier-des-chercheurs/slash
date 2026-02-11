@@ -42,7 +42,7 @@
       class="_viewModeBar--row _viewModeBar--zoomRow"
     >
       <!-- <span class="_viewModeBar--zoomLabel" aria-hidden="true">{{
-        zoomLabel
+        canvasZoom
       }}</span> -->
       <input
         type="range"
@@ -102,9 +102,12 @@ export default {
   gap: 6px;
 
   padding: 6px;
-  background: var(--c-gris_clair, #ccc);
-  box-shadow: 0 4px 5px 0px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+
+  border-radius: var(--border-radius);
+  border: 1px solid var(--c-gris);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
 }
 
 ._viewModeBar--row {
