@@ -387,7 +387,6 @@ export default {
 
   &.is--dragging {
     cursor: pointer;
-    z-index: 1000;
 
     ._canvasItemContent {
       pointer-events: none;

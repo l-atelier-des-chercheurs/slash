@@ -12,6 +12,11 @@
       @click.stop="openItemModal"
       :data-file-path="file.$path"
     >
+      <div
+        class="_canvasItem--authorIndicator"
+        :style="{ backgroundColor: $getFirstAuthorColor(file.$authors) }"
+      />
+
       <MediaContent
         :file="file"
         :context="'full'"
@@ -155,6 +160,19 @@ export default {
       overflow: hidden;
     }
   }
+}
+
+._canvasItem--authorIndicator {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  z-index: 1;
+
+  transform-origin: top left;
+  transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
 }
 
 ._canvasItem--chatBubble {

@@ -128,6 +128,14 @@ Vue.prototype.$api = api();
 import DOMPurify from "dompurify";
 Vue.prototype.$sanitize = DOMPurify.sanitize;
 
+Vue.prototype.$getFirstAuthorColor = function ($authors) {
+  if (!$authors || !Array.isArray($authors) || $authors.length === 0)
+    return undefined;
+  const first_path = $authors[0];
+  const author = this.getAuthor(first_path);
+  return author && author.color;
+};
+
 // globals mainly for non-editing components
 
 import TitleField from "@/adc-core/fields/TitleField.vue";
