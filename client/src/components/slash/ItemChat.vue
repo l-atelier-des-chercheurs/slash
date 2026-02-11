@@ -88,6 +88,9 @@ export default {
     ._openedChat--header {
       display: none;
     }
+    ._unreadMessages {
+      background: var(--c-gris);
+    }
   }
 }
 ._loader {

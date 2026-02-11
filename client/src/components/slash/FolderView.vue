@@ -81,7 +81,7 @@ export default {
       mediaTypeFilter: null,
       canvasZoom: 1,
       canvasScroll: { x: 0, y: 0 },
-      zoom_range: [0.01, 1],
+      zoom_range: [0.1, 1],
     };
   },
   async created() {

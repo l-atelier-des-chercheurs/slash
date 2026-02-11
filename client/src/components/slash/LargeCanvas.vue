@@ -4,6 +4,7 @@
     :class="{
       'is--drawMode': current_mode === 'draw',
     }"
+    draggable="false"
   >
     <SlashPanZoom2
       ref="viewer"
@@ -20,6 +21,7 @@
         :class="{
           'is--drawMode': current_mode === 'draw',
         }"
+        draggable="false"
         :style="{
           width: `${canvas_width}px`,
           height: `${canvas_height}px`,
@@ -47,13 +49,13 @@
           :getCanvasCoords="getCanvasCoordinatesFromEvent"
         />
       </div>
-      <div
+      <!-- <div
         class="_currentCenterDot"
         :style="{
           left: canvas_topleft_x + 'px',
           top: canvas_topleft_y + 'px',
         }"
-      ></div>
+      ></div> -->
     </SlashPanZoom2>
     <LeftToolbar :current_mode.sync="current_mode" />
   </div>
@@ -238,7 +240,7 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: var(--c-bleuvert);
+  background: #ccc;
 }
 
 ._canvasContent {

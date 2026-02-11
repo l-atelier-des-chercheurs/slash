@@ -6,6 +6,7 @@
       'is--drag-to-pan': enable_drag_to_pan && !is_panning,
       'is--panning': enable_drag_to_pan && is_panning,
     }"
+    draggable="false"
     @mousedown="onMouseDown"
     @wheel.prevent="onWheel"
     @touchstart.prevent.stop="onTouchStart"
@@ -13,7 +14,12 @@
     @touchend.prevent.stop="onTouchEnd"
     @touchcancel.prevent.stop="onTouchEnd"
   >
-    <div class="_pzViewport" ref="viewport" :style="viewportStyle">
+    <div
+      class="_pzViewport"
+      ref="viewport"
+      :style="viewportStyle"
+      draggable="false"
+    >
       <slot />
     </div>
     <!-- <div class="_panzoomDebug">
