@@ -87,7 +87,7 @@
 
         <button
           type="button"
-          class="u-button u-button_white"
+          class="u-button u-button_small"
           :class="{ 'is--active': show_color_input }"
           @click="show_color_input = !show_color_input"
         >

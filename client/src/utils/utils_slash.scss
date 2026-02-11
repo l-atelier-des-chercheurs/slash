@@ -241,6 +241,14 @@ input[type="file"] {
       }
     }
   }
+
+  &.u-button_small {
+    padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
+
+    b-icon {
+      font-size: 80%;
+    }
+  }
 }
 
 .u-button_icon {
