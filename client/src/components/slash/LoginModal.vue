@@ -1,5 +1,9 @@
 <template>
-  <BaseModal2 :title="'Hello Slashers!'" :is_closable="is_logged_in">
+  <BaseModal2
+    :title="'Hello Slashers!'"
+    :is_closable="is_logged_in"
+    @close="$emit('close')"
+  >
     <div>
       <p class="u-spacingBottom">
         Before using the app, please pick your name and structure/role so all
@@ -9,30 +13,43 @@
 
       <div v-if="!is_logged_in">
         <!-- Create new account: Name or pseudo + Role -->
-        <div v-if="show_create" class="_loginRow u-spacingBottom">
-          <div class="_loginRow__name">
-            <label class="u-label">Name or pseudo</label>
-            <input
-              v-model="new_author_name"
-              type="text"
-              class="u-input"
-              :placeholder="name_placeholder"
-            />
+        <template v-if="show_create">
+          <div class="_loginRow u-spacingBottom">
+            <div class="_loginRow__name">
+              <label class="u-label">Name or pseudo</label>
+              <input
+                v-model="new_author_name"
+                type="text"
+                class="u-input"
+                :placeholder="name_placeholder"
+              />
+            </div>
+            <div class="_loginRow__role">
+              <label class="u-label">Role</label>
+              <select v-model="selected_structure_role" class="u-input">
+                <option disabled value="">Choose…</option>
+                <option
+                  v-for="opt in structure_role_options"
+                  :key="opt"
+                  :value="opt"
+                >
+                  {{ opt }}
+                </option>
+              </select>
+            </div>
           </div>
-          <div class="_loginRow__role">
-            <label class="u-label">Role</label>
-            <select v-model="selected_structure_role" class="u-input">
-              <option disabled value="">Choose…</option>
-              <option
-                v-for="opt in structure_role_options"
-                :key="opt"
-                :value="opt"
-              >
-                {{ opt }}
-              </option>
-            </select>
-          </div>
-        </div>
+
+          <ColorInput
+            class="u-spacingBottom"
+            :label="$t('color')"
+            :value="new_author_color"
+            :allow_transparent="false"
+            :can_toggle="false"
+            :default_value="suggested_colors[0]"
+            :default_colors="suggested_colors"
+            @save="new_author_color = $event"
+          />
+        </template>
 
         <!-- Login with existing account: list of all created accounts from path authors -->
         <div v-else class="u-spacingBottom">
@@ -57,11 +74,36 @@
       <div v-else class="u-spacingBottom">
         <p>
           You are currently logged in as
-          <strong>{{ connected_as.name }}</strong
+
+          <strong :style="{ backgroundColor: connected_as.color }">{{
+            connected_as.name
+          }}</strong
           ><span v-if="connected_as_group.length">
             ({{ connected_as_group }})</span
           >.
         </p>
+
+        <div class="u-spacingBottom"></div>
+
+        <button
+          type="button"
+          class="u-button u-button_white"
+          :class="{ 'is--active': show_color_input }"
+          @click="show_color_input = !show_color_input"
+        >
+          <b-icon icon="palette-fill" /> Change color
+        </button>
+        <ColorInput
+          v-if="show_color_input"
+          class="u-spacingBottom"
+          :label="$t('color')"
+          :value="connected_as.color"
+          :allow_transparent="false"
+          :can_toggle="false"
+          :default_value="suggested_colors[0]"
+          :default_colors="suggested_colors"
+          @save="updateConnectedAs({ color: $event })"
+        />
       </div>
     </div>
 
@@ -121,8 +163,11 @@ export default {
     return {
       selected_author: saved_author || "",
       selected_structure_role: "",
+
       show_create: false,
       new_author_name: "",
+      new_author_color: "",
+
       authors_from_api: [],
       structure_role_options: [
         "Artist",
@@ -134,6 +179,7 @@ export default {
         "Trempo",
         "Other",
       ],
+      show_color_input: false,
     };
   },
   async created() {
@@ -161,6 +207,15 @@ export default {
         (this.new_author_name || "").trim().length > 0 &&
         !!this.selected_structure_role
       );
+    },
+    suggested_colors() {
+      return [
+        "hsl(227, 63%, 61%)",
+        "#52c5b9",
+        "#ffbe32",
+        "#fc4b60",
+        "transparent",
+      ];
     },
   },
   methods: {
@@ -197,6 +252,7 @@ export default {
 
       const default_password = "slash";
       const name = (this.new_author_name || "").trim();
+      const color = this.new_author_color;
 
       try {
         const new_folder_slug = await this.$api.createFolder({
@@ -206,6 +262,7 @@ export default {
             $password: default_password,
             requested_slug: name,
             group: this._group_from_role(),
+            color,
           },
         });
         await this.$api.loginToFolder({
@@ -228,6 +285,12 @@ export default {
       this.selected_structure_role = "";
       this.$alertify.success("Logged out");
     },
+    async updateConnectedAs(meta) {
+      await this.$api.updateMeta({
+        path: this.connected_as.$path,
+        new_meta: meta,
+      });
+    },
   },
 };
 </script>
@@ -242,7 +305,7 @@ export default {
   min-width: 0;
 }
 ._loginRow__role {
-  flex: 0 0 180px;
+  flex: 1;
 }
 .u-label {
   display: block;

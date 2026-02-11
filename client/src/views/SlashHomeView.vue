@@ -1,7 +1,7 @@
 <template>
   <div class="_homeView">
     <LoginModal v-if="show_login_modal" @close="show_login_modal = false" />
-    <FolderView v-else />
+    <FolderView />
   </div>
 </template>
 

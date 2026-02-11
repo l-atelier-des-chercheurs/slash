@@ -185,6 +185,9 @@
           },
           "projects_recently_edited": {
             "type": "array"
+          },
+          "color": {
+            "type": "string"
           }
         },
         "$files": {

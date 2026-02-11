@@ -46,8 +46,10 @@
 
       <div class="_dropMenu--buttonContainer">
         <button
+          v-if="connected_as"
           type="button"
           class="_dropMenu--userLabel"
+          :style="{ backgroundColor: connected_as.color }"
           @click="openLoginModal()"
         >
           {{ connected_as.name }}
@@ -55,6 +57,7 @@
         <button
           class="_dropMenu--openButton"
           :title="$t('import')"
+          :style="{ backgroundColor: connected_as.color }"
           :class="{
             'is--open': is_open,
           }"
@@ -213,8 +216,8 @@ $_peach_dark: #e8bc85;
 ._dropMenu--openButton {
   width: 72px;
   height: 72px;
-  font-size: 30px;
-  border-radius: 40%;
+  font-size: 20px;
+  border-radius: 50%;
   background-color: white;
   color: var(--c-noir);
   pointer-events: auto;
@@ -243,7 +246,7 @@ $_peach_dark: #e8bc85;
 
   &.is--open {
     transform: rotate(225deg);
-    background-color: var(--c-noir);
+    background-color: var(--c-noir) !important;
     border-radius: 50%;
     color: white;
 
