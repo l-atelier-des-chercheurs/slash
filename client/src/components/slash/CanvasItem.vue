@@ -105,6 +105,7 @@ export default {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: 4rem;
 }
 
 ._canvasItem--shadow {
@@ -177,16 +178,13 @@ export default {
 
 ._canvasItem--chatBubble {
   position: absolute;
-  top: calc(var(--spacing) / 4);
-  right: calc(var(--spacing) / 4);
-  z-index: 5;
+  top: calc(var(--spacing) / 1);
+  right: calc(var(--spacing) / 1);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  width: 2rem;
-  height: 2rem;
   border: none;
   border-radius: calc(var(--border-radius) - 2px);
   color: var(--g-800);
@@ -205,7 +203,9 @@ export default {
   }
 
   > .b-icon.bi {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    width: 1rem;
+    height: 1rem;
+    // box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
 }
 

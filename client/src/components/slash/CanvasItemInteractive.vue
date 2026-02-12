@@ -10,8 +10,13 @@
     @mousedown="handleMouseDown"
     :data-file-path="file.$path"
   >
-    <template v-if="file.$type === 'shape'">
+    <template v-if="file.$type === 'canvas_shape'">
       <div v-html="file.shape_svg" class="_canvasItem--shape" />
+    </template>
+    <template v-else-if="file.$type === 'canvas_text'">
+      <div class="_canvasItem--text">
+        <div v-html="file.text" />
+      </div>
     </template>
     <CanvasItem
       v-else
@@ -22,7 +27,7 @@
     />
 
     <div
-      v-if="file.$type !== 'shape'"
+      v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
@@ -396,13 +401,14 @@ export default {
     cursor: ew-resize;
   }
 
+  &:hover {
+  }
+
   // Hover effect moved from CanvasItem.vue (only for canvas mode now)
   &:hover,
   &.is--dragging {
     &:not(.is--resizing) {
-      ::v-deep ._canvasItem--content {
-        transform: translate(-5px, -5px);
-      }
+      outline: 2px solid var(--c-bleuvert);
     }
   }
 
@@ -413,6 +419,8 @@ export default {
   ._canvasItemContent {
     width: 100%;
     height: 100%;
+    min-height: 4rem;
+    min-width: 4rem;
   }
 
   ._canvasItem--resizeHandle {

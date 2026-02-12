@@ -407,7 +407,14 @@ export default {
       const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
       const clamped = Math.min(Math.max(zoom, min_zoom), max_zoom);
 
+      // Zoom around viewport center, like pinch
+      const center_x = this.center_x;
+      const center_y = this.center_y;
+
       this.current_zoom = clamped;
+      this.scroll_left = center_x * clamped - this.wrapper_ow / 2;
+      this.scroll_top = center_y * clamped - this.wrapper_oh / 2;
+      this.clampScroll();
 
       if (options.emit !== false) {
         this.handleInteractionEnd();

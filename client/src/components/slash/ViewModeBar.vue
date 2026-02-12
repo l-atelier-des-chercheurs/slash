@@ -41,9 +41,6 @@
       v-if="value === 'canvas'"
       class="_viewModeBar--row _viewModeBar--zoomRow"
     >
-      <!-- <span class="_viewModeBar--zoomLabel" aria-hidden="true">{{
-        canvasZoom
-      }}</span> -->
       <input
         type="range"
         class="_viewModeBar--zoomSlider"
@@ -122,13 +119,6 @@ export default {
   padding-bottom: 4px;
   // border-top: 1px solid var(--c-gris, #ccc);
   gap: 8px;
-}
-
-._viewModeBar--zoomLabel {
-  min-width: 2.5rem;
-  font-size: var(--sl-font-size-small);
-  font-variant-numeric: tabular-nums;
-  color: var(--c-gris_fonce, #555);
 }
 
 ._viewModeBar--zoomSlider {

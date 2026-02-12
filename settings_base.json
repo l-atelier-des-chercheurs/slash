@@ -153,6 +153,9 @@
             },
             "shape_svg": {
               "type": "string"
+            },
+            "text": {
+              "type": "string"
             }
           }
         }

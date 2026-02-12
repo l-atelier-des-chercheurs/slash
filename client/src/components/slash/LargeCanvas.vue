@@ -13,7 +13,7 @@
       :content_width="canvas_width"
       :content_height="canvas_height"
       :enable_drag_to_pan="false"
-      :margin_around_content="200"
+      :margin_around_content="margin_around_content"
       @scroll-end="updateScrollAndZoom"
     >
       <div
@@ -26,6 +26,7 @@
           width: `${canvas_width}px`,
           height: `${canvas_height}px`,
         }"
+        @click.self="handleCanvasClick"
       >
         <CanvasItemInteractive
           v-for="file in files"
@@ -48,6 +49,23 @@
           :folder_path="folder_path"
           :getCanvasCoords="getCanvasCoordinatesFromEvent"
         />
+        <transition name="fade">
+          <div
+            v-if="show_drop_menu"
+            class="_dropMenuPanelContainer"
+            :style="{
+              left: additional_meta.x + 'px',
+              top: additional_meta.y + 'px',
+              scale: 1 / zoom,
+            }"
+          >
+            <DropMenuPanel
+              :folder_path="folder_path"
+              :additional_meta="additional_meta"
+              @close="show_drop_menu = false"
+            />
+          </div>
+        </transition>
       </div>
       <!-- <div
         class="_currentCenterDot"
@@ -66,6 +84,7 @@ import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue"
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import CanvasShape from "@/components/slash/CanvasShape.vue";
+import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
 
 export default {
   props: {
@@ -86,24 +105,31 @@ export default {
     CanvasDrawOverlay,
     LeftToolbar,
     CanvasShape,
+    DropMenuPanel,
   },
   data() {
     return {
       canvas_topleft_x: 0,
       canvas_topleft_y: 0,
 
+      canvas_clicked_x: null,
+      canvas_clicked_y: null,
+
       current_mode: "pan-zoom",
 
       min_canvas_width: 1600,
       min_canvas_height: 1000,
+      margin_around_content: 500,
 
       lastLogTime: 0,
       saveStateTimeout: null,
+
+      show_add_menu: false,
+      show_drop_menu: false,
     };
   },
   computed: {
     canvas_width() {
-      const padding = 200;
       if (!this.files || this.files.length === 0) {
         return this.min_canvas_width;
       }
@@ -113,11 +139,10 @@ export default {
         const x = file.x || 0;
         right_edge = Math.max(right_edge, x + width);
       });
-      const cw = Math.round(right_edge + padding);
+      const cw = Math.round(right_edge + this.margin_around_content);
       return Math.max(this.min_canvas_width, cw);
     },
     canvas_height() {
-      const padding = 200;
       if (!this.files || this.files.length === 0) {
         return this.min_canvas_height;
       }
@@ -127,8 +152,19 @@ export default {
         const y = file.y || 0;
         bottom_edge = Math.max(bottom_edge, y + height);
       });
-      const ch = Math.round(bottom_edge + padding);
+      const ch = Math.round(bottom_edge + this.margin_around_content);
       return Math.max(this.min_canvas_height, ch);
+    },
+    additional_meta() {
+      if (!this.canvas_clicked_x || !this.canvas_clicked_y) return null;
+
+      const base_width = 320;
+
+      return {
+        x: this.canvas_clicked_x,
+        y: this.canvas_clicked_y,
+        width: this.zoom ? Math.round(base_width / this.zoom) : base_width,
+      };
     },
   },
   watch: {},
@@ -137,6 +173,17 @@ export default {
   },
   beforeDestroy() {},
   methods: {
+    handleCanvasClick(event) {
+      if (this.canvas_clicked_x !== null && this.canvas_clicked_y !== null) {
+        this.canvas_clicked_x = null;
+        this.canvas_clicked_y = null;
+        this.show_drop_menu = false;
+      } else {
+        this.canvas_clicked_x = event.offsetX;
+        this.canvas_clicked_y = event.offsetY;
+        this.show_drop_menu = true;
+      }
+    },
     updateScrollAndZoom({
       center_x,
       center_y,
@@ -255,14 +302,14 @@ export default {
   // border: var(--dot-size) solid var(--rule-color);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
   border-radius: var(--border-radius);
-  overflow: hidden;
+  overflow: visible;
   background-image: radial-gradient(
     circle,
     var(--rule-color) var(--dot-size),
     var(--background-color) var(--dot-size)
   );
   background-size: var(--rule-size) var(--rule-size);
-  background-position: calc(var(--rule-size) / 2) calc(var(--rule-size) / 2);
+  background-position: 0 0;
 
   @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     background-image: radial-gradient(
@@ -295,5 +342,34 @@ export default {
   background: var(--c-orange);
   border-radius: 50%;
   z-index: 1000;
+}
+
+._dropMenuPanelContainer {
+  position: absolute;
+  z-index: 2;
+
+  top: 0;
+  left: 0;
+  width: 520px;
+
+  transform-origin: top left;
+
+  ::v-deep {
+    ._dropMenu--panel {
+      flex-flow: row wrap;
+    }
+    ._dropMenu--btn {
+      border-radius: 1rem;
+    }
+    ._dropMenu--btn ._dropMenu--label {
+      position: relative;
+      right: auto;
+      left: auto;
+      margin-left: 12px;
+    }
+    ._dropMenu--panelWrapper {
+      align-items: flex-start;
+    }
+  }
 }
 </style>

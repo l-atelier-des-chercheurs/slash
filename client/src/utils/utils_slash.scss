@@ -310,3 +310,9 @@ input[type="file"] {
   font-size: var(--sl-font-size-x-small);
   font-family: var(--sl-font-mono);
 }
+
+hr {
+  border: none;
+  border-bottom: 2px solid var(--c-gris);
+  margin: calc(var(--spacing)) 0;
+}

@@ -1,7 +1,7 @@
 <template>
   <div class="_leftToolbar">
     <div class="_leftToolbar--content">
-      <div>
+      <!-- <div>
         <button
           type="button"
           class="u-button u-button_icon u-button_glass"
@@ -10,7 +10,7 @@
         >
           <b-icon icon="hand-index" />
         </button>
-      </div>
+      </div> -->
       <div>
         <button
           type="button"

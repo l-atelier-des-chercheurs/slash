@@ -144,7 +144,7 @@ export default {
       const requested_slug = `shape-${random_suffix}`;
 
       const additional_meta = {
-        $type: "shape",
+        $type: "canvas_shape",
         shape_svg: svg_content,
         x: Math.round(min_x),
         y: Math.round(min_y),

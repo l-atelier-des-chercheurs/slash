@@ -1,10 +1,6 @@
 <template>
-  <div class="_dropMenu">
-    <div
-      class="_dropMenu--overlay"
-      :class="{ 'is--open': is_open }"
-      @click="toggleOpen()"
-    ></div>
+  <div class="_dropMenu" :class="{ 'is--open': is_open }">
+    <div class="_dropMenu--overlay" @click="toggleOpen()"></div>
 
     <div
       class="_dropMenu--content"
@@ -12,37 +8,11 @@
         'is--open': is_open,
       }"
     >
-      <div class="_dropMenu--panel" :class="{ 'is--open': is_open }">
-        <div
-          v-for="(row, index) in typeRows"
-          :key="row.id"
-          class="_dropMenu--row"
-          :style="{
-            '--transition-delay': is_open
-              ? `${(typeRows.length - 1 - index) * 20}ms`
-              : '0ms',
-          }"
-        >
-          <template v-if="row.accept">
-            <label :for="inputId(row)" class="_dropMenu--btn">
-              <span class="_dropMenu--label">{{ row.label }}</span>
-              <b-icon :icon="row.icon" class="_dropMenu--icon" />
-            </label>
-            <input
-              :id="inputId(row)"
-              type="file"
-              class="_dropMenu--fileInput"
-              :accept="row.accept"
-              multiple
-              @change="onFileSelect($event, row)"
-            />
-          </template>
-          <button v-else type="button" class="_dropMenu--btn" @click.prevent>
-            <span class="_dropMenu--label">{{ row.label }}</span>
-            <b-icon :icon="row.icon" class="_dropMenu--icon" />
-          </button>
-        </div>
-      </div>
+      <DropMenuPanel
+        v-if="is_open"
+        :folder_path="folder_path"
+        :additional_meta="additional_meta"
+      />
 
       <div class="_dropMenu--buttonContainer">
         <button
@@ -67,20 +37,11 @@
         </button>
       </div>
     </div>
-
-    <UploadFiles
-      v-if="files_to_import.length > 0"
-      :files_to_import="files_to_import"
-      :path="folder_path"
-      :allow_caption_edition="true"
-      :additional_meta="additionalMeta"
-      @importedMedias="mediasJustImported($event)"
-      @close="files_to_import = []"
-    />
   </div>
 </template>
 <script>
 import ImportFileZone from "@/adc-core/ui/ImportFileZone.vue";
+import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
 
 export default {
   props: {
@@ -90,39 +51,11 @@ export default {
   },
   components: {
     ImportFileZone,
+    DropMenuPanel,
   },
   data() {
     return {
-      files_to_import: [],
       is_open: false,
-      typeRows: [
-        { id: "texte", label: this.$t("text"), icon: "file-earmark-text" },
-        { id: "embed", label: this.$t("embed"), icon: "puzzle" },
-        {
-          id: "audio",
-          label: this.$t("audio"),
-          icon: "record-circle-fill",
-          accept: "audio/*",
-        },
-        {
-          id: "fichier",
-          label: this.$t("file"),
-          icon: "file-earmark",
-          accept: "*/*",
-        },
-        // {
-        //   id: "video",
-        //   label: this.$t("video"),
-        //   icon: "play-fill",
-        //   accept: "video/*",
-        // },
-        // {
-        //   id: "image",
-        //   label: this.$t("image"),
-        //   icon: "image",
-        //   accept: "image/*",
-        // },
-      ],
     };
   },
   created() {},
@@ -130,7 +63,7 @@ export default {
   beforeDestroy() {},
   watch: {},
   computed: {
-    additionalMeta() {
+    additional_meta() {
       if (!this.canvas_scroll) return {};
       const baseWidth = 320;
       return {
@@ -143,19 +76,6 @@ export default {
     },
   },
   methods: {
-    inputId(row) {
-      return `_dropMenu--file-${row.id}`;
-    },
-    onFileSelect($event, row) {
-      const files = Array.from($event.target.files || []);
-      $event.target.value = "";
-      if (files.length) {
-        this.files_to_import = files;
-      }
-    },
-    mediasJustImported(medias) {
-      console.log(medias);
-    },
     openLoginModal() {
       this.$eventHub.$emit("login.openModal");
     },
@@ -171,6 +91,10 @@ $_peach_dark: #e8bc85;
 
 ._dropMenu {
   pointer-events: none;
+
+  &.is--open {
+    z-index: 1001;
+  }
 }
 
 ._dropMenu--content {
@@ -193,14 +117,14 @@ $_peach_dark: #e8bc85;
   width: 100%;
   height: 100%;
   background-color: rgba(255, 255, 255, 0.4);
-  z-index: 1001;
+  // z-index: 1001;
   backdrop-filter: blur(10px);
 
   transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
 
   opacity: 0;
 
-  &.is--open {
+  ._dropMenu.is--open & {
     opacity: 1;
     pointer-events: auto;
   }
@@ -254,77 +178,6 @@ $_peach_dark: #e8bc85;
       background-color: var(--c-gris_fonce);
     }
   }
-}
-
-._dropMenu--panel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-
-  &.is--open {
-    pointer-events: auto;
-  }
-}
-
-._dropMenu--row {
-  opacity: 0;
-  transition-property: opacity;
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
-  transition-delay: var(--transition-delay);
-
-  ._dropMenu--panel.is--open & {
-    opacity: 1;
-  }
-}
-
-._dropMenu--btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  border: none;
-  border-radius: 50%;
-  padding: 8px;
-  cursor: pointer;
-  color: var(--c-noir);
-  background: white;
-  font-size: 1.25rem;
-  font-weight: 500;
-  text-transform: lowercase;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-
-  &:hover {
-    background: var(--c-noir);
-    color: white;
-  }
-  &:focus {
-    outline: none;
-  }
-
-  ._dropMenu--label {
-    position: absolute;
-    color: var(--c-noir);
-    right: calc(100% + 8px);
-  }
-}
-
-._dropMenu--icon {
-  display: block;
-  // width: 30px;
-  // height: 30px;
-}
-
-._dropMenu--fileInput {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  pointer-events: none;
 }
 
 ._dropMenu--userLabel {

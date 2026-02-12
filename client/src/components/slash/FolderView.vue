@@ -25,15 +25,15 @@
       />
       <GeoMapView
         v-show="viewMode === 'map'"
-        :files="filtered_files_without_shapes"
+        :files="filtered_files_without_canvas_items"
       />
       <TimelineView
         v-show="viewMode === 'timeline'"
-        :files="filtered_files_without_shapes"
+        :files="filtered_files_without_canvas_items"
       />
       <MediaGridView
         v-show="viewMode === 'grid'"
-        :files="filtered_files_without_shapes"
+        :files="filtered_files_without_canvas_items"
       />
     </div>
 
@@ -151,8 +151,8 @@ export default {
       }
       return files.filter((f) => f.$type === type);
     },
-    filtered_files_without_shapes() {
-      return this.filtered_files.filter((f) => f.$type !== "shape");
+    filtered_files_without_canvas_items() {
+      return this.filtered_files.filter((f) => !f.$type.startsWith("canvas_"));
     },
   },
   methods: {

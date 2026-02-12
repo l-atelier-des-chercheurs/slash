@@ -1,5 +1,11 @@
 <template>
   <div class="_itemMeta">
+    <strong class="_itemMeta--filename">
+      {{ file.$media_filename }}
+    </strong>
+
+    <hr class="_itemMeta--separator" />
+
     <div class="u-spacingBottom">
       <TitleField
         :label="$t('caption')"
@@ -89,6 +95,24 @@ export default {
   border-radius: var(--border-radius);
   overflow: auto;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-  padding: calc(var(--spacing) * 1);
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 1.5);
+}
+
+._itemMeta--filename {
+  // font-size: var(--sl-font-size-large);
+  // font-weight: 600;
+  text-align: center;
+
+  display: block;
+  // padding-bottom: calc(var(--spacing) / 2);
+}
+
+._itemMeta--separator {
+  // border: none;
+  // border-bottom: 2px solid var(--c-gris_clair);
+  margin-bottom: calc(var(--spacing));
+  max-width: 50px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
