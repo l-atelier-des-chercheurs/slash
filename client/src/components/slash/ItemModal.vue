@@ -93,8 +93,16 @@ export default {
     };
   },
   created() {},
-  mounted() {},
-  beforeDestroy() {},
+  mounted() {
+    // Clear any existing text selection to prevent modal content from being selected
+    if (window.getSelection) {
+      window.getSelection().removeAllRanges();
+    }
+    window.addEventListener("keyup", this.handleKeyPress);
+  },
+  beforeDestroy() {
+    window.removeEventListener("keyup", this.handleKeyPress);
+  },
   watch: {
     current_view(new_view) {
       if (new_view === "chats") this.has_opened_chats = true;
@@ -110,6 +118,12 @@ export default {
     },
   },
   methods: {
+    handleKeyPress($event) {
+      if ($event.key === "Escape") {
+        this.closeModal();
+        $event.stopImmediatePropagation();
+      }
+    },
     setView(view_name) {
       this.current_view = view_name;
     },
@@ -126,6 +140,7 @@ export default {
   right: 0;
   margin: var(--spacing);
   z-index: 1;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 ._itemModal {
   position: fixed;
@@ -142,7 +157,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(241, 241, 241, 0.85);
+  background: rgba(241, 241, 241, 0.2);
   backdrop-filter: blur(10px);
   z-index: -1;
   cursor: pointer;

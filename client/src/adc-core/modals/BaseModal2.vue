@@ -112,6 +112,12 @@ export default {
   created() {},
   mounted() {
     this.show_modal = true;
+
+    // Clear any existing text selection to prevent modal content from being selected
+    if (window.getSelection) {
+      window.getSelection().removeAllRanges();
+    }
+
     window.addEventListener("keyup", this.handleKeyPress);
 
     this.$eventHub.$emit(`modal.is_opened`);

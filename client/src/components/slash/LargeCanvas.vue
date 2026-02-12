@@ -12,7 +12,7 @@
       :zoom_range="zoom_range"
       :content_width="canvas_width"
       :content_height="canvas_height"
-      :enable_drag_to_pan="current_mode === 'pan-zoom'"
+      :enable_drag_to_pan="false"
       :margin_around_content="200"
       @scroll-end="updateScrollAndZoom"
     >

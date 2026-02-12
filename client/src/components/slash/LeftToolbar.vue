@@ -15,6 +15,16 @@
         <button
           type="button"
           class="u-button u-button_icon u-button_glass"
+          :class="{ 'is--active': current_mode === 'pan-zoom' }"
+          @click="selectMode('pan-zoom')"
+        >
+          <b-icon icon="hand-index" />
+        </button>
+      </div>
+      <div>
+        <button
+          type="button"
+          class="u-button u-button_icon u-button_glass"
           :class="{ 'is--active': current_mode === 'draw' }"
           @click="selectMode('draw')"
         >

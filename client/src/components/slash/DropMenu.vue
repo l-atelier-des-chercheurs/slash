@@ -175,7 +175,7 @@ $_peach_dark: #e8bc85;
 
 ._dropMenu--content {
   position: fixed;
-  z-index: 1002;
+  z-index: 900;
   bottom: calc(var(--spacing) * 2);
   right: calc(var(--spacing) * 2);
   padding: calc(var(--spacing) / 1);
