@@ -62,8 +62,8 @@ export default {
   data() {
     return {
       typeRows: [
-        { id: "text", label: this.$t("text"), icon: "file-earmark-text" },
-        { id: "embed", label: this.$t("embed"), icon: "puzzle" },
+        // { id: "text", label: this.$t("text"), icon: "file-earmark-text" },
+        // { id: "embed", label: this.$t("embed"), icon: "puzzle" },
         {
           id: "audio",
           label: this.$t("audio"),

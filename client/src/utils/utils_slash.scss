@@ -38,7 +38,7 @@ textarea,
   margin: 0;
 
   background-color: var(--input-bg-color, var(--c-gris_clair));
-  border: 1px solid var(--input-border-color, var(--c-gris));
+  border: 2px solid transparent;
   border-radius: var(--input-border-radius, 4px);
 
   line-height: 1.5;
@@ -50,7 +50,7 @@ textarea,
 
   &:focus {
     outline: none;
-    border-color: var(--input-border-color-focus, var(--c-bleuvert));
+    border-color: var(--input-border-color-focus);
     background-color: white;
   }
 

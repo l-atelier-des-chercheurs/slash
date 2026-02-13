@@ -50,21 +50,13 @@
           :getCanvasCoords="getCanvasCoordinatesFromEvent"
         />
         <transition name="fade">
-          <div
+          <DropMenuPanelContainer
             v-if="show_drop_menu"
-            class="_dropMenuPanelContainer"
-            :style="{
-              left: additional_meta.x + 'px',
-              top: additional_meta.y + 'px',
-              scale: 1 / zoom,
-            }"
-          >
-            <DropMenuPanel
-              :folder_path="folder_path"
-              :additional_meta="additional_meta"
-              @close="show_drop_menu = false"
-            />
-          </div>
+            :additional_meta="additional_meta"
+            :zoom="zoom"
+            :folder_path="folder_path"
+            @close="show_drop_menu = false"
+          />
         </transition>
       </div>
       <!-- <div
@@ -84,7 +76,7 @@ import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue"
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import CanvasShape from "@/components/slash/CanvasShape.vue";
-import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
+import DropMenuPanelContainer from "@/components/slash/DropMenuPanelContainer.vue";
 
 export default {
   props: {
@@ -105,7 +97,7 @@ export default {
     CanvasDrawOverlay,
     LeftToolbar,
     CanvasShape,
-    DropMenuPanel,
+    DropMenuPanelContainer,
   },
   data() {
     return {
@@ -342,34 +334,5 @@ export default {
   background: var(--c-orange);
   border-radius: 50%;
   z-index: 1000;
-}
-
-._dropMenuPanelContainer {
-  position: absolute;
-  z-index: 2;
-
-  top: 0;
-  left: 0;
-  width: 520px;
-
-  transform-origin: top left;
-
-  ::v-deep {
-    ._dropMenu--panel {
-      flex-flow: row wrap;
-    }
-    ._dropMenu--btn {
-      border-radius: 1rem;
-    }
-    ._dropMenu--btn ._dropMenu--label {
-      position: relative;
-      right: auto;
-      left: auto;
-      margin-left: 12px;
-    }
-    ._dropMenu--panelWrapper {
-      align-items: flex-start;
-    }
-  }
 }
 </style>
