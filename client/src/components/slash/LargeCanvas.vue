@@ -288,29 +288,22 @@ export default {
   // Dot grid pattern with --color-rule; pans with content (this div is inside the panned viewport)
   --rule-color: var(--color-rule);
   --background-color: white;
-  --rule-size: 100px;
+  --bg-size: 100px;
+  --bg-position: 0 0;
   --dot-size: 4px;
 
   // border: var(--dot-size) solid var(--rule-color);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
-  border-radius: var(--border-radius);
+  // border-radius: var(--border-radius);
   overflow: visible;
-  background-image: radial-gradient(
-    circle,
-    var(--rule-color) var(--dot-size),
-    var(--background-color) var(--dot-size)
-  );
-  background-size: var(--rule-size) var(--rule-size);
-  background-position: 0 0;
 
-  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    background-image: radial-gradient(
-      circle,
-      var(--rule-color) var(--dot-size),
-      var(--background-color) var(--dot-size)
-    );
-    background-size: var(--rule-size) var(--rule-size);
-  }
+  // draw tiny SLASH "/" in the background
+  background-color: #ffffff;
+
+  background-image: radial-gradient(#000000 1px, transparent 1px),
+    radial-gradient(#000000 1px, #ffffff 1px);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 20px;
 }
 
 ._largeCanvas.is--drawMode {
