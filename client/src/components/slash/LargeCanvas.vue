@@ -39,8 +39,10 @@
           :canvas_width="canvas_width"
           :canvas_height="canvas_height"
           :canvas_zoom="zoom"
+          :is_selected="selected_files.includes(file.$path)"
           @position-update="handlePositionUpdate"
           @width-update="handleWidthUpdate"
+          @select="handleSelect"
         />
         <CanvasDrawOverlay
           v-if="current_mode === 'draw'"
@@ -118,6 +120,8 @@ export default {
 
       show_add_menu: false,
       show_drop_menu: false,
+
+      selected_files: [],
     };
   },
   computed: {
@@ -174,6 +178,20 @@ export default {
         this.canvas_clicked_x = event.offsetX;
         this.canvas_clicked_y = event.offsetY;
         this.show_drop_menu = true;
+      }
+
+      if (event.metaKey || event.shiftKey) {
+        return;
+      } else {
+        this.selected_files = [];
+      }
+    },
+    handleSelect(file_path, mode) {
+      // if command or shift is pressed, append to selected_files; otherwise, replace
+      if (mode === "append") {
+        this.selected_files.push(file_path);
+      } else {
+        this.selected_files = [file_path];
       }
     },
     updateScrollAndZoom({

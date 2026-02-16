@@ -4,6 +4,7 @@
     :class="{
       'is--dragging': has_dragged,
       'is--resizing': isResizing,
+      'is--selected': is_selected,
     }"
     :style="itemStyle"
     :data-file-type="file.$type"
@@ -31,7 +32,11 @@
       v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
       :style="'--scale-factor: ' + canvas_zoom"
     >
-      <button type="button" class="u-button" @click="handleOpen">
+      <button
+        type="button"
+        class="u-button u-button_icon u-button_glass _openBtn"
+        @click="handleOpen"
+      >
         <b-icon icon="box-arrow-up-right" />
       </button>
     </div>
@@ -74,6 +79,10 @@ export default {
     canvas_zoom: {
       type: Number,
       default: 1,
+    },
+    is_selected: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {
@@ -195,6 +204,9 @@ export default {
 
       this.isDragging = true;
       this.has_dragged = false;
+
+      const mode = event.metaKey || event.shiftKey ? "append" : "replace";
+      this.$emit("select", this.file.$path, mode);
 
       // Get canvas container
       const canvasContainer = this.$el.closest("._largeCanvas");
@@ -423,9 +435,17 @@ export default {
   &:hover,
   &.is--dragging,
   &.is--resizing {
-    outline: var(--scale-factor) solid var(--c-noir);
+    outline: var(--scale-factor) solid;
+    outline-color: var(--active-color);
     outline-offset: 4px;
     outline-style: dashed;
+  }
+
+  &.is--selected {
+    outline-offset: 4px;
+    outline-style: solid;
+    outline: var(--scale-factor) solid;
+    outline-color: var(--active-color);
   }
 
   &[data-file-type="shape"] {
@@ -445,29 +465,32 @@ export default {
     opacity: 0;
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
-    button {
-      // background-color: rgba(255, 255, 255, 0.7);
-      // color: black;
-      // border: none;
+    ._openBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 10rem;
       height: 6rem;
+      text-align: center;
       border-radius: 8rem;
       pointer-events: auto;
       font-size: 3rem;
+
+      &:hover {
+        // background-color: rgba(255, 255, 255, 1);
+      }
     }
   }
   &[data-file-type="audio"] ._canvasItem--open button {
-    height: 4rem;
+    height: 3rem;
     width: 6rem;
     border-radius: 6rem;
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   ._canvasItemContent {
     width: 100%;
     height: 100%;
-    min-height: 4rem;
-    min-width: 4rem;
   }
 
   ._canvasItem--resizeHandle {
