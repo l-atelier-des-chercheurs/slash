@@ -26,9 +26,15 @@
         :media="file"
         @close="show_optimize_modal = false"
       />
+      <BlurMedia
+        v-if="show_blur_modal"
+        :media="file"
+        @close="show_blur_modal = false"
+      />
 
       <div class="_meta" v-if="show_meta_sidebar || $root.is_mobile_view">
         <div class="u-spacingBottom">
+          pro {{ file.$processing }}
           <div class="_topbar">
             <h3>
               {{ $t("media") }}
@@ -227,8 +233,17 @@
               v-if="show_cropadjust_modal"
               :media="file"
               @close="show_cropadjust_modal = false"
-              @closeParentModal="$emit('close')"
             />
+
+            <button
+              type="button"
+              class="u-button u-button_orange"
+              v-if="blur_possible"
+              @click="show_blur_modal = true"
+            >
+              <b-icon :icon="'dash-circle-dotted'" />
+              {{ $t("to_blur") }}
+            </button>
 
             <button
               type="button"
@@ -236,7 +251,7 @@
               v-if="optimization_possible"
               @click="show_optimize_modal = true"
             >
-              <b-icon :icon="'file-play-fill'" />
+              <b-icon icon="sliders" />
               <template v-if="file.$type === 'image'">
                 {{ $t("optimize_resize") }}
               </template>
@@ -306,7 +321,7 @@
                 class="u-button u-button_orange"
                 @click="show_optimize_modal = true"
               >
-                <b-icon :icon="'file-play-fill'" />
+                <b-icon icon="sliders" />
                 {{ $t("convert_shorten") }}
               </button>
             </div>
@@ -348,12 +363,14 @@ export default {
     NavOverlay,
     DuplicateMedia,
     CropAdjustMedia: () => import("@/adc-core/fields/CropAdjustMedia.vue"),
+    BlurMedia: () => import("@/adc-core/fields/BlurMedia.vue"),
     OptimizeMedia: () => import("@/adc-core/fields/OptimizeMedia.vue"),
     PositionPicker: () => import("@/adc-core/inputs/PositionPicker.vue"),
   },
   data() {
     return {
       show_cropadjust_modal: false,
+      show_blur_modal: false,
       show_nav_btn: false,
       show_meta_sidebar: true,
       is_regenerating: false,
@@ -388,6 +405,9 @@ export default {
       if (this.available_makes?.length > 0)
         count += this.available_makes.length;
       return count;
+    },
+    blur_possible() {
+      return this.cropadjust_possible;
     },
     cropadjust_possible() {
       return (

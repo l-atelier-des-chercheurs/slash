@@ -175,6 +175,7 @@ export default {
   section_title: "Chapter title",
   section: "Chapter",
   in_this_section: "In this chapter",
+  on_the_cover: "On the cover",
   in_another_section: "In another chapter",
   change_section: "Move to another chapter",
   remove_section: "Remove this chapter",
@@ -362,11 +363,15 @@ export default {
   version: "Version",
 
   panes: "Panes",
+  panes_visible_in_project_instr:
+    "Choose which panes are available in this project. Only these will appear in the bar above.",
+  panes_hidden_in_project_instr:
+    "Shown panes are checked. Uncheck a pane to hide it from the project bar.",
   capture: "Capture",
   collect: "Collect",
   make: "Make",
   publish: "Publish",
-  notes_todo: "Notes/todo",
+  notes_todo: "Todo",
 
   projects_you_edited_last: "Projects you edited last",
 
@@ -705,8 +710,6 @@ export default {
   export_montage: "Export montage",
   export_stomotion: "Export animation",
 
-  video_to_rework: "Video to edit",
-
   pick_audio: "Pick audio media",
   pick_image: "Pick image media",
   pick_video: "Pick video media",
@@ -829,6 +832,10 @@ export default {
   lines_angle: "Lines angle",
   number_of_colors: "Number of colors",
   blur: "Blur",
+  brush_size: "Brush size",
+  feather: "Feather",
+  blur_radius: "Blur radius",
+  clear: "Clear",
   hue: "Hue",
   saturation: "Saturation",
   lightness: "Clarity",
@@ -1129,6 +1136,9 @@ export default {
 
   already_optimized:
     "This media has already been converted, it is not recommended to convert it again.",
+  resized: "Resized",
+  cropped: "Cropped",
+  blurred: "Blurred",
   preview_new: "Create new version",
   wont_remove_original: "Will not remove the original",
   replace_original: "Replace original media",
@@ -1144,6 +1154,7 @@ export default {
   very_close: "Very close",
   enable_indexing: "Enable indexing on search engines",
   crop_adjust: "Crop/adjust",
+  to_blur: "Blur/anonymize",
   aspect_ratio: "Aspect ratio",
   square: "Square",
   original: "Original",
@@ -1499,16 +1510,14 @@ export default {
   muted: "Muted",
   show_controls: "Show controls",
 
-  new_note_todo: "Nouvelle note/tâche",
-  list_of_notes_todo: "No note/task | {count} note/task | {count} notes/tasks",
-  archived:
-    "No note/task archived | {count} note/task archived | {count} notes/tasks archived",
+  new_note_todo: "New task",
+  list_of_notes_todo: "No task | {count} task | {count} tasks",
+  archived: "No task archived | {count} task archived | {count} tasks archived",
   done_on: "Done on",
 
   create_list: "Create list",
-  create_list_instructions:
-    "Create a new list to organize your notes and tasks.",
-  no_notes_to_show: "No notes to show",
+  create_list_instructions: "Create a new list to organize your tasks.",
+  no_notes_to_show: "No tasks to show",
   note_content: "Note content…",
   linked_project: "Linked project",
   object_fit: "Fitting",

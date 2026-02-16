@@ -41,6 +41,9 @@
       :path="current_project_path"
       :select_mode="select_mode"
       :pick_from_types="pick_from_types"
+      :meta_filenames_already_present_from_parent="
+        meta_filenames_already_present_from_parent
+      "
       @pickMedias="handlePickMedias"
       @close="handleClose"
     />
@@ -66,9 +69,19 @@ export default {
       default: "multiple",
     },
     pick_from_types: [String, Array],
+    // Caller can pass when it has the value (e.g. under EditionTemplate) so child modal gets it despite portal.
+    passed_meta_filenames_already_present: {
+      type: Array,
+      default: undefined,
+    },
   },
   components: {
     ResourcesPicker,
+  },
+  inject: {
+    $getMetaFilenamesAlreadyPresent: {
+      default: false,
+    },
   },
   data() {
     return {
@@ -79,6 +92,13 @@ export default {
   beforeDestroy() {},
   watch: {},
   computed: {
+    meta_filenames_already_present_from_parent() {
+      if (this.passed_meta_filenames_already_present !== undefined)
+        return this.passed_meta_filenames_already_present;
+      return this.$getMetaFilenamesAlreadyPresent
+        ? this.$getMetaFilenamesAlreadyPresent()
+        : [];
+    },
     current_project_path() {
       const all_publications_path = this.getParent(this.publication_path);
       return this.getParent(all_publications_path);

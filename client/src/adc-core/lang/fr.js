@@ -240,6 +240,7 @@ export default {
   section_title: "Titre du chapitre",
   section: "Chapitre",
   in_this_section: "Dans ce chapitre",
+  on_the_cover: "Sur la couverture",
   in_another_section: "Dans un autre chapitre",
   change_section: "Déplacer vers un autre chapitre",
   remove_section: "Supprimer le chapitre",
@@ -520,8 +521,6 @@ export default {
   export_montage: "Exporter le montage",
   export_stomotion: "Exporter l’animation",
 
-  video_to_rework: "Vidéo à retrailler",
-
   pick_audio: "Choisissez le son à utiliser",
   pick_image: "Choisissez l’image à utiliser",
   pick_video: "Choisissez la vidéo à utiliser",
@@ -668,6 +667,10 @@ export default {
   lines_angle: "Angle des lignes",
   number_of_colors: "Nombre de couleurs",
   blur: "Flou",
+  brush_size: "Taille du pinceau",
+  feather: "Adoucissement",
+  blur_radius: "Rayon du flou",
+  clear: "Effacer",
   hue: "Teinte",
   saturation: "Saturation",
   lightness: "Clarté",
@@ -1031,11 +1034,15 @@ export default {
   general_informations: "Informations sur l’instance",
 
   panes: "Panneaux",
+  panes_visible_in_project_instr:
+    "Choisissez les panneaux disponibles dans ce projet. Seuls ceux-ci apparaîtront dans la barre ci‑dessus.",
+  panes_hidden_in_project_instr:
+    "Les panneaux affichés sont cochés. Décochez un panneau pour le masquer de la barre du projet.",
   capture: "Capter",
   collect: "Collecter",
   make: "Fabriquer",
   publish: "Publier",
-  notes_todo: "Notes/tâches",
+  notes_todo: "Tâches",
 
   projects_you_edited_last: "Derniers projets que vous avez modifiés",
 
@@ -1201,6 +1208,9 @@ export default {
 
   already_optimized:
     "Ce média a déjà été converti, le convertir à nouveau risque de dégrader sa qualité de manière importante.",
+  resized: "Redimensionné",
+  cropped: "Recadré",
+  blurred: "Flouté",
   preview_new: "Créer une nouvelle version",
   wont_remove_original: "Ne supprimera pas l’original",
   replace_original: "Remplacer l’original",
@@ -1216,6 +1226,7 @@ export default {
   very_close: "Très près",
   enable_indexing: "Permettre l’indexation par les moteurs de recherche",
   crop_adjust: "Recadrer/retoucher",
+  to_blur: "Flouter/anonymiser",
   aspect_ratio: "Rapport largeur/hauteur",
   square: "Carré",
   original: "Original",
@@ -1568,16 +1579,15 @@ export default {
   non_contributor: "Non contributeur",
   space_title: "Titre de l’espace",
 
-  new_note_todo: "Nouvelle note/tâche",
-  list_of_notes_todo:
-    "Aucune note/tâche | {count} note/tâche | {count} notes/tâches",
+  new_note_todo: "Nouvelle tâche",
+  list_of_notes_todo: "Aucune tâche | {count} tâche | {count} tâches",
   archived:
-    "Aucune note/tâche archivée | {count} note/tâche archivée | {count} notes/tâches archivées",
+    "Aucune tâche archivée | {count} tâche archivée | {count} tâches archivées",
   done_on: "Terminé le",
 
   create_list: "Créer une liste",
   create_list_instructions:
-    "Créez une nouvelle liste pour organiser vos notes et tâches.",
+    "Créez une nouvelle liste pour organiser vos tâches.",
   no_notes_to_show: "Aucune note à afficher",
   note_content: "Contenu de la note…",
   linked_project: "Projet en lien",

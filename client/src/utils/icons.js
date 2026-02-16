@@ -148,6 +148,7 @@ import {
   BIconEyeSlashFill,
   BIconBoundingBox,
   BIconRulers,
+  BIconSliders,
   BIconClock,
   BIconFilter,
   BIconThreeDots,
@@ -175,6 +176,8 @@ import {
   BIconLayoutSidebarInset,
   BIconLayoutSidebarReverse,
   BIconLayoutSidebarInsetReverse,
+  BIconDashCircleDotted,
+  BIconEraser,
 } from "bootstrap-vue";
 
 Vue.component("BIconShieldCheck", BIconShieldCheck);
@@ -322,6 +325,7 @@ Vue.component("BIconEyeFill", BIconEyeFill);
 Vue.component("BIconEyeSlashFill", BIconEyeSlashFill);
 Vue.component("BIconBoundingBox", BIconBoundingBox);
 Vue.component("BIconRulers", BIconRulers);
+Vue.component("BIconSliders", BIconSliders);
 Vue.component("BIconClock", BIconClock);
 Vue.component("BIconFilter", BIconFilter);
 Vue.component("BIconThreeDots", BIconThreeDots);
@@ -350,3 +354,5 @@ Vue.component("BIconLayoutSidebar", BIconLayoutSidebar);
 Vue.component("BIconLayoutSidebarInset", BIconLayoutSidebarInset);
 Vue.component("BIconLayoutSidebarReverse", BIconLayoutSidebarReverse);
 Vue.component("BIconLayoutSidebarInsetReverse", BIconLayoutSidebarInsetReverse);
+Vue.component("BIconDashCircleDotted", BIconDashCircleDotted);
+Vue.component("BIconEraser", BIconEraser);
