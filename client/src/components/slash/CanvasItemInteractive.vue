@@ -42,7 +42,13 @@
     </div>
 
     <div
-      v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
+      class="_canvasItem--selectedBorder"
+      v-if="!isResizing && !has_dragged"
+    ></div>
+    <div
+      v-if="
+        !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected
+      "
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
@@ -309,7 +315,10 @@ export default {
         y: this.currentY,
       });
     },
-    handleMouseUp() {
+    handleMouseUp(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
       if (this.isResizing) {
         this.isResizing = false;
 
@@ -403,6 +412,7 @@ export default {
 <style lang="scss" scoped>
 ._canvasItem {
   --shadow-size: 5px;
+  --selected-border-width: max(calc(2px / var(--scale-factor)), 4px);
 
   position: absolute;
   width: 160px;
@@ -414,39 +424,6 @@ export default {
   user-select: none;
 
   transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
-
-  &.is--dragging {
-    cursor: pointer;
-
-    ._canvasItemContent {
-    }
-  }
-  &.is--resizing {
-    cursor: ew-resize;
-  }
-
-  &:hover {
-    ._canvasItem--open {
-      opacity: 1;
-    }
-  }
-
-  // Hover effect moved from CanvasItem.vue (only for canvas mode now)
-  &:hover,
-  &.is--dragging,
-  &.is--resizing {
-    outline: var(--scale-factor) solid;
-    outline-color: var(--active-color);
-    outline-offset: 4px;
-    outline-style: dashed;
-  }
-
-  &.is--selected {
-    outline-offset: 4px;
-    outline-style: solid;
-    outline: var(--scale-factor) solid;
-    outline-color: var(--active-color);
-  }
 
   &[data-file-type="shape"] {
     pointer-events: none;
@@ -487,6 +464,30 @@ export default {
     border-radius: 6rem;
     font-size: 1.5rem;
   }
+  &:hover {
+    ._canvasItem--open {
+      opacity: 1;
+    }
+  }
+
+  &:hover,
+  &.is--selected {
+    &:not(.is--dragging),
+    &:not(.is--resizing) {
+      ._canvasItem--selectedBorder {
+        opacity: 1;
+      }
+    }
+  }
+
+  ._canvasItem--selectedBorder {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    outline: var(--selected-border-width) solid var(--active-color);
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+  }
 
   ._canvasItemContent {
     width: 100%;
@@ -510,21 +511,17 @@ export default {
     cursor: nwse-resize;
     z-index: 10;
     pointer-events: auto;
-    opacity: 0;
 
-    transform: scale(calc(1 / var(--scale-factor)));
     transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
     &::before {
       content: "";
       display: block;
       width: var(--button-size);
-      height: calc(var(--button-size) / 2.5);
-      transform: rotate(90deg);
-      background-color: transparent;
-      border-radius: calc(var(--button-size) / 2);
-      box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
-      transform: rotate(45deg);
+      height: calc(var(--button-size));
+      // transform: rotate(90deg);
+      background-color: white;
+      outline: var(--selected-border-width) solid var(--active-color);
       transition: all 0.2s;
     }
 
@@ -534,33 +531,19 @@ export default {
       transform: translateY(-50%);
 
       &::before {
-        transform: rotate(90deg);
       }
     }
 
     &:hover::before {
-      background-color: black;
+      background-color: var(--active-color);
       // box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
     }
   }
 
   &.is--resizing {
     ._canvasItem--resizeHandle::before {
-      background-color: black;
+      background-color: var(--active-color);
       // box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
-    }
-  }
-
-  &:hover,
-  &.is--dragging,
-  &.is--resizing {
-    ._canvasItemContent {
-      width: 100%;
-      height: 100%;
-    }
-
-    ._canvasItem--resizeHandle {
-      opacity: 1;
     }
   }
 }

@@ -99,6 +99,7 @@ export default {
   width: 320px;
 
   transform-origin: top left;
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
   &::before {
     content: "";
