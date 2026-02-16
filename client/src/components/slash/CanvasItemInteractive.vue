@@ -27,6 +27,16 @@
     />
 
     <div
+      class="_canvasItem--open"
+      v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
+      :style="'--scale-factor: ' + canvas_zoom"
+    >
+      <button type="button" class="u-button" @click="handleOpen">
+        <b-icon icon="box-arrow-up-right" />
+      </button>
+    </div>
+
+    <div
       v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
@@ -170,6 +180,9 @@ export default {
       this.resizeStartX = event.clientX;
       this.resizeStartWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+    },
+    handleOpen() {
+      this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
     handleMouseDown(event) {
       // Don't start dragging if clicking on resize handle
@@ -394,7 +407,6 @@ export default {
     cursor: pointer;
 
     ._canvasItemContent {
-      pointer-events: none;
     }
   }
   &.is--resizing {
@@ -402,18 +414,53 @@ export default {
   }
 
   &:hover {
+    ._canvasItem--open {
+      opacity: 1;
+    }
   }
 
   // Hover effect moved from CanvasItem.vue (only for canvas mode now)
   &:hover,
-  &.is--dragging {
-    &:not(.is--resizing) {
-      outline: 2px solid var(--c-bleuvert);
-    }
+  &.is--dragging,
+  &.is--resizing {
+    outline: var(--scale-factor) solid var(--c-noir);
+    outline-offset: 4px;
+    outline-style: dashed;
   }
 
   &[data-file-type="shape"] {
     pointer-events: none;
+  }
+
+  ._canvasItem--open {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
+    button {
+      // background-color: rgba(255, 255, 255, 0.7);
+      // color: black;
+      // border: none;
+      width: 10rem;
+      height: 6rem;
+      border-radius: 8rem;
+      pointer-events: auto;
+      font-size: 3rem;
+    }
+  }
+  &[data-file-type="audio"] ._canvasItem--open button {
+    height: 4rem;
+    width: 6rem;
+    border-radius: 6rem;
+    font-size: 2rem;
   }
 
   ._canvasItemContent {

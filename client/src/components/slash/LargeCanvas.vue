@@ -290,7 +290,7 @@ export default {
   --background-color: white;
   --bg-size: 100px;
   --bg-position: 0 0;
-  --dot-size: 4px;
+  --dot-size: 2px;
 
   // border: var(--dot-size) solid var(--rule-color);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
@@ -300,10 +300,16 @@ export default {
   // draw tiny SLASH "/" in the background
   background-color: #ffffff;
 
-  background-image: radial-gradient(#000000 1px, transparent 1px),
-    radial-gradient(#000000 1px, #ffffff 1px);
-  background-size: 40px 40px;
-  background-position: 0 0, 20px 20px;
+  background-image: radial-gradient(
+      var(--rule-color) var(--dot-size),
+      transparent var(--dot-size)
+    ),
+    radial-gradient(
+      var(--rule-color) var(--dot-size),
+      transparent var(--dot-size)
+    );
+  background-size: var(--bg-size) var(--bg-size);
+  background-position: 0 0, calc(var(--bg-size) / 2) calc(var(--bg-size) / 2);
 }
 
 ._largeCanvas.is--drawMode {

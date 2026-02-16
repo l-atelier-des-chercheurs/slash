@@ -42,7 +42,10 @@
       :allow_caption_edition="true"
       :additional_meta="additional_meta"
       @importedMedias="onImportedMedias"
-      @close="files_to_import = []"
+      @close="
+        files_to_import = [];
+        $emit('close');
+      "
     />
   </div>
 </template>
@@ -124,6 +127,7 @@ export default {
     },
     onImportedMedias(medias) {
       this.$emit("importedMedias", medias);
+      this.$emit("close");
     },
   },
 };

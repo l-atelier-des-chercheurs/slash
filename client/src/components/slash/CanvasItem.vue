@@ -12,10 +12,10 @@
       @click.stop="openItemModal"
       :data-file-path="file.$path"
     >
-      <div
+      <!-- <div
         class="_canvasItem--authorIndicator"
         :style="{ backgroundColor: $getFirstAuthorColor(file.$authors) }"
-      />
+      /> -->
 
       <MediaContent
         :file="file"
