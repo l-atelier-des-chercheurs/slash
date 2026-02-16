@@ -10,9 +10,12 @@
         }"
       >
         <template v-if="row.accept">
-          <label :for="inputId(row)" class="_dropMenu--btn">
-            <span class="_dropMenu--label">{{ row.label }}</span>
+          <label
+            :for="inputId(row)"
+            class="u-button u-button_glass _dropMenu--btn"
+          >
             <b-icon :icon="row.icon" class="_dropMenu--icon" />
+            <span class="_dropMenu--label">{{ row.label }}</span>
           </label>
           <input
             :id="inputId(row)"
@@ -163,17 +166,18 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: calc(var(--spacing) / 2);
 
-  border: none;
-  border-radius: 50%;
-  padding: 8px;
+  // border: none;
+  // border-radius: 50%;
+  // padding: 8px;
   cursor: pointer;
-  color: var(--c-noir);
-  background: white;
-  font-size: 1.25rem;
+  // color: var(--c-noir);
+  // background: white;
+  // font-size: 1.25rem;
   font-weight: 500;
   text-transform: lowercase;
+
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 
   &:hover {

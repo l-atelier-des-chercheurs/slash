@@ -124,7 +124,7 @@ export default {
       position: relative;
       right: auto;
       left: auto;
-      margin-left: 12px;
+      // margin-left: 12px;
     }
     ._dropMenu--panelWrapper {
       align-items: flex-start;

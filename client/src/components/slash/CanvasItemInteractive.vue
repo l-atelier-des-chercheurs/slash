@@ -461,6 +461,10 @@ export default {
       pointer-events: auto;
       font-size: 3rem;
 
+      &:not(:hover) {
+        background-color: rgba(255, 255, 255, 0.6);
+      }
+
       &:hover {
         // background-color: rgba(255, 255, 255, 1);
       }

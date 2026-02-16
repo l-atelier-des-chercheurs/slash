@@ -19,7 +19,7 @@
           v-if="connected_as"
           type="button"
           class="_dropMenu--userLabel"
-          :style="{ backgroundColor: connected_as.color }"
+          :style="{ backgroundColor: connected_as?.color }"
           @click="openLoginModal()"
         >
           {{ connected_as.name }}
@@ -27,7 +27,7 @@
         <button
           class="_dropMenu--openButton"
           :title="$t('import')"
-          :style="{ backgroundColor: connected_as.color }"
+          :style="{ backgroundColor: connected_as?.color }"
           :class="{
             'is--open': is_open,
           }"
