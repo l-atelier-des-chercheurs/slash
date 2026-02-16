@@ -41,10 +41,7 @@
       </button>
     </div>
 
-    <div
-      class="_canvasItem--selectedBorder"
-      v-if="!isResizing && !has_dragged"
-    ></div>
+    <div class="_canvasItem--selectedBorder"></div>
     <div
       v-if="
         !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected

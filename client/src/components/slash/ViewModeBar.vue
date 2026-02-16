@@ -110,7 +110,7 @@ export default {
 ._viewModeBar--row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: calc(var(--spacing) / 4);
 }
 
 ._viewModeBar--zoomRow {
