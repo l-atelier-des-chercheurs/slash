@@ -166,8 +166,11 @@ export default {
   watch: {},
   mounted() {
     this.restoreStateFromLocalStorage();
+    this.$eventHub.$on("canvas.dragEnd", this.handleDragEnd);
   },
-  beforeDestroy() {},
+  beforeDestroy() {
+    this.$eventHub.$off("canvas.dragEnd", this.handleDragEnd);
+  },
   methods: {
     handleCanvasClick(event) {
       if (this.canvas_clicked_x !== null && this.canvas_clicked_y !== null) {
@@ -210,10 +213,51 @@ export default {
     },
     handlePositionUpdate({ file, x, y }) {
       // Clamp to >= 0 so all content stays within the canvas (no negative coords)
-      const clampedX = Math.max(0, x);
-      const clampedY = Math.max(0, y);
-      this.$set(file, "x", clampedX);
-      this.$set(file, "y", clampedY);
+      const clamped_x = Math.max(0, x);
+      const clamped_y = Math.max(0, y);
+      const old_x = file.x || 0;
+      const old_y = file.y || 0;
+      const delta_x = clamped_x - old_x;
+      const delta_y = clamped_y - old_y;
+
+      this.$set(file, "x", clamped_x);
+      this.$set(file, "y", clamped_y);
+
+      // If multiple items are selected, move all of them by the same delta
+      if (
+        this.selected_files.length > 1 &&
+        this.selected_files.includes(file.$path)
+      ) {
+        for (const path of this.selected_files) {
+          if (path === file.$path) continue;
+          const other = this.files.find((f) => f.$path === path);
+          if (!other) continue;
+          const other_x = Math.max(0, (other.x || 0) + delta_x);
+          const other_y = Math.max(0, (other.y || 0) + delta_y);
+          const { width, height } = this.getFileDimensions(other);
+          const max_x = Math.max(0, this.canvas_width - width);
+          const max_y = Math.max(0, this.canvas_height - height);
+          this.$set(other, "x", Math.min(other_x, max_x));
+          this.$set(other, "y", Math.min(other_y, max_y));
+        }
+      }
+    },
+    async handleDragEnd({ file: dragged_file }) {
+      // Persist position for other selected files (the dragged file is saved by CanvasItemInteractive)
+      if (this.selected_files.length <= 1) return;
+      for (const path of this.selected_files) {
+        if (path === dragged_file.$path) continue;
+        const f = this.files.find((file) => file.$path === path);
+        if (!f) continue;
+        try {
+          await this.$api.updateMeta({
+            path: f.$path,
+            new_meta: { x: f.x || 0, y: f.y || 0 },
+          });
+        } catch (err) {
+          console.error("Failed to save canvas position:", err);
+        }
+      }
     },
     handleWidthUpdate({ file, width }) {
       // Update file width locally

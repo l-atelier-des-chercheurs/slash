@@ -211,8 +211,10 @@ export default {
       this.isDragging = true;
       this.has_dragged = false;
 
-      const mode = event.metaKey || event.shiftKey ? "append" : "replace";
-      this.$emit("select", this.file.$path, mode);
+      if (!this.is_selected) {
+        const mode = event.metaKey || event.shiftKey ? "append" : "replace";
+        this.$emit("select", this.file.$path, mode);
+      }
 
       // Get canvas container
       const canvasContainer = this.$el.closest("._largeCanvas");
@@ -375,6 +377,12 @@ export default {
       // Clear current position to use file position
       this.currentX = null;
       this.currentY = null;
+
+      this.$eventHub.$emit("canvas.dragEnd", {
+        file: this.file,
+        x: finalX,
+        y: finalY,
+      });
 
       // Debounce API call
       if (this.saveTimeout) {
