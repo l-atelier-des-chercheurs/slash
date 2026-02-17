@@ -1,7 +1,8 @@
 <template>
   <div
-    class="_canvasItem is--canvas panzoom-exclude"
+    class="_canvasItem is--canvas"
     :class="{
+      'panzoom-exclude': mode !== 'pan-zoom',
       'is--dragging': has_dragged,
       'is--resizing': isResizing,
       'is--selected': is_selected,
@@ -50,6 +51,7 @@
       <button
         type="button"
         class="u-button u-button_icon u-button_glass _openBtn"
+        :class="{ 'panzoom-exclude': mode === 'pan-zoom' }"
         v-if="!shift_or_cmd_pressed"
         @click="handleOpen"
       >
@@ -524,6 +526,11 @@ export default {
     ._canvasItem--shape,
     ._canvasItem--text {
       pointer-events: none;
+    }
+    cursor: inherit;
+    ._canvasItem--open {
+      pointer-events: auto;
+      cursor: inherit;
     }
     ._canvasItem--open ._openBtn {
       pointer-events: auto;
