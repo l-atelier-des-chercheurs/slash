@@ -5,6 +5,7 @@
     :class="{
       'is--drag-to-pan': enable_drag_to_pan && !is_panning,
       'is--panning': enable_drag_to_pan && is_panning,
+      'is--zooming': is_zooming,
     }"
     draggable="false"
     @mousedown="onMouseDown"
@@ -77,6 +78,15 @@ export default {
       drag_start_client_y: 0,
       drag_start_scroll_left: 0,
       drag_start_scroll_top: 0,
+
+      // Cmd-drag zoom state
+      is_zooming: false,
+      zoom_drag_start_client_y: 0,
+      zoom_drag_start_zoom: 1,
+      zoom_drag_anchor_content_x: 0,
+      zoom_drag_anchor_content_y: 0,
+      zoom_drag_anchor_offset_x: 0,
+      zoom_drag_anchor_offset_y: 0,
 
       // Pinch state
       is_pinch: false,
@@ -154,8 +164,28 @@ export default {
     this.$eventHub.$off(`panzoom.panTo`, this.panTo);
   },
   methods: {
+    getContentPointFromClient(client_x, client_y) {
+      const wrapper = this.$refs.wrapper;
+      const zoom = this.current_zoom || 1;
+      if (!wrapper || !zoom) {
+        return {
+          content_x: 0,
+          content_y: 0,
+          offset_x: 0,
+          offset_y: 0,
+        };
+      }
+
+      const rect = wrapper.getBoundingClientRect();
+      const offset_x = client_x - rect.left;
+      const offset_y = client_y - rect.top;
+      const content_x = (this.scroll_left + offset_x) / zoom;
+      const content_y = (this.scroll_top + offset_y) / zoom;
+
+      return { content_x, content_y, offset_x, offset_y };
+    },
     onMouseDown(event) {
-      if (!this.enable_drag_to_pan) return;
+      if (event.button !== 0) return;
 
       // Ignore drags starting from excluded elements
       if (
@@ -166,6 +196,26 @@ export default {
         return;
       }
 
+      // Cmd-drag should zoom instead of panning
+      if (event.metaKey) {
+        event.preventDefault();
+
+        const { content_x, content_y, offset_x, offset_y } =
+          this.getContentPointFromClient(event.clientX, event.clientY);
+
+        this.is_zooming = true;
+        this.is_panning = false;
+        this.zoom_drag_start_client_y = event.clientY;
+        this.zoom_drag_start_zoom = this.current_zoom || 1;
+        this.zoom_drag_anchor_content_x = content_x;
+        this.zoom_drag_anchor_content_y = content_y;
+        this.zoom_drag_anchor_offset_x = offset_x;
+        this.zoom_drag_anchor_offset_y = offset_y;
+        return;
+      }
+
+      if (!this.enable_drag_to_pan) return;
+
       this.is_panning = true;
       this.drag_start_client_x = event.clientX;
       this.drag_start_client_y = event.clientY;
@@ -173,6 +223,28 @@ export default {
       this.drag_start_scroll_top = this.scroll_top;
     },
     onMouseMove(event) {
+      if (this.is_zooming) {
+        const dy = event.clientY - this.zoom_drag_start_client_y;
+        const start_zoom = this.zoom_drag_start_zoom || 1;
+
+        // Smooth exponential zoom: drag up to zoom in, down to zoom out
+        const sensitivity = 0.006;
+        const target_zoom = start_zoom * Math.exp(-dy * sensitivity);
+
+        const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
+        const new_zoom = Math.min(Math.max(target_zoom, min_zoom), max_zoom);
+
+        this.current_zoom = new_zoom;
+        this.scroll_left =
+          this.zoom_drag_anchor_content_x * new_zoom -
+          this.zoom_drag_anchor_offset_x;
+        this.scroll_top =
+          this.zoom_drag_anchor_content_y * new_zoom -
+          this.zoom_drag_anchor_offset_y;
+        this.clampScroll();
+        return;
+      }
+
       if (!this.is_panning) return;
 
       const dx = event.clientX - this.drag_start_client_x;
@@ -184,6 +256,12 @@ export default {
       this.clampScroll();
     },
     onMouseUp(event) {
+      if (this.is_zooming) {
+        this.is_zooming = false;
+        this.handleInteractionEnd();
+        return;
+      }
+
       if (!this.is_panning) return;
 
       this.is_panning = false;
@@ -201,6 +279,28 @@ export default {
       this.handleInteractionEnd();
     },
     onWheel(event) {
+      // Cmd + wheel = zoom (instead of wheel-pan)
+      if (event.metaKey) {
+        const zoom_delta = -event.deltaY * 0.005;
+        const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
+        const current_zoom = this.current_zoom || 1;
+        const new_zoom = Math.min(
+          Math.max(current_zoom * (1 + zoom_delta), min_zoom),
+          max_zoom
+        );
+
+        // Zoom around cursor position
+        const { content_x, content_y, offset_x, offset_y } =
+          this.getContentPointFromClient(event.clientX, event.clientY);
+
+        this.current_zoom = new_zoom;
+        this.scroll_left = content_x * new_zoom - offset_x;
+        this.scroll_top = content_y * new_zoom - offset_y;
+        this.clampScroll();
+        this.handleInteractionEnd();
+        return;
+      }
+
       // Trackpad pinch-to-zoom: browsers send wheel with ctrlKey
       if (event.ctrlKey) {
         const zoom_delta = -event.deltaY * 0.005;
@@ -435,6 +535,9 @@ export default {
   }
   &.is--panning {
     cursor: grabbing;
+  }
+  &.is--zooming {
+    cursor: ns-resize;
   }
 }
 
