@@ -9,6 +9,7 @@
       :touch_mode="current_mode === 'pan-zoom' ? 'pan-zoom' : 'select'"
       :margin_around_content="margin_around_content"
       @scroll-end="updateScrollAndZoom"
+      @viewport-change="handleViewportChange"
     >
       <div
         class="_canvasContent"
@@ -31,6 +32,7 @@
           :canvas_width="canvas_width"
           :canvas_height="canvas_height"
           :canvas_zoom="zoom"
+          :mode="current_mode"
           :is_selected="selected_files.includes(file.$path)"
           @position-update="handlePositionUpdate"
           @width-update="handleWidthUpdate"
@@ -61,6 +63,14 @@
         }"
       ></div> -->
     </SlashPanZoom2>
+    <MiniMap
+      :files="files"
+      :canvas_width="canvas_width"
+      :canvas_height="canvas_height"
+      :zoom="zoom"
+      :viewport_props="viewport_props"
+      :selected_files="selected_files"
+    />
     <LeftToolbar :current_mode.sync="current_mode" />
   </div>
 </template>
@@ -71,6 +81,7 @@ import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import CanvasShape from "@/components/slash/CanvasShape.vue";
 import DropMenuPanelContainer from "@/components/slash/DropMenuPanelContainer.vue";
+import MiniMap from "@/components/slash/MiniMap.vue";
 
 export default {
   props: {
@@ -92,6 +103,7 @@ export default {
     LeftToolbar,
     CanvasShape,
     DropMenuPanelContainer,
+    MiniMap,
   },
   data() {
     return {
@@ -114,6 +126,13 @@ export default {
       show_drop_menu: false,
 
       selected_files: [],
+
+      viewport_props: {
+        left_pct: 0,
+        top_pct: 0,
+        width_pct: 0,
+        height_pct: 0,
+      },
     };
   },
   computed: {
@@ -155,7 +174,6 @@ export default {
       };
     },
   },
-  watch: {},
   mounted() {
     this.restoreStateFromLocalStorage();
     this.$eventHub.$on("canvas.dragEnd", this.handleDragEnd);
@@ -195,6 +213,9 @@ export default {
       } else {
         this.selected_files = [file_path];
       }
+    },
+    handleViewportChange(pct) {
+      this.viewport_props = { ...pct };
     },
     updateScrollAndZoom({
       center_x,

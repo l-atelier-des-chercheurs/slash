@@ -6,9 +6,9 @@
       'is--resizing': isResizing,
       'is--selected': is_selected,
     }"
+    :data-mode="mode"
     :style="itemStyle"
     :data-file-type="file.$type"
-    @mousedown="handleMouseDown"
     :data-file-path="file.$path"
   >
     <template v-if="file.$type === 'canvas_shape'">
@@ -28,6 +28,21 @@
     />
 
     <div
+      class="_canvasItem--selectedBorder"
+      v-if="mode === 'select'"
+      @mousedown="handleMouseDown"
+    ></div>
+    <div
+      v-if="
+        !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected
+      "
+      class="_canvasItem--resizeHandle"
+      :class="{ 'is--widthOnly': isWidthOnly }"
+      :style="'--scale-factor: ' + canvas_zoom"
+      @mousedown.stop="handleResizeStart"
+    />
+
+    <div
       class="_canvasItem--open"
       v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
       :style="'--scale-factor: ' + canvas_zoom"
@@ -41,17 +56,6 @@
         <b-icon icon="box-arrow-up-right" />
       </button>
     </div>
-
-    <div class="_canvasItem--selectedBorder"></div>
-    <div
-      v-if="
-        !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected
-      "
-      class="_canvasItem--resizeHandle"
-      :class="{ 'is--widthOnly': isWidthOnly }"
-      :style="'--scale-factor: ' + canvas_zoom"
-      @mousedown.stop="handleResizeStart"
-    />
   </div>
 </template>
 
@@ -63,6 +67,10 @@ export default {
     file: {
       type: Object,
       required: true,
+    },
+    mode: {
+      type: String,
+      default: "canvas",
     },
     canvas_topleft_x: {
       type: Number,
@@ -213,11 +221,6 @@ export default {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
     handleMouseDown(event) {
-      // Don't start dragging if clicking on resize handle
-      if (event.target.classList.contains("_canvasItem--resizeHandle")) {
-        return;
-      }
-
       event.preventDefault();
       event.stopPropagation();
 
@@ -458,6 +461,8 @@ export default {
     align-items: center;
     justify-content: center;
     opacity: 0;
+    pointer-events: none;
+
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
     ._openBtn {
@@ -499,6 +504,29 @@ export default {
       ._canvasItem--selectedBorder {
         opacity: 1;
       }
+    }
+  }
+
+  &[data-mode="select"] {
+    ._canvasItem--selectedBorder {
+      pointer-events: auto;
+    }
+    ._canvasItemContent,
+    ._canvasItem--shape,
+    ._canvasItem--text {
+      pointer-events: none;
+    }
+  }
+
+  &[data-mode="pan-zoom"] {
+    &,
+    ._canvasItemContent,
+    ._canvasItem--shape,
+    ._canvasItem--text {
+      pointer-events: none;
+    }
+    ._canvasItem--open ._openBtn {
+      pointer-events: auto;
     }
   }
 

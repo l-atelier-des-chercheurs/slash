@@ -22,12 +22,6 @@
       draggable="false"
     >
       <slot />
-      <div
-        v-if="touch_mode === 'pan-zoom'"
-        class="_panZoomOverlay"
-        :style="overlayStyle"
-        draggable="false"
-      ></div>
     </div>
     <!-- <div class="_panzoomDebug">
       <div>zoom: {{ current_zoom.toFixed(2) }}</div>
@@ -103,6 +97,7 @@ export default {
       debounce_interaction: undefined,
 
       resize_observer: null,
+      viewport_change_raf: null,
     };
   },
   computed: {
@@ -143,10 +138,20 @@ export default {
         height: this.content_height ? `${this.content_height}px` : "100%",
       };
     },
+    viewport_pct() {
+      return this.getViewportPct();
+    },
   },
   watch: {
     zoom(new_zoom) {
       this.setZoom(new_zoom);
+    },
+    viewport_pct: {
+      handler() {
+        this.scheduleViewportChange();
+      },
+      deep: true,
+      immediate: true,
     },
   },
   mounted() {
@@ -163,6 +168,10 @@ export default {
     }
   },
   beforeDestroy() {
+    if (this.viewport_change_raf != null) {
+      cancelAnimationFrame(this.viewport_change_raf);
+      this.viewport_change_raf = null;
+    }
     if (this.resize_observer && this.$refs.wrapper) {
       this.resize_observer.unobserve(this.$refs.wrapper);
       this.resize_observer = null;
@@ -400,6 +409,37 @@ export default {
       if (!wrapper) return;
       this.wrapper_ow = wrapper.offsetWidth || 0;
       this.wrapper_oh = wrapper.offsetHeight || 0;
+    },
+    getViewportPct() {
+      const zoom = this.current_zoom || 1;
+      const cw = this.content_width;
+      const ch = this.content_height;
+      if (cw == null || ch == null || cw <= 0 || ch <= 0) {
+        return {
+          left_pct: 0,
+          top_pct: 0,
+          width_pct: 100,
+          height_pct: 100,
+        };
+      }
+      const viewport_w = this.wrapper_ow / zoom;
+      const viewport_h = this.wrapper_oh / zoom;
+      return {
+        left_pct: (this.topleft_x / cw) * 100,
+        top_pct: (this.topleft_y / ch) * 100,
+        width_pct: (viewport_w / cw) * 100,
+        height_pct: (viewport_h / ch) * 100,
+      };
+    },
+    scheduleViewportChange() {
+      if (this.viewport_change_raf != null) return;
+      this.viewport_change_raf = requestAnimationFrame(() => {
+        this.viewport_change_raf = null;
+        this.emitViewportChange();
+      });
+    },
+    emitViewportChange() {
+      this.$emit("viewport-change", this.getViewportPct());
     },
     handleInteractionEnd() {
       if (this.debounce_interaction) clearTimeout(this.debounce_interaction);
