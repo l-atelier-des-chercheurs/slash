@@ -3,8 +3,8 @@
     ref="wrapper"
     class="viewer"
     :class="{
-      'is--drag-to-pan': enable_drag_to_pan && !is_panning,
-      'is--panning': enable_drag_to_pan && is_panning,
+      'is--drag-to-pan': touch_mode === 'pan-zoom' && !is_panning,
+      'is--panning': touch_mode === 'pan-zoom' && is_panning,
       'is--zooming': is_zooming,
     }"
     draggable="false"
@@ -22,6 +22,12 @@
       draggable="false"
     >
       <slot />
+      <div
+        v-if="touch_mode === 'pan-zoom'"
+        class="_panZoomOverlay"
+        :style="overlayStyle"
+        draggable="false"
+      ></div>
     </div>
     <!-- <div class="_panzoomDebug">
       <div>zoom: {{ current_zoom.toFixed(2) }}</div>
@@ -55,11 +61,10 @@ export default {
       type: Number,
       default: 0,
     },
-    mode: {
+    touch_mode: {
       type: String,
       default: "pan-zoom",
-      validator: (v) => ["pan-zoom", "select"].includes(v),
-      default: true,
+      validator: (value) => ["pan-zoom", "select"].includes(value),
     },
   },
   data() {
@@ -130,6 +135,12 @@ export default {
         transformOrigin: "0 0",
         transform,
         willChange: "transform",
+      };
+    },
+    overlayStyle() {
+      return {
+        width: this.content_width ? `${this.content_width}px` : "100%",
+        height: this.content_height ? `${this.content_height}px` : "100%",
       };
     },
   },
@@ -216,7 +227,7 @@ export default {
         return;
       }
 
-      if (!this.enable_drag_to_pan) return;
+      if (this.touch_mode !== "pan-zoom") return;
 
       event.preventDefault();
       this.is_panning = true;
@@ -259,8 +270,6 @@ export default {
       this.clampScroll();
     },
     onMouseUp(event) {
-      debugger;
-
       if (this.is_zooming) {
         this.is_zooming = false;
         this.handleInteractionEnd();
@@ -549,6 +558,14 @@ export default {
 
 ._pzViewport {
   position: relative;
+}
+
+._panZoomOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  z-index: 1;
 }
 
 ._panzoomDebug {

@@ -6,7 +6,7 @@
       :zoom_range="zoom_range"
       :content_width="canvas_width"
       :content_height="canvas_height"
-      :enable_drag_to_pan="current_mode === 'pan-zoom'"
+      :touch_mode="current_mode === 'pan-zoom' ? 'pan-zoom' : 'select'"
       :margin_around_content="margin_around_content"
       @scroll-end="updateScrollAndZoom"
     >
