@@ -21,7 +21,7 @@
         :zoom_range="zoom_range"
         :folder_path="default_folder.$path"
         @update:zoom="canvasZoom = $event"
-        @update:scroll="canvasScroll = $event"
+        @update:scroll="canvas_scroll = $event"
       />
       <GeoMapView
         v-show="viewMode === 'map'"
@@ -47,7 +47,7 @@
       class="_dropMenu"
       :folder_path="default_folder.$path"
       :canvas_zoom="canvasZoom"
-      :canvas_scroll="canvasScroll"
+      :canvas_scroll="canvas_scroll"
     />
   </div>
 </template>
@@ -80,7 +80,7 @@ export default {
       filterBarOpen: false,
       mediaTypeFilter: null,
       canvasZoom: 1,
-      canvasScroll: { x: 0, y: 0 },
+      canvas_scroll: null,
       zoom_range: [0.1, 1],
     };
   },

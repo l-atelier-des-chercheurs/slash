@@ -249,6 +249,20 @@ input[type="file"] {
       font-size: 80%;
     }
   }
+
+  &.u-button_transparent {
+    background-color: transparent;
+    border: none;
+    color: inherit;
+
+    &:hover,
+    &:active,
+    &:focus-visible {
+      &:not([disabled]) {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
 }
 
 .u-button_icon {

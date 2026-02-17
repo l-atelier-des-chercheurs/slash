@@ -208,11 +208,11 @@ export default {
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;
       // if command or shift is pressed, append to selected_files; otherwise, replace
-      // if (mode === "append") {
-      this.selected_files.push(file_path);
-      // } else {
-      //   this.selected_files = [file_path];
-      // }
+      if (mode === "append") {
+        this.selected_files.push(file_path);
+      } else {
+        this.selected_files = [file_path];
+      }
     },
     handleViewportChange(pct) {
       this.viewport_props = { ...pct };
@@ -227,7 +227,7 @@ export default {
       this.canvas_topleft_x = topleft_x;
       this.canvas_topleft_y = topleft_y;
       this.$emit("update:zoom", zoom);
-      this.$emit("update:scroll", { center_x, center_y });
+      this.$emit("update:scroll", { topleft_x, topleft_y, center_x, center_y });
       this.saveStateToLocalStorage();
     },
     handlePositionUpdate({ file, x, y }) {
