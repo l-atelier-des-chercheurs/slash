@@ -137,19 +137,26 @@ export default {
         f.$path.endsWith("/" + metafilename)
       );
     },
+    sorted_files() {
+      let files = this.default_folder.$files;
+      if (!files) return [];
+      return files.sort((a, b) => {
+        return a.$date_created - b.$date_created;
+      });
+    },
     filtered_files() {
       if (!this.default_folder || !Array.isArray(this.default_folder.$files)) {
         return [];
       }
       const type = this.mediaTypeFilter;
-      let files = this.default_folder.$files;
 
-      if (!type) return files;
-
-      if (type === "3d") {
-        return files.filter((f) => f.$type === "stl" || f.$type === "obj");
+      if (!type) return this.sorted_files;
+      else if (type === "3d") {
+        return this.sorted_files.filter(
+          (f) => f.$type === "stl" || f.$type === "obj"
+        );
       }
-      return files.filter((f) => f.$type === type);
+      return this.sorted_files.filter((f) => f.$type === type);
     },
     filtered_files_without_canvas_items() {
       return this.filtered_files.filter((f) => !f.$type.startsWith("canvas_"));
