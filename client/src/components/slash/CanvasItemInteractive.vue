@@ -35,6 +35,7 @@
       <button
         type="button"
         class="u-button u-button_icon u-button_glass _openBtn"
+        v-if="!shift_or_cmd_pressed"
         @click="handleOpen"
       >
         <b-icon icon="box-arrow-up-right" />
@@ -93,6 +94,7 @@ export default {
   },
   data() {
     return {
+      shift_or_cmd_pressed: false,
       isDragging: false,
       isResizing: false,
       has_dragged: false,
@@ -173,15 +175,29 @@ export default {
   mounted() {
     document.addEventListener("mousemove", this.handleMouseMove);
     document.addEventListener("mouseup", this.handleMouseUp);
+    document.addEventListener("keydown", this.handleKeyDown);
+    document.addEventListener("keyup", this.handleKeyUp);
   },
   beforeDestroy() {
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("keydown", this.handleKeyDown);
+    document.removeEventListener("keyup", this.handleKeyUp);
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
   },
   methods: {
+    handleKeyDown(event) {
+      if (event.key === "Shift" || event.key === "Meta") {
+        this.shift_or_cmd_pressed = true;
+      }
+    },
+    handleKeyUp(event) {
+      if (event.key === "Shift" || event.key === "Meta") {
+        this.shift_or_cmd_pressed = false;
+      }
+    },
     handleResizeStart(event) {
       event.preventDefault();
       event.stopPropagation();
@@ -504,14 +520,16 @@ export default {
   }
 
   ._canvasItem--resizeHandle {
-    --button-size: 24px;
+    --button-size: 20px;
 
     position: absolute;
-    right: calc(var(--button-size) / -2);
-    bottom: calc(var(--button-size) / -2);
+    right: calc(var(--button-size) * -1.5);
+    bottom: calc(var(--button-size) * -1.5);
 
-    width: var(--button-size);
-    height: var(--button-size);
+    width: calc(var(--button-size) * 3);
+    height: calc(var(--button-size) * 3);
+
+    // background-color: red;
 
     display: flex;
     align-items: center;
@@ -527,7 +545,7 @@ export default {
       content: "";
       display: block;
       width: var(--button-size);
-      height: calc(var(--button-size));
+      height: var(--button-size);
       // transform: rotate(90deg);
       background-color: white;
       outline: var(--selected-border-width) solid var(--active-color);
