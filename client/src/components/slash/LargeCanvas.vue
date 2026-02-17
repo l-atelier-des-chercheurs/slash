@@ -12,7 +12,7 @@
       :zoom_range="zoom_range"
       :content_width="canvas_width"
       :content_height="canvas_height"
-      :enable_drag_to_pan="false"
+      :enable_drag_to_pan="current_mode === 'pan-zoom'"
       :margin_around_content="margin_around_content"
       @scroll-end="updateScrollAndZoom"
     >
@@ -173,20 +173,26 @@ export default {
   },
   methods: {
     handleCanvasClick(event) {
+      if (this.current_mode === "pan-zoom") {
+        return;
+      }
+      if (event.metaKey || event.shiftKey) {
+        return;
+      } else if (this.selected_files.length > 0) {
+        this.selected_files = [];
+        return;
+      }
+
       if (this.canvas_clicked_x !== null && this.canvas_clicked_y !== null) {
         this.canvas_clicked_x = null;
         this.canvas_clicked_y = null;
         this.show_drop_menu = false;
+        return;
       } else {
         this.canvas_clicked_x = event.offsetX;
         this.canvas_clicked_y = event.offsetY;
         this.show_drop_menu = true;
-      }
-
-      if (event.metaKey || event.shiftKey) {
         return;
-      } else {
-        this.selected_files = [];
       }
     },
     handleSelect(file_path, mode) {

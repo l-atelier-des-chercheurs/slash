@@ -311,13 +311,13 @@ export default {
           max_zoom
         );
 
-        // Zoom around the current viewport center (center_x, center_y)
-        const center_x = this.center_x;
-        const center_y = this.center_y;
+        // Zoom around cursor position (matches Cmd + wheel behavior)
+        const { content_x, content_y, offset_x, offset_y } =
+          this.getContentPointFromClient(event.clientX, event.clientY);
 
         this.current_zoom = new_zoom;
-        this.scroll_left = center_x * new_zoom - this.wrapper_ow / 2;
-        this.scroll_top = center_y * new_zoom - this.wrapper_oh / 2;
+        this.scroll_left = content_x * new_zoom - offset_x;
+        this.scroll_top = content_y * new_zoom - offset_y;
         this.clampScroll();
         this.handleInteractionEnd();
         return;
@@ -363,13 +363,15 @@ export default {
       const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
       const new_zoom = Math.min(Math.max(target_zoom, min_zoom), max_zoom);
 
-      // Zoom around the current viewport center (center_x, center_y)
-      const center_x = this.center_x;
-      const center_y = this.center_y;
+      // Zoom around pinch midpoint (touch "mouse position")
+      const mid_x = (t1.clientX + t2.clientX) / 2;
+      const mid_y = (t1.clientY + t2.clientY) / 2;
+      const { content_x, content_y, offset_x, offset_y } =
+        this.getContentPointFromClient(mid_x, mid_y);
 
       this.current_zoom = new_zoom;
-      this.scroll_left = center_x * new_zoom - this.wrapper_ow / 2;
-      this.scroll_top = center_y * new_zoom - this.wrapper_oh / 2;
+      this.scroll_left = content_x * new_zoom - offset_x;
+      this.scroll_top = content_y * new_zoom - offset_y;
       this.clampScroll();
 
       this.handleInteractionEnd();
