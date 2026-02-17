@@ -55,8 +55,10 @@ export default {
       type: Number,
       default: 0,
     },
-    enable_drag_to_pan: {
-      type: Boolean,
+    mode: {
+      type: String,
+      default: "pan-zoom",
+      validator: (v) => ["pan-zoom", "select"].includes(v),
       default: true,
     },
   },
@@ -216,6 +218,7 @@ export default {
 
       if (!this.enable_drag_to_pan) return;
 
+      event.preventDefault();
       this.is_panning = true;
       this.drag_start_client_x = event.clientX;
       this.drag_start_client_y = event.clientY;
@@ -256,6 +259,8 @@ export default {
       this.clampScroll();
     },
     onMouseUp(event) {
+      debugger;
+
       if (this.is_zooming) {
         this.is_zooming = false;
         this.handleInteractionEnd();
@@ -263,7 +268,6 @@ export default {
       }
 
       if (!this.is_panning) return;
-
       this.is_panning = false;
 
       // Detect click vs drag (small movement = click)

@@ -1,11 +1,5 @@
 <template>
-  <div
-    class="_largeCanvas"
-    :class="{
-      'is--drawMode': current_mode === 'draw',
-    }"
-    draggable="false"
-  >
+  <div class="_largeCanvas" :data-mode="current_mode" draggable="false">
     <SlashPanZoom2
       ref="viewer"
       :zoom="zoom"
@@ -18,9 +12,7 @@
     >
       <div
         class="_canvasContent"
-        :class="{
-          'is--drawMode': current_mode === 'draw',
-        }"
+        :data-mode="current_mode"
         draggable="false"
         :style="{
           width: `${canvas_width}px`,
@@ -381,18 +373,13 @@ export default {
   background-position: 0 0, calc(var(--bg-size) / 2) calc(var(--bg-size) / 2);
 }
 
-._largeCanvas.is--drawMode {
+._largeCanvas[data-mode="draw"] {
   cursor: crosshair;
 }
 
-._canvasContent.is--drawMode {
+._canvasContent[data-mode="draw"] {
   cursor: crosshair;
   user-select: none;
-}
-
-._canvasContent.is--drawMode ._canvasItem,
-._canvasContent.is--drawMode ._canvasItemContent {
-  pointer-events: none;
 }
 
 ._currentCenterDot {

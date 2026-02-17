@@ -331,9 +331,6 @@ export default {
       });
     },
     handleMouseUp(event) {
-      event.preventDefault();
-      event.stopPropagation();
-
       if (this.isResizing) {
         this.isResizing = false;
 
