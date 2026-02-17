@@ -89,6 +89,8 @@ export default {
   gap: var(--spacing);
   align-items: center;
   justify-content: center;
+
+  pointer-events: none;
 }
 
 ._leftToolbar--content {
@@ -102,5 +104,7 @@ export default {
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.5);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
+
+  pointer-events: auto;
 }
 </style>

@@ -208,11 +208,11 @@ export default {
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;
       // if command or shift is pressed, append to selected_files; otherwise, replace
-      if (mode === "append") {
-        this.selected_files.push(file_path);
-      } else {
-        this.selected_files = [file_path];
-      }
+      // if (mode === "append") {
+      this.selected_files.push(file_path);
+      // } else {
+      //   this.selected_files = [file_path];
+      // }
     },
     handleViewportChange(pct) {
       this.viewport_props = { ...pct };

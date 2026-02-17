@@ -11,6 +11,7 @@
     <svg
       v-if="draw_points.length > 1"
       class="_drawOverlay"
+      draggable="false"
       :width="canvas_width"
       :height="canvas_height"
       :viewBox="`0 0 ${canvas_width} ${canvas_height}`"
