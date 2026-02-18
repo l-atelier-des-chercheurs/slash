@@ -209,15 +209,6 @@ export default {
     onMouseDown(event) {
       if (event.button !== 0) return;
 
-      // Ignore drags starting from excluded elements
-      if (
-        event.target &&
-        event.target.closest &&
-        event.target.closest(".panzoom-exclude")
-      ) {
-        return;
-      }
-
       // Cmd-drag should zoom instead of panning
       if (event.metaKey) {
         event.preventDefault();
@@ -233,6 +224,15 @@ export default {
         this.zoom_drag_anchor_content_y = content_y;
         this.zoom_drag_anchor_offset_x = offset_x;
         this.zoom_drag_anchor_offset_y = offset_y;
+        return;
+      }
+
+      // Ignore drags starting from excluded elements
+      if (
+        event.target &&
+        event.target.closest &&
+        event.target.closest(".panzoom-exclude")
+      ) {
         return;
       }
 
