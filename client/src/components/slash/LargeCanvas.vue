@@ -177,11 +177,44 @@ export default {
   mounted() {
     this.restoreStateFromLocalStorage();
     this.$eventHub.$on("canvas.dragEnd", this.handleDragEnd);
+    window.addEventListener("keydown", this.handleGlobalKeydown);
   },
   beforeDestroy() {
     this.$eventHub.$off("canvas.dragEnd", this.handleDragEnd);
+    window.removeEventListener("keydown", this.handleGlobalKeydown);
   },
   methods: {
+    handleGlobalKeydown(event) {
+      if (this.selected_files.length === 0) return;
+      if (event.key !== "Backspace" && event.key !== "Delete") return;
+      const target = event.target;
+      const is_input =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        (target.isContentEditable &&
+          target.getAttribute("contenteditable") === "true");
+      if (is_input) return;
+      event.preventDefault();
+      this.removeSelectedFiles();
+    },
+    async removeSelectedFiles() {
+      const paths = [...this.selected_files];
+      this.selected_files = [];
+      for (const path of paths) {
+        try {
+          await this.$api.deleteItem({ path });
+        } catch (err) {
+          console.error("Failed to delete:", path, err);
+        }
+      }
+      if (paths.length > 0) {
+        this.$alertify
+          .closeLogOnClick(true)
+          .delay(4000)
+          .success(this.$t("removed_successfully"));
+        this.$emit("items-removed", paths);
+      }
+    },
     handleCanvasClick(event) {
       if (this.current_mode === "pan-zoom") {
         return;
