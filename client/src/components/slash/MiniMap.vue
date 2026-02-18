@@ -199,11 +199,21 @@ export default {
     handleMouseDown(event) {
       if (!this.$refs.svg) return;
       const svg_rect = this.$refs.svg.getBoundingClientRect();
-      const scale_x = this.canvas_width / svg_rect.width;
-      const scale_y = this.canvas_height / svg_rect.height;
+      // preserveAspectRatio="xMidYMid meet" scales content to fit and centers it;
+      // the visible content may not fill the element, so we must use the same math.
+      const scale = Math.min(
+        svg_rect.width / this.canvas_width,
+        svg_rect.height / this.canvas_height
+      );
+      const content_w = this.canvas_width * scale;
+      const content_h = this.canvas_height * scale;
+      const offset_x = (svg_rect.width - content_w) / 2;
+      const offset_y = (svg_rect.height - content_h) / 2;
 
-      const x = (event.clientX - svg_rect.left) * scale_x;
-      const y = (event.clientY - svg_rect.top) * scale_y;
+      const client_x = event.clientX - svg_rect.left;
+      const client_y = event.clientY - svg_rect.top;
+      const x = (client_x - offset_x) / scale;
+      const y = (client_y - offset_y) / scale;
 
       // Emit event to pan to this position (center the viewport on the clicked point)
       this.$eventHub.$emit("panzoom.panTo", {
