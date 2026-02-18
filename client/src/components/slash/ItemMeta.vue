@@ -66,10 +66,30 @@
       :path="file.$path"
       :can_edit="true"
     />
+
+    <div class="_itemMeta--remove">
+      <button
+        type="button"
+        class="u-button u-button_red u-button_small"
+        @click="show_remove_menu = true"
+      >
+        <b-icon icon="trash" />
+        {{ $t("remove") }}
+      </button>
+    </div>
+
+    <RemoveMenu2
+      v-if="show_remove_menu"
+      :path="file.$path"
+      :modal_title="$t('remove_media')"
+      @close="show_remove_menu = false"
+      @removedSuccessfully="onRemovedSuccessfully"
+    />
   </div>
 </template>
 <script>
 import PositionPicker from "@/adc-core/inputs/PositionPicker.vue";
+import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 
 export default {
   props: {
@@ -80,10 +100,22 @@ export default {
   },
   components: {
     PositionPicker,
+    RemoveMenu2,
+  },
+  data() {
+    return {
+      show_remove_menu: false,
+    };
   },
   computed: {
     authors_path() {
       return this.file.$authors || "noone";
+    },
+  },
+  methods: {
+    onRemovedSuccessfully() {
+      this.show_remove_menu = false;
+      this.$emit("removed");
     },
   },
 };
@@ -114,5 +146,10 @@ export default {
   max-width: 50px;
   margin-left: auto;
   margin-right: auto;
+}
+
+._itemMeta--remove {
+  margin-top: auto;
+  padding-top: calc(var(--spacing) * 1);
 }
 </style>

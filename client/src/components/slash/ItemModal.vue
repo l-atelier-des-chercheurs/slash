@@ -41,7 +41,10 @@
                 class="_flipCard--face _flipCard--faceFront"
                 :aria-hidden="current_view !== 'informations'"
               >
-                <ItemMeta :file="file" />
+                <ItemMeta
+                  :file="file"
+                  @removed="$emit('close')"
+                />
               </section>
               <section
                 class="_flipCard--face _flipCard--faceBack"
