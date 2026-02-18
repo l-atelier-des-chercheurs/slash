@@ -1,24 +1,24 @@
 <template>
   <div class="_dropMenu">
-    <div
-      class="_dropMenu--content"
-      :style="{ backgroundColor: connected_as?.color }"
-    >
+    <div class="_dropMenu--content">
       <button
         v-if="connected_as"
         type="button"
         class="u-button u-button_transparent u-button_icon _dropMenu--userLabel"
         @click="openLoginModal()"
       >
+        <span
+          class="_dropMenu--userLabel__color"
+          :style="{ backgroundColor: connected_as?.color }"
+        ></span>
         {{ connected_as.name }}
       </button>
       <button
         class="u-button u-button_transparent _dropMenu--openButton"
         :title="$t('import')"
-        :style="{ backgroundColor: connected_as?.color }"
         @click="openFileImport()"
       >
-        <b-icon icon="plus-lg" />
+        <b-icon icon="plus" scale="1.5" />
       </button>
       <input
         ref="file_input"
@@ -94,7 +94,7 @@ export default {
   left: calc(var(--spacing) * 1);
   pointer-events: auto;
 
-  padding: 6px;
+  padding: calc(var(--spacing) / 4);
   border-radius: var(--border-radius);
   border: 1px solid var(--c-gris);
   backdrop-filter: blur(10px);
@@ -104,7 +104,7 @@ export default {
   display: flex;
   flex-direction: row nowrap;
   align-items: center;
-  gap: var(--spacing);
+  // gap: var(--spacing);
   overflow: hidden;
 }
 
@@ -131,9 +131,21 @@ export default {
 }
 
 ._dropMenu--userLabel {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
   white-space: nowrap;
   font-weight: 600;
   background-color: transparent;
-  padding: calc(var(--spacing) / 2) calc(var(--spacing) / 1);
+  padding: calc(var(--spacing) / 2);
+}
+
+._dropMenu--userLabel__color {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  line-height: 0;
 }
 </style>
