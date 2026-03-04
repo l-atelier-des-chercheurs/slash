@@ -34,9 +34,7 @@
       @mousedown="handleMouseDown"
     ></div>
     <div
-      v-if="
-        !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected
-      "
+      v-if="!['canvas_shape'].includes(file.$type) && is_selected"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
@@ -136,7 +134,7 @@ export default {
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
       // max width is 2000px
-      const max_width = 2000;
+      const max_width = 1000;
       const max_height = 1000;
       width = Math.min(width, max_width);
 
@@ -450,6 +448,10 @@ export default {
 
   &[data-file-type="shape"] {
     pointer-events: none;
+  }
+
+  ._canvasItem--text {
+    font-size: 200%;
   }
 
   ._canvasItem--open {

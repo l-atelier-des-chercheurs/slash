@@ -12,7 +12,9 @@
         type="text"
         v-model="new_text"
         ref="text_input"
-        placeholder="Text"
+        placeholder="Quick note..."
+        minlength="3"
+        maxlength="50"
         @keyup.enter="createText"
       />
       <button type="button" class="u-button_icon" @click="createText">

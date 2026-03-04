@@ -165,12 +165,12 @@ export default {
     additional_meta() {
       if (!this.canvas_clicked_x || !this.canvas_clicked_y) return null;
 
-      const base_width = 320;
+      const base_width = 640;
 
       return {
         x: this.canvas_clicked_x,
         y: this.canvas_clicked_y,
-        width: this.zoom ? Math.round(base_width / this.zoom) : base_width,
+        width: base_width,
       };
     },
   },
@@ -394,7 +394,7 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #ccc;
+  background: #eee;
 }
 
 ._canvasContent {

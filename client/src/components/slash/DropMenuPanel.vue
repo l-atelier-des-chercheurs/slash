@@ -32,8 +32,8 @@
           class="_dropMenu--btn"
           @click.prevent="handleLabelClick(row)"
         >
-          <span class="_dropMenu--label">{{ row.label }}</span>
           <b-icon :icon="row.icon" class="_dropMenu--icon" />
+          <span class="_dropMenu--label">{{ row.label }}</span>
         </button>
       </div>
     </div>
@@ -81,6 +81,11 @@ export default {
           label: this.$t("file"),
           icon: "file-earmark",
           accept: "*/*",
+        },
+        {
+          id: "text",
+          label: this.$t("write"),
+          icon: "file-earmark-text",
         },
         // {
         //   id: "video",
