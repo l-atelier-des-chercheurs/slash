@@ -228,8 +228,8 @@ export default {
 <style lang="scss" scoped>
 ._miniMap {
   position: absolute;
-  bottom: var(--spacing);
-  left: var(--spacing);
+  bottom: var(--fixed-ui-margins);
+  left: var(--fixed-ui-margins);
   width: 200px;
   height: 150px;
   background: white;

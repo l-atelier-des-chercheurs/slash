@@ -84,16 +84,13 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._dropMenu {
-  pointer-events: none;
+  position: absolute;
+  top: var(--fixed-ui-margins);
+  left: var(--fixed-ui-margins);
+  z-index: 900;
 }
 
 ._dropMenu--content {
-  position: fixed;
-  z-index: 900;
-  top: calc(var(--spacing) * 1);
-  left: calc(var(--spacing) * 1);
-  pointer-events: auto;
-
   padding: calc(var(--spacing) / 4);
   border-radius: var(--border-radius);
   border: 1px solid var(--c-gris);

@@ -369,20 +369,53 @@ export default {
 
     getCanvasCoordinatesFromEvent(event) {
       if (!this.$refs.viewer || !this.$refs.viewer.getZoom) return null;
+      const pointer_event =
+        (event && event.touches && event.touches[0]) ||
+        (event && event.changedTouches && event.changedTouches[0]) ||
+        event;
+      if (
+        !pointer_event ||
+        pointer_event.clientX === undefined ||
+        pointer_event.clientY === undefined
+      ) {
+        console.log(
+          "[LargeCanvas] getCanvasCoordinatesFromEvent: invalid event",
+          {
+            has_event: !!event,
+            touches_count: event && event.touches ? event.touches.length : 0,
+            changed_touches_count:
+              event && event.changedTouches ? event.changedTouches.length : 0,
+          }
+        );
+        return null;
+      }
 
       const zoom = this.zoom;
       const scroll_left = this.canvas_topleft_x;
       const scroll_top = this.canvas_topleft_y;
 
       const canvas_rect = this.$el.getBoundingClientRect();
-      const mouse_screen_x = event.clientX - canvas_rect.left;
-      const mouse_screen_y = event.clientY - canvas_rect.top;
+      const mouse_screen_x = pointer_event.clientX - canvas_rect.left;
+      const mouse_screen_y = pointer_event.clientY - canvas_rect.top;
 
       const x = scroll_left + mouse_screen_x / zoom;
       const y = scroll_top + mouse_screen_y / zoom;
 
       const clamped_x = Math.max(0, Math.min(x, this.canvas_width));
       const clamped_y = Math.max(0, Math.min(y, this.canvas_height));
+
+      if (event && event.type && event.type.startsWith("touch")) {
+        console.log("[LargeCanvas] touch coords", {
+          event_type: event.type,
+          client_x: pointer_event.clientX,
+          client_y: pointer_event.clientY,
+          canvas_x: clamped_x,
+          canvas_y: clamped_y,
+          zoom,
+          scroll_left,
+          scroll_top,
+        });
+      }
 
       return { x: clamped_x, y: clamped_y };
     },

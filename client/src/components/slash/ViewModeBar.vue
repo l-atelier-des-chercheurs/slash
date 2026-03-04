@@ -88,7 +88,7 @@ export default {
 <style lang="scss" scoped>
 ._viewModeBar {
   position: absolute;
-  top: calc(var(--spacing, 1rem) * 1.5);
+  top: var(--fixed-ui-margins);
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;

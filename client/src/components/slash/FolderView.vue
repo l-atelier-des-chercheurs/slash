@@ -5,6 +5,11 @@
     </div>
 
     <div class="_viewArea">
+      <DropMenu
+        :folder_path="default_folder.$path"
+        :canvas_zoom="canvasZoom"
+        :canvas_scroll="canvas_scroll"
+      />
       <ViewModeBar
         :value="viewMode"
         :filter-open="filterBarOpen"
@@ -41,13 +46,6 @@
       v-if="opened_file"
       :file="opened_file"
       @close="closeItemModalWithTransition"
-    />
-
-    <DropMenu
-      class="_dropMenu"
-      :folder_path="default_folder.$path"
-      :canvas_zoom="canvasZoom"
-      :canvas_scroll="canvas_scroll"
     />
   </div>
 </template>

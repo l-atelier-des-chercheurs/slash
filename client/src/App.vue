@@ -125,6 +125,8 @@ export default {
   --spacing: 1rem;
   --mobile-breakpoint: 767px;
 
+  --fixed-ui-margins: 1.5vw;
+
   --c-bleumarine: hsl(227, 63%, 41%);
   --c-bleumarine_clair: hsl(227, 63%, 81%);
   --c-bleumarine_fonce: hsl(227, 63%, 21%);

@@ -76,13 +76,12 @@ export default {
 <style lang="scss" scoped>
 ._leftToolbar {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: var(--fixed-ui-margins);
+  left: var(--fixed-ui-margins);
 
   height: 100%;
   z-index: 1000;
   border-radius: var(--border-radius);
-  padding: var(--spacing);
 
   display: flex;
   flex-direction: column;
