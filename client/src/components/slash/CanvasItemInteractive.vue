@@ -141,11 +141,15 @@ export default {
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
 
+      const author_color = this.$getFirstAuthorColor(this.file.$authors);
+      debugger;
+
       const style = {
         left: `${x}px`,
         top: `${y}px`,
         width: `${width}px`,
         "--scale-factor": this.canvas_zoom,
+        "--author-color": author_color,
       };
 
       if (ratio) {
@@ -616,6 +620,7 @@ export default {
       path {
         pointer-events: auto;
         stroke-width: 4px;
+        stroke: var(--author-color, black);
       }
     }
   }

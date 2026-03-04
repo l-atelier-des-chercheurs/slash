@@ -145,7 +145,7 @@ export default {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  margin-right: 0.5rem;
+  margin-right: calc(var(--spacing) / 4);
   line-height: 0;
 }
 </style>

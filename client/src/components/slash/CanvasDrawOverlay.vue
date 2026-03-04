@@ -171,6 +171,7 @@ export default {
         y: Math.round(min_y),
         width: rounded_width,
         requested_slug,
+        $authors: [this.connected_as.$path],
       };
 
       try {
