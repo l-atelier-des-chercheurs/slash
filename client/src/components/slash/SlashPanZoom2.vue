@@ -363,44 +363,76 @@ export default {
         const dy = touches[0].clientY - touches[1].clientY;
         this.pinch_start_distance = Math.hypot(dx, dy) || 1;
         this.pinch_start_zoom = this.current_zoom || 1;
+        return;
       }
+
+      // One-finger drag should pan when hand mode is active
+      if (touches.length !== 1 || this.touch_mode !== "pan-zoom") return;
+
+      const touch = touches[0];
+      const target = touch.target;
+
+      if (target && target.closest && target.closest(".panzoom-exclude")) {
+        return;
+      }
+
+      this.is_pinch = false;
+      this.is_panning = true;
+      this.drag_start_client_x = touch.clientX;
+      this.drag_start_client_y = touch.clientY;
+      this.drag_start_scroll_left = this.scroll_left;
+      this.drag_start_scroll_top = this.scroll_top;
     },
     onTouchMove(event) {
       const touches = event.touches;
 
-      if (!this.is_pinch || touches.length !== 2) return;
+      if (this.is_pinch && touches.length === 2) {
+        const t1 = touches[0];
+        const t2 = touches[1];
 
-      const t1 = touches[0];
-      const t2 = touches[1];
+        // Current distance between fingers
+        const dx = t1.clientX - t2.clientX;
+        const dy = t1.clientY - t2.clientY;
+        const distance = Math.hypot(dx, dy) || 1;
 
-      // Current distance between fingers
-      const dx = t1.clientX - t2.clientX;
-      const dy = t1.clientY - t2.clientY;
-      const distance = Math.hypot(dx, dy) || 1;
+        // Compute new zoom based on pinch scale
+        const scale_factor = distance / this.pinch_start_distance;
+        const target_zoom = this.pinch_start_zoom * scale_factor;
 
-      // Compute new zoom based on pinch scale
-      const scale_factor = distance / this.pinch_start_distance;
-      const target_zoom = this.pinch_start_zoom * scale_factor;
+        const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
+        const new_zoom = Math.min(Math.max(target_zoom, min_zoom), max_zoom);
 
-      const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
-      const new_zoom = Math.min(Math.max(target_zoom, min_zoom), max_zoom);
+        // Zoom around pinch midpoint (touch "mouse position")
+        const mid_x = (t1.clientX + t2.clientX) / 2;
+        const mid_y = (t1.clientY + t2.clientY) / 2;
+        const { content_x, content_y, offset_x, offset_y } =
+          this.getContentPointFromClient(mid_x, mid_y);
 
-      // Zoom around pinch midpoint (touch "mouse position")
-      const mid_x = (t1.clientX + t2.clientX) / 2;
-      const mid_y = (t1.clientY + t2.clientY) / 2;
-      const { content_x, content_y, offset_x, offset_y } =
-        this.getContentPointFromClient(mid_x, mid_y);
+        this.current_zoom = new_zoom;
+        this.scroll_left = content_x * new_zoom - offset_x;
+        this.scroll_top = content_y * new_zoom - offset_y;
+        this.clampScroll();
 
-      this.current_zoom = new_zoom;
-      this.scroll_left = content_x * new_zoom - offset_x;
-      this.scroll_top = content_y * new_zoom - offset_y;
+        this.handleInteractionEnd();
+        return;
+      }
+
+      if (!this.is_panning || touches.length !== 1) return;
+
+      const touch = touches[0];
+      const dx = touch.clientX - this.drag_start_client_x;
+      const dy = touch.clientY - this.drag_start_client_y;
+
+      this.scroll_left = this.drag_start_scroll_left - dx;
+      this.scroll_top = this.drag_start_scroll_top - dy;
       this.clampScroll();
-
-      this.handleInteractionEnd();
     },
     onTouchEnd(event) {
       if (event.touches.length < 2) {
         this.is_pinch = false;
+      }
+      if (event.touches.length === 0) {
+        this.is_panning = false;
       }
       this.handleInteractionEnd();
     },

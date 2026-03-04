@@ -142,7 +142,6 @@ export default {
       const height = ratio ? width * ratio : 160;
 
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
-      debugger;
 
       const style = {
         left: `${x}px`,
