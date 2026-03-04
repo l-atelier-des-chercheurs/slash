@@ -50,7 +50,7 @@ textarea,
 
   &:focus {
     outline: none;
-    border-color: var(--input-border-color-focus);
+    border-color: var(--active-color);
     background-color: white;
   }
 
