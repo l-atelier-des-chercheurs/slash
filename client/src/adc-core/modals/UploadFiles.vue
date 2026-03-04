@@ -44,7 +44,7 @@
             {{ $t("cancel") }}
           </template>
           <template v-else> -->
-          {{ confirm_before_closing ? $t("interrupt") : $t("close") }}
+          {{ confirm_before_closing ? $t("interrupt") : $t("done") }}
           <!-- </template> -->
         </button>
       </template>
@@ -108,7 +108,11 @@ export default {
       for (let i = 0; i < this.$refs.filesList.length; i++) {
         const fileComponent = this.$refs.filesList[i];
         if (fileComponent.status === "waiting") {
-          await fileComponent.uploadFile();
+          try {
+            await fileComponent.uploadFile();
+          } catch (e) {
+            // ignore
+          }
         }
       }
     },

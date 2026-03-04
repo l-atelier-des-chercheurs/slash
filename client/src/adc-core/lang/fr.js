@@ -218,7 +218,8 @@ export default {
   back_to_publications: "Retour aux publications",
   generate_preview: "Générer un aperçu",
   nothing_to_show: "Rien à afficher",
-  make_publication_public: "Rendre la publication visible à tous",
+  make_publication_public:
+    "Rendre la publication visible à tous, sans mot de passe général",
 
   story: "Récit",
   story_with_sections: "Récit",
@@ -350,6 +351,7 @@ export default {
 
   none_f: "Aucune",
   not_specified: "Non renseigné",
+  not_specified_f: "Non spécifiée",
   none: "Aucun·e",
   reset_all: "Retirer tout",
   filter: "Filtrer",
@@ -882,6 +884,8 @@ export default {
   areas_used: "{count} zones utilisées",
   click_empty_cell_to_add_area:
     "Cliquez sur une cellule vide pour ajouter une zone",
+  max_grid_area_reached:
+    "Nombre maximum de zones atteint (de A à Z). Supprimez une zone pour en ajouter une nouvelle.",
   add_link: "Ajouter un lien",
   add_text: "Ajouter du texte",
 
@@ -1287,13 +1291,12 @@ export default {
 
   connected_currently: "Connecté actuellement",
 
-  confirm_save_changes:
-    "Des modifications sont en cours, souhaitez-vous les enregistrer ?",
-  confirm_cancel_changes:
-    "Des modifications sont en cours, êtes-vous sûr de vouloir les abandonner ?",
+  confirm_save_changes: "Vous avez des modifications non enregistrées.",
+  confirm_cancel_changes: "Vous avez des modifications non enregistrées.",
   continue_editing: "Continuer l’édition",
+  discard_changes: "Abandonner",
   close_without_saving: "Fermer sans enregistrer",
-
+  done: "Terminé",
   start_by_uploading_images: "Commencez par importer vos images ci-dessous",
   or: "ou",
   live_dubbing: "Doublage en direct",
@@ -1393,8 +1396,6 @@ export default {
   items_in_bin: "Éléments dans la corbeille",
   bin_removal_notice:
     "Les éléments dans la corbeille sont automatiquement supprimés après 30 jours.",
-  bin_removal_notice:
-    "Les éléments dans la corbeille sont automatiquement supprimés après 30 jours.",
   restore: "Restaurer",
   remove_for_good: "Supprimer définitivement",
   bin_is_empty: "La corbeille est vide",
@@ -1422,7 +1423,7 @@ export default {
   no_media_selected: "Aucun média sélectionné",
   forgot_password: "Mot de passe oublié ?",
   folder_not_public:
-    "Ce contenu n’est pas publique, pour y accéder son auteur doit le rendre publique.",
+    "Ce contenu n’est pas public, pour y accéder son auteur doit le rendre public.",
   width_alignment_grid_only_non_mobile:
     "La largeur du module et son alignement (au milieu ou à droite) ne s’appliquent que si la largeur de l’écran le permet (plus de 767 pixels).",
 
@@ -1593,10 +1594,13 @@ export default {
   linked_project: "Projet en lien",
   object_fit: "Remplissage",
   chain_count: "{count} zone | {count} zones",
+  continue: "Continuer",
   no_linked_project: "Aucun projet en lien",
   no_spaces: "Aucun espace à afficher",
 
   add_cover: "Ajouter une couverture",
 
   back_to_content: "Revenir au contenu",
+  click_on_another_cell_to_continue:
+    "Cliquez sur une cellule vide pour créer un bloc chaîné.",
 };

@@ -17,6 +17,8 @@
       v-if="show_archives"
       :path="path"
       :current_content="content"
+      :save_format="save_format"
+      :content_type="content_type"
       @close="show_archives = false"
       @restore="restoreVersion"
     />
@@ -53,48 +55,49 @@
 
       <slot name="custom_buttons" />
 
-      <div class="_archiveSaveContainer">
-        <template v-if="editor_is_enabled && !is_disabling_editor">
-          <transition name="pagechange" mode="out-in">
-            <div
-              class="u-button _savingStatus"
-              v-if="is_loading_or_saving"
-              key="saving"
-            >
-              <LoaderSpinner />
-              {{ $t("saving") }}
-            </div>
-            <div
-              class="u-button _savedStatus"
-              v-else-if="show_saved_icon"
-              key="saved"
-            >
-              <b-icon icon="check-circle" />
-              {{ $t("saved") }}
-            </div>
-            <!-- <span v-else key="connected">
+      <div
+        class="_archiveSaveContainer"
+        v-if="editor_is_enabled && !is_disabling_editor"
+      >
+        <transition name="pagechange" mode="out-in">
+          <div
+            class="u-button _savingStatus"
+            v-if="is_loading_or_saving"
+            key="saving"
+          >
+            <LoaderSpinner />
+            {{ $t("saving") }}
+          </div>
+          <div
+            class="u-button _savedStatus"
+            v-else-if="show_saved_icon"
+            key="saved"
+          >
+            <b-icon icon="check-circle" />
+            {{ $t("saved") }}
+          </div>
+          <!-- <span v-else key="connected">
                 <b>{{ $t(rtc.connection_state) }}</b>
               </span> -->
-            <button
-              type="button"
-              class="u-button u-button_white _archivesBtn"
-              v-else-if="field_to_edit === '$content' && path"
-              @click="show_archives = !show_archives"
-            >
-              <b-icon icon="archive" />
-              {{ $t("history") }}
-            </button>
-          </transition>
-          <EditBtn
-            class="_editBtn"
-            v-if="
-              (is_collaborative && !is_loading_or_saving) || path !== undefined
-            "
-            :btn_type="'check'"
-            :label_position="'left'"
-            @click="saveContent"
-          />
-        </template>
+          <button
+            type="button"
+            class="u-button u-button_white _archivesBtn"
+            v-else-if="field_to_edit === '$content' && path"
+            @click="show_archives = !show_archives"
+          >
+            <b-icon icon="archive" />
+            {{ $t("history") }}
+          </button>
+        </transition>
+        <EditBtn
+          class="_editBtn"
+          v-if="
+            (is_collaborative && !is_loading_or_saving) || path !== undefined
+          "
+          :btn_type="'check'"
+          :label_position="'left'"
+          @click="saveContent"
+        />
       </div>
     </div>
 
@@ -172,6 +175,13 @@ DividerBlot.blotName = "divider";
 DividerBlot.tagName = "hr";
 Quill.register(DividerBlot);
 
+var Block = Quill.import("blots/block");
+class WarningBlot extends Block {}
+WarningBlot.blotName = "warning";
+WarningBlot.tagName = "DIV";
+WarningBlot.className = "u-warning";
+Quill.register(WarningBlot);
+
 import MediaBlot from "./imports/MediaBlot.js";
 import CardEditableModule from "./imports/CardEditableModule.js";
 
@@ -201,7 +211,7 @@ export default {
       default: "$content",
     },
     scrollingContainer: HTMLElement,
-    custom_formats: Array,
+    custom_formats: [Array, Boolean],
     can_edit: Boolean,
     is_collaborative: {
       type: Boolean,
@@ -300,9 +310,10 @@ export default {
         (this.is_collaborative && !this.editor_is_enabled)
       ) {
         this.$nextTick(() => {
-          if (this.content !== this.editor.root.innerHTML)
-            // this.editor.root.innerHTML = (this.content);
-            this.editor.root.innerHTML = this.$sanitize(this.content);
+          const incoming_content = this.content || "";
+          if (this.getEditorContent() !== incoming_content) {
+            this.setEditorContent(incoming_content);
+          }
         });
       }
     },
@@ -327,6 +338,21 @@ export default {
     },
   },
   methods: {
+    setEditorContent(content, change_source = "init") {
+      if (!this.editor) return;
+
+      if (this.save_format === "raw") {
+        const normalized = (content || "").replace(/\r\n?/g, "\n");
+        const text = normalized.endsWith("\n") ? normalized : normalized + "\n";
+        this.editor.setContents([{ insert: text }], change_source);
+      } else {
+        const sanitized_content = this.$sanitize(content || "");
+        const delta = this.editor.clipboard.convert({
+          html: sanitized_content,
+        });
+        this.editor.setContents(delta, change_source);
+      }
+    },
     async initEditor() {
       const toolbar = this.makeToolbar();
 
@@ -340,11 +366,21 @@ export default {
               enter: {
                 key: "Enter",
                 handler: (range, context) => {
+                  const current_format = (context && context.format) || {};
+                  const in_blockquote_or_warning =
+                    current_format.blockquote || current_format.warning;
+
+                  if (in_blockquote_or_warning) {
+                    this.editor.insertText(range.index, "\n");
+                    this.editor.setSelection(range.index + 1);
+                    this.editor.format("blockquote", false);
+                    this.editor.format("warning", false);
+                    return false;
+                  }
+
                   if (this.$listeners.onEnter) {
                     return this.$listeners.onEnter(range, context);
                   }
-                  // Return true to allow default Enter behavior
-                  // Return false to prevent default behavior
                   return true;
                 },
               },
@@ -362,23 +398,8 @@ export default {
         scrollingContainer: this.scrollingContainer,
       });
 
-      if (this.content) {
-        if (this.save_format === "raw") {
-          // const _content = this.$sanitize(this.content);
-          // this.editor.root.innerHTML = _content;
-          // this.editor.clipboard.dangerouslyPasteHTML(_content);
-          // this.editor.setContents(this.editor.getContents(), "init");
-          const normalized = this.content.replace(/\r\n?/g, "\n");
-          const text = normalized.endsWith("\n")
-            ? normalized
-            : normalized + "\n";
-          this.editor.setContents([{ insert: text }], "init");
-        } else {
-          // this.editor.setText(this.content);
-          // this.editor.root.innerHTML = this.content;
-          const delta = this.editor.clipboard.convert({ html: this.content });
-          this.editor.setContents(delta, "init");
-        }
+      if (this.content || this.content === "") {
+        this.setEditorContent(this.content);
         this.editor.history.clear();
       }
 
@@ -411,6 +432,7 @@ export default {
         "link",
         "emoji",
         "blockquote",
+        "warning",
       ];
       basic_formatting.map((bf) => {
         if (reference_formats.includes(bf)) formatting_opt.push(bf);
@@ -572,6 +594,7 @@ export default {
 
       if (this.is_collaborative) await this.startCollaborative();
       this.editor.enable();
+      this.editor.focus();
 
       // if (this.editor.getLength() <= 1) {
       //   const fontLastUsed = localStorage.getItem("fontLastUsed");
@@ -632,11 +655,7 @@ export default {
     },
 
     restoreVersion(content) {
-      this.editor.root.innerHTML = content;
-      // do not use, it doesnt respect \n
-      // const value = content;
-      // const delta = this.editor.clipboard.convert(value);
-      // this.editor.setContents(delta, "user");
+      this.setEditorContent(content, "user");
       this.show_archives = false;
     },
     updateInput() {
@@ -818,6 +837,7 @@ export default {
       height: auto;
       overflow: visible;
       color: inherit;
+      border: none;
 
       background-color: transparent;
 
@@ -838,6 +858,12 @@ export default {
         margin: calc(var(--spacing) * 1) 0;
         border: none;
         border-left: 2px solid var(--c-gris);
+      }
+
+      .u-warning {
+        padding: calc(var(--spacing) / 4) calc(var(--spacing) / 1);
+        padding-left: calc(var(--spacing) * 4);
+        margin: calc(var(--spacing) * 1) 0;
       }
 
       .ql-code-block-container {
@@ -913,6 +939,10 @@ export default {
       border-bottom-left-radius: var(--input-border-radius);
       border-bottom-right-radius: var(--input-border-radius);
       // border-radius: var(--input-border-radius);
+
+      &:has(.ql-editor:focus-visible) {
+        border-color: var(--c-gris);
+      }
     }
   }
 }
@@ -951,7 +981,7 @@ export default {
 
   display: flex;
   flex-flow: row wrap;
-  // gap: calc(var(--spacing) / 4);
+  gap: calc(var(--spacing) / 4);
   justify-content: flex-start;
   align-items: center;
 
@@ -969,13 +999,16 @@ export default {
   &::after {
     display: none;
   }
-  button:not(.u-button),
+
+  // override ql-snow.css
+  button,
   svg {
     display: inherit;
     color: currentColor;
   }
 
   .u-button {
+    display: inherit;
     color: currentColor;
 
     &:hover,
@@ -988,7 +1021,7 @@ export default {
   }
 
   .u-button_orange {
-    color: white;
+    // color: white;
     background-color: var(--c-orange);
 
     &:hover,
@@ -1037,6 +1070,7 @@ export default {
   .ql-color-picker .ql-picker-options {
     // to prevent overflow issues with pagemenu overflow
     width: var(--quill-options-size);
+    width: calc(var(--quill-options-size) * 1.6);
   }
 
   .ql-picker {
@@ -1077,17 +1111,40 @@ export default {
     }
   }
 
+  // Warning block button styling
+  .ql-warning {
+    svg {
+      display: none;
+    }
+    &:after {
+      content: "⚠";
+      color: currentColor;
+      font-size: var(--quill-buttons-size);
+      line-height: 1;
+    }
+
+    &:hover,
+    &.ql-active {
+      color: #06c;
+    }
+  }
+
   .ql-formats {
     // margin-right: calc(var(--spacing) / 2);
     // margin-bottom: calc(var(--spacing) / 2);
     margin: 0;
     display: flex;
     flex-flow: row nowrap;
-    border: 2px solid var(--toolbar-bg);
+    // border: 2px solid var(--toolbar-bg);
     border-radius: var(--input-border-radius);
     background: #fff;
 
-    button,
+    button {
+      border-radius: var(--input-border-radius);
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    button:not(.u-button),
     > *:not(.ql-size):not(.ql-lineheight):not(.ql-header):not(.ql-font)
       .ql-picker-label {
       display: flex;
@@ -1150,6 +1207,25 @@ export default {
 
     .ql-picker-label::before {
       // line-height: var(--button-size);
+    }
+
+    .ql-active,
+    .ql-picker.ql-expanded {
+      // background-color: var(--c-gris_clair);
+      // outline: 2px solid var(--c-gris);
+      // border-color: var(--c-gris);
+      // border-width: 2px;
+      // border-style: solid;
+      // border-radius: var(--input-border-radius);
+      // padding: 2px;
+      border-radius: var(--input-border-radius);
+      border: none;
+      box-shadow: 0 1px 4px inset rgba(0, 0, 0, 0.2);
+
+      .ql-picker-label {
+        border-radius: var(--input-border-radius);
+        border: none;
+      }
     }
   }
 
@@ -1237,6 +1313,9 @@ export default {
   .ql-picker.ql-size .ql-picker-label[data-value]::before {
     font-size: 100% !important;
   }
+  .ql-picker-label[data-value="Belle Allure CE"] {
+    line-height: 2.2;
+  }
 }
 
 select.ql-ui {
@@ -1283,6 +1362,10 @@ select.ql-ui {
   flex-flow: row wrap;
   justify-content: center;
   align-items: center;
+
+  &:empty {
+    display: none;
+  }
 
   ._archiveSaveContainer {
     border: 2px solid var(--toolbar-bg);

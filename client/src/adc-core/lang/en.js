@@ -35,6 +35,8 @@ export default {
   importing_from_url: "Importing from URL...",
   preview_of_image: "Preview of the image",
   failed_to_import_from_url: "Failed to import image from URL",
+  file_size_limit_exceeded:
+    "File too large. Maximum size: {maxSize} MB.",
   embed: "Embed",
   table: "Table",
   from_project: "From project",
@@ -189,6 +191,7 @@ export default {
   no_publications: "No publications to show",
   no_files: "No file",
   not_specified: "Not specified",
+  not_specified_f: "Not specified",
   none_f: "None",
   none: "None",
 
@@ -937,6 +940,8 @@ export default {
   add_grid_area: "Add grid area",
   areas_used: "{count} areas used",
   click_empty_cell_to_add_area: "Click on an empty cell to add an area",
+  max_grid_area_reached:
+    "Maximum number of grid areas reached (A to Z). Delete an area to add a new one.",
   add_link: "Add link",
   add_text: "Add text",
   share_link_to_page: "Share a link to this page",
@@ -1208,13 +1213,12 @@ export default {
 
   connected_currently: "Connected currently",
 
-  confirm_save_changes:
-    "Some changes have been made, do you want to save them?",
-  confirm_cancel_changes:
-    "Some changes have been made, are you sure you want to abandon them?",
+  confirm_save_changes: "You have unsaved changes.",
+  confirm_cancel_changes: "You have unsaved changes.",
   continue_editing: "Continue editing",
+  discard_changes: "Discard changes",
   close_without_saving: "Close without saving",
-
+  done: "Done",
   keep_existing_keywords: "Keep existing keywords",
   add_after_existing_keywords: "Add after existing keywords",
   erase_and_replace_keywords: "Erase and replace keywords",
@@ -1522,9 +1526,12 @@ export default {
   linked_project: "Linked project",
   object_fit: "Fitting",
   chain_count: "{count} area | {count} areas",
+  continue: "Continue",
   no_linked_project: "No linked project",
   no_spaces: "No spaces to show",
 
   add_cover: "Add cover",
   back_to_content: "Back to content",
+  click_on_another_cell_to_continue:
+    "Click on an empty cell to create a chained area.",
 };

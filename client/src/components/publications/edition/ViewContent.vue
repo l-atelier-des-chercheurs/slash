@@ -16,14 +16,6 @@
           </button>
         </div>
       </div>
-      <!-- <select
-        :value="view_mode"
-        size="small"
-        @change="$emit('changeView', $event.target.value)"
-      >
-        <option value="book">{{ $t("book") }}</option>
-        <option value="html">{{ $t("webpage") }}</option>
-      </select> -->
 
       <select
         size="small"
@@ -61,6 +53,7 @@
         :can_edit="can_edit"
         @openChapter="$emit('openChapter', $event)"
         @updateChaptersPositions="$emit('updateChaptersPositions', $event)"
+        @updateNumberOfBookPages="updateNumberOfBookPages"
       />
       <DocViewer
         v-else
@@ -94,7 +87,7 @@ import { renderMedia as renderMediaFunction } from "@/components/publications/ed
 import PagedViewer from "@/components/publications/edition/PagedViewer.vue";
 import DocViewer from "@/components/publications/edition/DocViewer.vue";
 
-import pagedengine from "@/components/publications/edition/pagedengine.scss?raw";
+import pagedengine from "@/components/publications/edition/pagedengine.css?raw";
 import default_styles from "@/components/publications/edition/default_styles.css?raw";
 
 export default {
@@ -122,14 +115,14 @@ export default {
       is_loading: false,
       available_view_modes: [
         {
+          label: this.$t("webpage"),
+          value: "web",
+          icon: "window-sidebar",
+        },
+        {
           label: this.$t("book"),
           value: "book",
           icon: "book",
-        },
-        {
-          label: this.$t("webpage"),
-          value: "html",
-          icon: "window-sidebar",
         },
       ],
       // custom_styles_nested: "",
@@ -447,7 +440,7 @@ export default {
         },
       });
       md.use(markdownItCsc, {
-        renderMedia: ({ meta_src, alt, width, height, title, size }) =>
+        renderMedia: ({ meta_src, alt, width, height, title, size, tag }) =>
           this.renderMedia({
             meta_src,
             source_medias,
@@ -456,6 +449,7 @@ export default {
             height,
             title,
             size,
+            tag,
           }),
         transformURL: (url) => this.transformURL(url),
       });
@@ -595,6 +589,16 @@ export default {
           });
         }
 
+        if (!media && source_media) {
+          // try to find in chapter source_medias
+          const local_media = chapter?.source_medias?.find(
+            (sm) =>
+              sm?.meta_filename_in_project ===
+              source_media?.meta_filename_in_project
+          );
+          if (local_media) media = local_media._media;
+        }
+
         let cell = document.createElement("div");
         cell.className = "grid-cell";
 
@@ -644,6 +648,7 @@ export default {
           cell.appendChild(document.createTextNode("\n"));
           cell.appendChild(img);
         } else if (media?.$type === "video") {
+        } else {
         }
 
         grid_content.appendChild(cell);
@@ -702,6 +707,7 @@ export default {
       height,
       title,
       size,
+      tag,
     }) {
       return renderMediaFunction({
         media,
@@ -712,11 +718,13 @@ export default {
         height,
         title,
         size,
+        tag,
         context: {
           view_mode: this.view_mode,
           getMediaSrc: this.getMediaSrc.bind(this),
           makeMediaFileURL: this.makeMediaFileURL.bind(this),
           makeQREmbedForQR: this.makeQREmbedForQR.bind(this),
+          makeQREmbedForExternalURL: this.makeQREmbedForExternalURL.bind(this),
         },
       });
     },
@@ -777,6 +785,34 @@ export default {
               </div>`;
       }
       return html;
+    },
+    makeQREmbedForExternalURL({ url, alt, width, height }) {
+      const code = generate(url);
+      const data_url = code.toDataURL({ scale: 10 });
+
+      let html = `
+        <a href="${url}" target="_blank" rel="noopener" data-url="url">
+          <img class="_qrCode" src="${data_url}" alt="QR code for link" />
+        </a>
+      `;
+      html += `<div class="mediaInfos">`;
+      html += `<div class="mediaDuration">${url}</div>`;
+      html += `<div class="mediaSourceCaption">${alt || ""}</div>`;
+      html += `</div>`;
+      return html;
+    },
+    async updateNumberOfBookPages(number_of_book_pages) {
+      if (
+        this.publication.number_of_book_pages === number_of_book_pages ||
+        !this.can_edit
+      )
+        return;
+      await this.$api.updateMeta({
+        path: this.publication.$path,
+        new_meta: {
+          number_of_book_pages,
+        },
+      });
     },
   },
 };

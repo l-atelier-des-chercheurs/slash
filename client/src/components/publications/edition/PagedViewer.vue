@@ -173,6 +173,9 @@ export default {
           bookpreview.appendChild(flow.pagesArea);
           bookrender.innerHTML = "";
 
+          const number_of_book_pages = flow.total;
+          this.updateNumberOfBookPages(number_of_book_pages);
+
           this.$nextTick(() => {
             this.showOnlyPages();
             if (this.can_edit) {
@@ -187,6 +190,9 @@ export default {
           });
         });
       });
+    },
+    updateNumberOfBookPages(number_of_book_pages) {
+      this.$emit("updateNumberOfBookPages", number_of_book_pages);
     },
     addChapterShortcuts() {
       const bookpreview = this.$refs.bookpreview;
@@ -334,9 +340,9 @@ export default {
 
       const page_scrollLeft = page.getBoundingClientRect().left;
       const page_scrollTop = page.getBoundingClientRect().top;
-      console.log("-");
-      console.log(container_scrollLeft, container_scrollTop);
-      console.log(page_scrollLeft, page_scrollTop);
+      // console.log("-");
+      // console.log(container_scrollLeft, container_scrollTop);
+      // console.log(page_scrollLeft, page_scrollTop);
 
       const padding = 200;
       this.$refs.panzoom3.scrollTo(

@@ -43,7 +43,6 @@
 import FullUI from "@/FullUI.vue";
 
 export default {
-  props: {},
   components: {
     FullUI,
     PublicationView: () => import("@/views/PublicationView.vue"),
@@ -53,7 +52,6 @@ export default {
       router_is_loading: true,
     };
   },
-  created() {},
   mounted() {
     setTimeout(() => {
       this.router_is_loading = false;
@@ -162,8 +160,6 @@ export default {
   --dropzone-color1: transparent;
   --dropzone-color2: var(--c-orange);
 
-  // --c-bodybg: white;
-  --c-bodybg: hsl(51, 33%, 98%);
   --c-bodybg: white;
 
   // --c-bodybg: hsl(48, 19%, 98%);
@@ -183,7 +179,6 @@ export default {
   --scrollbar-height: 1px;
   --scrollbar-padding: 3px;
   --scrollbar-border: 2px;
-  --scrollbar-color: 2px;
   --c-barbgcolor: rgba(255, 255, 255, 0);
   --c-thumbcolor: black;
   --label-color: var(--c-gris_fonce);
@@ -193,16 +188,10 @@ export default {
   --input-font-size: var(--sl-font-size-normal);
   --input-font-size-x-small: var(--sl-font-size-x-small);
   --input-font-size-small: var(--sl-font-size-small);
-  --input-font-weight: inherit;
-  --input-height: 2.5em;
-  --input-height-large: 3em;
-  // --input-height-big: 3em;
-  --input-height-small: 1.85rem;
+  --input-height: 2.5rem;
+  --input-height-small: 1.75rem;
 
   --input-color: var(--body-color);
-  --input-border-color: var(--c-gris_fonce);
-  --input-border-color-focus: var(--active-color);
-  --input-border-width: 3px;
   --input-border-radius: 4px;
   --input-bg-color: var(--color-white);
   --input-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.05);
@@ -227,9 +216,6 @@ export default {
   --active-color: var(--c-gris_fonce);
 
   --sl-font-mono: "Fira Mono";
-  --padding: var(--spacing);
-
-  $sizes: 50, 100, 200, 300, 400, 500, 600, 700, 800, 900;
 
   --sl-font-size-normal: 1rem;
 
@@ -267,7 +253,7 @@ body {
 
 ::selection {
   // background: hsla(211, 63%, 77%, 0.5);
-  background: hsla(174, 70%, 71%, 0.5);
+  background: hsla(174, 0%, 81%, 0.5);
 }
 
 html {

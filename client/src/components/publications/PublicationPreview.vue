@@ -157,9 +157,13 @@ export default {
 }
 ._publicationPreview--cover {
   position: relative;
+
   // overflow: hidden;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  img {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
 }
 
 ._header {
@@ -210,10 +214,17 @@ export default {
   align-content: center;
   align-items: center;
   // border: 2px solid white;
-  padding: calc(var(--spacing) / 1);
+  // padding: calc(var(--spacing) / 1);
   width: 100%;
-  aspect-ratio: 21/29.7;
+  // aspect-ratio: 21/29.7;
+  box-shadow: none;
+  background: transparent;
   min-height: 50px;
+  max-width: 140px;
+
+  ::v-deep svg {
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
+  }
 }
 
 ._icon {
@@ -253,10 +264,21 @@ export default {
     width: 60px;
     flex-shrink: 0;
     box-shadow: none;
-    border: 1px solid var(--c-gris);
+    // border: 1px solid var(--c-gris);
+    overflow: hidden;
+    aspect-ratio: 1/1;
 
+    img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: scale-down;
+      object-position: center;
+      background: var(--c-gris_clair);
+    }
     ._noPreview {
-      aspect-ratio: 1/1;
       padding: 0;
       min-height: auto;
     }

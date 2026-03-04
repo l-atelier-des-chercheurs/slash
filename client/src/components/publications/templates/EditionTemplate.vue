@@ -1,7 +1,7 @@
 <template>
   <div class="_editionTemplate">
     <splitpanes v-if="can_edit" class="_splitpanes">
-      <pane v-if="show_edit_pane">
+      <pane v-if="show_edit_pane" min-size="10">
         <div class="_chapterSummary">
           <div class="_chapterSummary--content">
             <div class="_showPreviewBtn">
@@ -56,13 +56,13 @@
             :chapter_position="getChapterPosition(opened_chapter.$path)"
             :view_mode="view_mode"
             @remove="removeChapter(opened_chapter)"
-            @close="$emit('updatePane', { key: 'chapter', value: false })"
+            @close="closeChapter"
             @prev="openChapter(-1)"
             @next="openChapter(1)"
           />
         </transition>
       </pane>
-      <pane v-if="show_preview_pane">
+      <pane v-if="show_preview_pane" min-size="10">
         <div class="_viewer">
           <ViewContent
             :publication="publication"
@@ -155,7 +155,7 @@ export default {
   watch: {},
   computed: {
     view_mode() {
-      return this.pane_infos?.view_mode || "book";
+      return this.pane_infos?.view_mode || "web";
     },
     all_chapters() {
       return this.getSectionsWithProps({
@@ -291,6 +291,9 @@ export default {
     },
   },
   methods: {
+    closeChapter() {
+      this.$emit("updatePane", { key: "chapter", value: false });
+    },
     openChapter(dir) {
       const idx = this.all_chapters.findIndex((f) =>
         f.$path.endsWith(this.opened_section_meta_filename)

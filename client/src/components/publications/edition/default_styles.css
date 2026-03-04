@@ -243,8 +243,8 @@
       text-align: left;
       color: currentColor;
       background: transparent;
-      padding: 0.25em 0.5em;
-      border-radius: 0.5em;
+      /* padding: 0.25em 0.5em; */
+      border-radius: 0.25em;
       cursor: pointer;
       font-size: inherit;
 
@@ -261,6 +261,7 @@
 
   .chapter, .cover {
     flex: 10 1 0;
+    overflow: auto;
 
     h1 {
     }
@@ -283,6 +284,16 @@
 
   h3 {
     font-size: 1.1em;
+  }
+
+  pre {
+    /* padding: calc(var(--spacing) / 4); */
+
+    > code {
+      overflow: auto;
+      max-width: 100%;
+        display: block;
+    }
   }
 
   .media {

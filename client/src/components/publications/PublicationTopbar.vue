@@ -18,7 +18,7 @@
         :show_label="false"
         :field_name="'title'"
         :tag="'h3'"
-        :maxlength="40"
+        :maxlength="60"
         :required="true"
         :content="publication.title"
         :path="publication.$path"
@@ -126,20 +126,14 @@
             {{ $t("direct_link") }}
           </button>
         </div>
-        <QRModal
+        <SharePublication
           v-if="show_qr_code_modal"
-          :url_to_access="share_url"
+          :share_url="share_url"
+          :publication_path="publication.$path"
+          :is_public="publication.$public === true"
+          :can_edit="can_edit"
           @close="show_qr_code_modal = false"
-        >
-          <ToggleField
-            v-if="$root.app_infos?.instance_meta?.has_general_password"
-            :label="$t('make_publication_public')"
-            :field_name="'$public'"
-            :content="publication.$public === true"
-            :path="publication.$path"
-            :can_edit="can_edit"
-          />
-        </QRModal>
+        />
       </DropDown>
     </div>
   </div>
@@ -147,6 +141,7 @@
 <script>
 import DuplicatePublication from "@/components/publications/DuplicatePublication.vue";
 import ExportPubliModal from "@/components/publications/ExportPubliModal.vue";
+import SharePublication from "@/components/publications/SharePublication.vue";
 
 export default {
   props: {
@@ -158,6 +153,7 @@ export default {
   components: {
     DuplicatePublication,
     ExportPubliModal,
+    SharePublication,
   },
   data() {
     return {

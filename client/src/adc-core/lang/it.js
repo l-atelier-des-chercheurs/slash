@@ -41,6 +41,8 @@ export default {
   add: "Aggiungi",
   add_item: "Aggiungi un elemento",
   add_files: "Aggiungi file",
+  file_size_limit_exceeded:
+    "File troppo grande. Dimensione massima: {maxSize} MB.",
   hide_already_present_medias: `
     Nascondi i media già inclusi nella pubblicazione | 
     Nascondi i {count} media già inclusi nella pubblicazione
@@ -323,6 +325,7 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
 
   none_f: "Nessuna",
   not_specified: "Non specificato",
+  not_specified_f: "Non specificata",
   none: "Nessuna.o",
   reset_all: "Resetta tutto",
   filter: "Filtra",
@@ -1231,7 +1234,10 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
 
   connected_currently: "Connesso attualmente",
 
-  confirm_save_changes: "Ci sono state delle modifiche, vuoi salvarle?",
+  confirm_save_changes: "Ci sono modifiche non salvate.",
+  confirm_cancel_changes: "Ci sono modifiche non salvate.",
+  continue_editing: "Continua a modificare",
+  discard_changes: "Annulla modifiche",
   close_without_saving: "Chiudi senza salvare",
 
   start_by_uploading_images: "Inizia importando le immagini di seguito",

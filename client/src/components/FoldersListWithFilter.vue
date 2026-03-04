@@ -18,23 +18,21 @@
     </template>
 
     <template #top-right>
-      <div class="_topRightControls">
-        <template v-if="sorted_folders.length > 0">
-          <select
-            size="small"
-            class="_orderSelect"
-            :name="'order_folders'"
-            v-model="order_key"
-            :disabled="filtered_folders.length <= 1"
-          >
-            <option
-              v-for="opt in order_options"
-              :key="opt.key"
-              :value="opt.key"
-              v-text="opt.text"
-            />
-          </select>
-        </template>
+      <div class="_topRightControls" v-if="sorted_folders.length > 0">
+        <select
+          size="small"
+          class="_orderSelect"
+          :name="'order_folders'"
+          v-model="order_key"
+          :disabled="filtered_folders.length <= 1"
+        >
+          <option
+            v-for="opt in order_options"
+            :key="opt.key"
+            :value="opt.key"
+            v-text="opt.text"
+          />
+        </select>
 
         <div class="_mode" v-if="view_mode">
           <button
@@ -301,6 +299,10 @@ export default {
       type: Array,
       default: () => ["list", "medium", "map", "tiny"],
     },
+    default_view_mode: {
+      type: String,
+      default: "tiny",
+    },
   },
   components: {
     FilterableListLayout,
@@ -312,7 +314,7 @@ export default {
       search_query: "",
       order_key: "$date_created",
 
-      current_view_mode: "medium", // 'list' or 'map' or 'medium'
+      current_view_mode: this.default_view_mode, // 'list' or 'map' or 'medium'
       filter_by_group: "", // for authors
     };
   },
@@ -550,7 +552,8 @@ export default {
   methods: {
     loadSettings() {
       this.current_view_mode =
-        localStorage.getItem(this.view_mode_saved_key) || "medium";
+        localStorage.getItem(this.view_mode_saved_key) ||
+        this.default_view_mode;
       this.search_query =
         localStorage.getItem(this.search_query_saved_key) || "";
 

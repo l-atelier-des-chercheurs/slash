@@ -123,15 +123,18 @@ export default {
       const media_parent_folder = this.getParent(path);
 
       // media is directly inside publication
-      let folder = this.publication_path;
-      if (media_parent_folder === folder) {
-        if (this.canLoggedinEditFolder({ folder })) return "local";
+      if (media_parent_folder === this.publication_path) {
+        return this.can_edit;
       }
 
-      // media is linked to parent
-      folder = this.getParent(this.getParent(this.publication_path));
-      if (media_parent_folder === folder)
-        if (this.canLoggedinEditFolder({ folder })) return "link";
+      const project_path = this.getParent(
+        this.getParent(this.publication_path)
+      );
+      // media is linked to parent project
+      if (media_parent_folder === project_path) {
+        const project = this.getFromCache(project_path);
+        return this.canLoggedinContributeToFolder({ folder: project });
+      }
 
       return false;
     },

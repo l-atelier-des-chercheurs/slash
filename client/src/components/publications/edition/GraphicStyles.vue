@@ -49,7 +49,7 @@
         <DLabel :str="$t('name')" />
         <TextInput
           :content.sync="new_css_title"
-          :maxlength="40"
+          :maxlength="60"
           :required="true"
           :autofocus="true"
           ref="titleInput"
@@ -208,6 +208,10 @@ export default {
 
   // border-bottom: 2px solid var(--c-gris_fonce);
   padding: calc(var(--spacing) / 2);
+
+  button {
+    white-space: nowrap;
+  }
 }
 
 ._openedStyleFile {
