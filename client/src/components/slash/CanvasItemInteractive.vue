@@ -13,7 +13,11 @@
     :data-file-path="file.$path"
   >
     <template v-if="file.$type === 'canvas_shape'">
-      <div v-html="file.shape_svg" class="_canvasItem--shape" />
+      <div
+        v-html="file.shape_svg"
+        class="_canvasItem--shape"
+        @mousedown="handleMouseDown"
+      />
     </template>
     <template v-else-if="file.$type === 'canvas_text'">
       <div class="_canvasItem--text">
@@ -30,6 +34,7 @@
 
     <div
       class="_canvasItem--selectedBorder"
+      :class="{ 'is--shape': file.$type === 'canvas_shape' }"
       v-if="mode === 'select'"
       @mousedown="handleMouseDown"
     ></div>
@@ -436,7 +441,7 @@ export default {
 <style lang="scss" scoped>
 ._canvasItem {
   --shadow-size: 5px;
-  --selected-border-width: max(calc(2px / var(--scale-factor)), 4px);
+  --selected-border-width: max(calc(2px / var(--scale-factor)), 2px);
 
   position: absolute;
   width: 160px;
@@ -444,12 +449,12 @@ export default {
 
   overflow: visible;
 
-  cursor: pointer;
+  // cursor: pointer;
   user-select: none;
 
   transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
 
-  &[data-file-type="shape"] {
+  &[data-file-type="canvas_shape"] {
     pointer-events: none;
   }
 
@@ -519,8 +524,13 @@ export default {
       pointer-events: auto;
     }
     ._canvasItemContent,
-    ._canvasItem--shape,
     ._canvasItem--text {
+      pointer-events: none;
+    }
+    &:not(.is--selected) ._canvasItem--selectedBorder.is--shape {
+      pointer-events: none;
+    }
+    ._canvasItem--shape {
       pointer-events: none;
     }
   }
@@ -616,9 +626,12 @@ export default {
   ::v-deep {
     svg {
       overflow: visible;
+      pointer-events: none;
+
       path {
         pointer-events: auto;
-        stroke-width: 4px;
+        pointer-events: visibleStroke;
+        stroke-width: 5px;
         stroke: var(--author-color, black);
       }
     }
@@ -626,7 +639,7 @@ export default {
 
   &:hover {
     ::v-deep path {
-      stroke-width: 6px;
+      stroke-width: 7px;
     }
   }
 }
