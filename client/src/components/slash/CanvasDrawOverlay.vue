@@ -84,11 +84,31 @@ export default {
 
     pointsToSvgPath(points) {
       if (!points || points.length === 0) return "";
-      const [first, ...rest] = points;
-      let d = `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`;
-      rest.forEach((point) => {
-        d += ` L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
-      });
+
+      const [first_point, ...rest_points] = points;
+      let d = `M ${first_point.x.toFixed(1)} ${first_point.y.toFixed(1)}`;
+
+      if (rest_points.length === 0) return d;
+      if (rest_points.length === 1) {
+        const [last_point] = rest_points;
+        d += ` L ${last_point.x.toFixed(1)} ${last_point.y.toFixed(1)}`;
+        return d;
+      }
+
+      for (let i = 1; i < points.length - 1; i += 1) {
+        const control_point = points[i];
+        const next_point = points[i + 1];
+        const mid_x = (control_point.x + next_point.x) / 2;
+        const mid_y = (control_point.y + next_point.y) / 2;
+        d += ` Q ${control_point.x.toFixed(1)} ${control_point.y.toFixed(
+          1
+        )} ${mid_x.toFixed(1)} ${mid_y.toFixed(1)}`;
+      }
+
+      const last_point = points[points.length - 1];
+      d += ` Q ${last_point.x.toFixed(1)} ${last_point.y.toFixed(
+        1
+      )} ${last_point.x.toFixed(1)} ${last_point.y.toFixed(1)}`;
       return d;
     },
 
