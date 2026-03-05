@@ -4,7 +4,7 @@
       <div>
         <button
           type="button"
-          class="u-button u-button_icon u-button_glass"
+          class="u-button u-button_icon"
           :class="{ 'is--active': current_mode === 'select' }"
           @click="selectMode('select')"
         >
@@ -14,7 +14,7 @@
       <div>
         <button
           type="button"
-          class="u-button u-button_icon u-button_glass"
+          class="u-button u-button_icon"
           :class="{ 'is--active': current_mode === 'pan-zoom' }"
           @click="selectMode('pan-zoom')"
         >
@@ -38,7 +38,7 @@
       <div>
         <button
           type="button"
-          class="u-button u-button_icon u-button_glass"
+          class="u-button u-button_icon"
           :class="{ 'is--active': current_mode === 'draw' }"
           @click="selectMode('draw')"
         >

@@ -5,7 +5,7 @@
         v-for="mode in ['canvas', 'grid', 'map', 'timeline']"
         :key="mode"
         type="button"
-        class="u-button u-button_icon u-button_glass"
+        class="u-button u-button_icon"
         :class="{ 'is--active': value === mode }"
         :aria-pressed="value === mode"
         @click="$emit('input', mode)"
@@ -27,7 +27,7 @@
 
       <button
         type="button"
-        class="u-button u-button_icon u-button_glass _viewModeBar--btn"
+        class="u-button u-button_icon _viewModeBar--btn"
         :class="{ 'is--active': filter_open }"
         aria-label="Filter"
         :aria-pressed="filter_open"
