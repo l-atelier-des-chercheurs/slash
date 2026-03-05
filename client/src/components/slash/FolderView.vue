@@ -1,7 +1,10 @@
 <template>
   <div v-if="default_folder" class="_folderView">
-    <div v-show="filter_bar_open" class="_filterBar" aria-hidden="true">
-      <FilterBar v-model="media_type_filter" />
+    <div v-if="filter_bar_open" class="_filterBar">
+      <FilterBar
+        :author_filter.sync="author_filter"
+        :media_type_filter.sync="media_type_filter"
+      />
     </div>
 
     <div class="_viewArea">
@@ -76,6 +79,7 @@ export default {
       default_folder: null,
       view_mode: "canvas",
       filter_bar_open: false,
+      author_filter: null,
       media_type_filter: null,
       canvas_zoom: 1,
       canvas_scroll: null,
@@ -146,15 +150,21 @@ export default {
       if (!this.default_folder || !Array.isArray(this.default_folder.$files)) {
         return [];
       }
-      const type = this.media_type_filter;
+      const media_type_filter = this.media_type_filter;
+      const author_filter = this.author_filter;
 
-      if (!type) return this.sorted_files;
-      else if (type === "3d") {
-        return this.sorted_files.filter(
-          (f) => f.$type === "stl" || f.$type === "obj"
-        );
-      }
-      return this.sorted_files.filter((f) => f.$type === type);
+      return this.sorted_files.filter((file) => {
+        const has_author_filter = !!author_filter;
+        const file_authors = Array.isArray(file.$authors) ? file.$authors : [];
+        const match_author =
+          !has_author_filter || file_authors.includes(author_filter);
+
+        if (!media_type_filter) return match_author;
+        if (media_type_filter === "3d") {
+          return match_author && (file.$type === "stl" || file.$type === "obj");
+        }
+        return match_author && file.$type === media_type_filter;
+      });
     },
     filtered_files_without_canvas_items() {
       return this.filtered_files.filter((f) => !f.$type.startsWith("canvas_"));
@@ -508,15 +518,18 @@ export default {
   width: 100%;
   height: 100%;
   min-height: 100vh;
+
+  transition: all 1s ease-in-out;
 }
 
 ._filterBar {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   width: 100%;
-  background: var(--c-gris_clair, #f0f0f0);
+  // background: var(--c-noir);
+  // color: white;
   border-bottom: 1px solid var(--c-gris, #ccc);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  z-index: 9999;
+  box-shadow: 0 -16px 16px -16px inset rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 ._viewArea {
@@ -524,5 +537,6 @@ export default {
   flex: 1;
   min-height: 0;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 </style>

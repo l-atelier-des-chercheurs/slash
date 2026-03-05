@@ -45,7 +45,7 @@ textarea,
   transition: border-color 0.15s, background-color 0.15s;
 
   &:hover {
-    border-color: var(--c-gris_fonce);
+    background-color: var(--c-gris_clair);
   }
 
   &:focus {
@@ -225,7 +225,7 @@ input[type="file"] {
   &:active,
   &:focus-visible {
     &:not([disabled]) {
-      background-color: var(--c-gris);
+      background-color: var(--c-gris_clair);
     }
   }
 
@@ -322,17 +322,17 @@ input[type="file"] {
 .u-overlayPanel {
   // outline: 2px solid rgba(241, 241, 241, 0.4);
   backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.2);
   box-shadow: 0 0 5px 0px rgba(0, 0, 0, 0.2);
   padding: calc(var(--spacing) / 4);
   border-radius: var(--border-radius);
 
-  transition: all 4s 2s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: background-color 4s 2s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:hover {
     // backdrop-filter: blur(4px);
     background: rgba(255, 255, 255, 1);
-    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    transition: background-color 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   }
 }
 
@@ -346,4 +346,36 @@ hr {
   border: none;
   border-bottom: 2px solid var(--c-gris);
   margin: calc(var(--spacing)) 0;
+}
+
+select {
+  position: relative;
+  color: var(--c-noir);
+  // border: none;
+  padding: calc(var(--spacing) / 2) calc(var(--spacing) / 1.5);
+  padding-right: calc(var(--spacing) / 2 + 1.5rem);
+  min-width: 0px;
+  cursor: pointer;
+  // line-height: 1.5;
+  border-radius: var(--input-border-radius);
+  user-select: none;
+
+  background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='UTF-8'%3F%3E%3Csvg width='41px' height='26px' viewBox='0 0 41 26' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cdefs%3E%3C/defs%3E%3Cg id='Page-1' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cpolygon id='Path-3' fill='%23000000' points='0 5.38215461 19.9830489 25.3652035 40.1398855 5.20836689 34.9315186 0 19.8691842 15.0623344 4.83971338 0.0328636246'%3E%3C/polygon%3E%3C/g%3E%3C/svg%3E%0A");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 0.8rem;
+  background-color: var(--c-gris_clair);
+
+  &:disabled {
+    background-image: url("data:image/svg+xml,%3C%3Fxml version=%271.0%27 encoding=%27UTF-8%27%3F%3E%3Csvg width=%2741px%27 height=%2726px%27 viewBox=%270 0 41 26%27 version=%271.1%27 xmlns=%27http://www.w3.org/2000/svg%27 xmlns:xlink=%27http://www.w3.org/1999/xlink%27%3E%3Cdefs%3E%3C/defs%3E%3Cg id=%27Page-1%27 stroke=%27none%27 stroke-width=%271%27 fill=%27none%27 fill-rule=%27evenodd%27%3E%3Cpolygon id=%27Path-3%27 fill=%27%23CCCCCC%27 points=%270 5.38215461 19.9830489 25.3652035 40.1398855 5.20836689 34.9315186 0 19.8691842 15.0623344 4.83971338 0.0328636246%27%3E%3C/polygon%3E%3C/g%3E%3C/svg%3E%0A");
+  }
+
+  &.is--active {
+    background-color: var(--active-color);
+    color: white;
+  }
+
+  &:hover {
+    background-color: var(--c-gris);
+  }
 }

@@ -110,7 +110,7 @@ export default {
     left: -0.5rem;
     width: 1rem;
     height: 1rem;
-    background: var(--c-noir);
+    background: var(--color-rule);
     border-radius: 50%;
     z-index: -1;
   }

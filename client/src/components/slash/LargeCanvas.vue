@@ -429,7 +429,7 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #eee;
+  background: #f9f9f9;
 }
 
 ._canvasContent {

@@ -27,7 +27,7 @@
 
       <button
         type="button"
-        class="_viewModeBar--btn"
+        class="u-button u-button_icon u-button_glass _viewModeBar--btn"
         :class="{ 'is--active': filter_open }"
         aria-label="Filter"
         :aria-pressed="filter_open"
@@ -97,6 +97,12 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+
+  @media (max-width: 767px) {
+    left: auto;
+    right: var(--fixed-ui-margins);
+    transform: none;
+  }
 }
 
 ._viewModeBar--row {
@@ -148,23 +154,23 @@ export default {
 }
 
 ._viewModeBar--btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--c-gris_fonce, #555);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;
+  // width: 36px;
+  // height: 36px;
+  // padding: 0;
+  // border: none;
+  // border-radius: 6px;
+  // background: transparent;
+  // color: var(--c-gris_fonce, #555);
+  // cursor: pointer;
+  // transition: background 0.15s, color 0.15s;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: inherit;
-  }
+  // &:hover {
+  //   background: rgba(0, 0, 0, 0.06);
+  //   color: inherit;
+  // }
 
   // &.is--active {
   //   background: var(--c-bleuvert, #2a9d8f);
@@ -172,7 +178,7 @@ export default {
   // }
 
   .b-icon {
-    font-size: 1.25rem;
+    // font-size: 1.25rem;
   }
 }
 
