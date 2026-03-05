@@ -138,13 +138,6 @@ export default {
       let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
-      // max width is 2000px
-      if (this.file.$type !== "canvas_shape") {
-        const max_width = 1000;
-        const max_height = 1000;
-        width = Math.min(width, max_width);
-      }
-
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
 
@@ -278,12 +271,8 @@ export default {
 
         // Calculate new width (in canvas coordinates)
         let newWidth = Math.max(50, this.resizeStartWidth + adjustedDeltaX);
-        newWidth = Math.min(2600, this.resizeStartWidth + adjustedDeltaX);
-
-        // Allow any width (no upper bound clamping since we allow negative positions)
-        const clampedWidth = newWidth;
-
-        this.currentWidth = Math.round(clampedWidth);
+        newWidth = Math.min(1200, this.resizeStartWidth + adjustedDeltaX);
+        this.currentWidth = Math.round(newWidth);
 
         // Emit width update
         this.$emit("width-update", {
