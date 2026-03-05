@@ -16,7 +16,7 @@
         :y="0"
         :width="canvas_width"
         :height="canvas_height"
-        fill="#f5f5f5"
+        fill="#fff"
         stroke="#ddd"
         stroke-width="1"
       />

@@ -8,6 +8,7 @@
         aria-label="Filter by author"
         @change="handleChangeAuthor"
       >
+        <option value="">All</option>
         <option
           v-for="author in authors"
           :key="author.$path"

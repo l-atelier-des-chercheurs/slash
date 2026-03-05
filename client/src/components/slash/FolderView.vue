@@ -525,7 +525,7 @@ export default {
 ._filterBar {
   flex: 0 0 auto;
   width: 100%;
-  // background: var(--c-noir);
+  background: var(--c-gris_clair);
   // color: white;
   border-bottom: 1px solid var(--c-gris, #ccc);
   box-shadow: 0 -16px 16px -16px inset rgba(0, 0, 0, 0.2);
