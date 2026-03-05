@@ -445,7 +445,8 @@ export default {
 <style lang="scss" scoped>
 ._canvasItem {
   --shadow-size: 5px;
-  --selected-border-width: max(calc(2px / var(--scale-factor)), 2px);
+  --selected-border-width: max(calc(3px / var(--scale-factor)), 3px);
+  --selected-border-color: var(--active-color, var(--c-gris_fonce));
 
   position: absolute;
   width: 160px;
@@ -560,7 +561,7 @@ export default {
     position: absolute;
     inset: 0;
     opacity: 0;
-    outline: var(--selected-border-width) solid var(--active-color);
+    outline: var(--selected-border-width) solid var(--selected-border-color);
     pointer-events: none;
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
   }
@@ -599,7 +600,7 @@ export default {
       height: var(--button-size);
       // transform: rotate(90deg);
       background-color: white;
-      outline: var(--selected-border-width) solid var(--active-color);
+      outline: var(--selected-border-width) solid var(--selected-border-color);
       transition: all 0.2s;
     }
 

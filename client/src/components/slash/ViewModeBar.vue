@@ -113,43 +113,9 @@ export default {
 
 ._viewModeBar--zoomRow {
   width: 100%;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  // border-top: 1px solid var(--c-gris, #ccc);
-  gap: 8px;
-}
 
-._viewModeBar--zoomSlider {
-  flex: 1;
-  min-width: 80px;
-  // max-width: 140px;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--c-gris, #ccc);
-  border-radius: 3px;
-  outline: none;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--c-bleuvert, #2a9d8f);
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  }
-
-  &::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--c-bleuvert, #2a9d8f);
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  input {
+    width: 100%;
   }
 }
 
