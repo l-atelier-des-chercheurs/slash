@@ -1,5 +1,5 @@
 <template>
-  <div class="_viewModeBar">
+  <div class="_viewModeBar u-overlayPanel">
     <div class="_viewModeBar--row">
       <button
         v-for="mode in ['canvas', 'grid', 'map', 'timeline']"
@@ -97,14 +97,6 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-
-  padding: 6px;
-
-  border-radius: var(--border-radius);
-  border: 1px solid var(--c-gris);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
 }
 
 ._viewModeBar--row {

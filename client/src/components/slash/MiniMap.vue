@@ -1,5 +1,8 @@
 <template>
-  <div class="_miniMap" v-if="canvas_width > 0 && canvas_height > 0">
+  <div
+    class="_miniMap u-overlayPanel"
+    v-if="canvas_width > 0 && canvas_height > 0"
+  >
     <svg
       ref="svg"
       class="_miniMapSvg"
@@ -232,10 +235,6 @@ export default {
   left: var(--fixed-ui-margins);
   width: 200px;
   height: 150px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   cursor: pointer;
   overflow: hidden;

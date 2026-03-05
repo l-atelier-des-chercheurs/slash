@@ -232,6 +232,8 @@ export default {
       event.preventDefault();
       event.stopPropagation();
 
+      if (this.mode === "pan-zoom") return;
+
       this.isDragging = true;
       this.has_dragged = false;
 
@@ -540,7 +542,7 @@ export default {
     ._canvasItemContent,
     ._canvasItem--shape,
     ._canvasItem--text {
-      pointer-events: none;
+      pointer-events: none !important;
     }
     cursor: inherit;
     ._canvasItem--open {

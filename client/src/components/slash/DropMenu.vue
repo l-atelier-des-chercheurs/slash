@@ -1,6 +1,6 @@
 <template>
   <div class="_dropMenu">
-    <div class="_dropMenu--content">
+    <div class="_dropMenu--content u-overlayPanel">
       <button
         v-if="connected_as"
         type="button"
@@ -91,17 +91,9 @@ export default {
 }
 
 ._dropMenu--content {
-  padding: calc(var(--spacing) / 4);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--c-gris);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
-
   display: flex;
   flex-direction: row nowrap;
   align-items: center;
-  // gap: var(--spacing);
   overflow: hidden;
 }
 

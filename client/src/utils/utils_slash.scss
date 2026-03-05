@@ -319,6 +319,23 @@ input[type="file"] {
   }
 }
 
+.u-overlayPanel {
+  // outline: 2px solid rgba(241, 241, 241, 0.4);
+  backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 5px 0px rgba(0, 0, 0, 0.2);
+  padding: calc(var(--spacing) / 4);
+  border-radius: var(--border-radius);
+
+  transition: all 2s 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+
+  &:hover {
+    // backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 1);
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+}
+
 .fieldCaption {
   font-weight: 500;
   font-size: var(--sl-font-size-x-small);
