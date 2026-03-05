@@ -435,31 +435,17 @@ export default {
 ._canvasContent {
   position: relative;
 
-  // Dot grid pattern with --color-rule; pans with content (this div is inside the panned viewport)
-  --rule-color: var(--color-rule);
+  // Dot grid pattern; pans with content (this div is inside the panned viewport)
   --background-color: white;
   --bg-size: 100px;
-  --bg-position: 0 0;
-  --dot-size: 2px;
 
-  // border: var(--dot-size) solid var(--rule-color);
   box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
-  // border-radius: var(--border-radius);
   overflow: visible;
 
-  // draw tiny SLASH "/" in the background
   background-color: #ffffff;
-
-  background-image: radial-gradient(
-      var(--rule-color) var(--dot-size),
-      transparent var(--dot-size)
-    ),
-    radial-gradient(
-      var(--rule-color) var(--dot-size),
-      transparent var(--dot-size)
-    );
+  background-image: url("/images/bg-dot-grid.png");
+  background-repeat: repeat;
   background-size: var(--bg-size) var(--bg-size);
-  background-position: 0 0, calc(var(--bg-size) / 2) calc(var(--bg-size) / 2);
 }
 
 ._largeCanvas[data-mode="draw"] {
