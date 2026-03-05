@@ -18,6 +18,7 @@
         :style="{
           width: `${canvas_width}px`,
           height: `${canvas_height}px`,
+          backgroundImage: `url(${$root.publicPath}images/bg-dot-grid.png)`,
         }"
         @click.self="handleCanvasClick"
       >
@@ -443,9 +444,9 @@ export default {
   overflow: visible;
 
   background-color: #ffffff;
-  background-image: url("/images/bg-dot-grid.png");
   background-repeat: repeat;
   background-size: var(--bg-size) var(--bg-size);
+  background-position: -24px -24px, 0 calc(var(--bg-size) / 2);
 }
 
 ._largeCanvas[data-mode="draw"] {
