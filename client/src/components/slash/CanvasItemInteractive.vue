@@ -124,6 +124,9 @@ export default {
       resizeStartX: 0,
       resizeStartWidth: 0,
       saveTimeout: null,
+
+      item_min_width: 50,
+      item_max_width: 1400,
     };
   },
   computed: {
@@ -137,6 +140,8 @@ export default {
       // Clamp for display as well
       let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+      width = Math.min(this.item_max_width, width);
+      width = Math.max(this.item_min_width, width);
 
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
@@ -270,8 +275,14 @@ export default {
         const adjustedDeltaX = deltaX / this.canvas_zoom;
 
         // Calculate new width (in canvas coordinates)
-        let newWidth = Math.max(50, this.resizeStartWidth + adjustedDeltaX);
-        newWidth = Math.min(1200, this.resizeStartWidth + adjustedDeltaX);
+        let newWidth = Math.max(
+          this.item_min_width,
+          this.resizeStartWidth + adjustedDeltaX
+        );
+        newWidth = Math.min(
+          this.item_max_width,
+          this.resizeStartWidth + adjustedDeltaX
+        );
         this.currentWidth = Math.round(newWidth);
 
         // Emit width update

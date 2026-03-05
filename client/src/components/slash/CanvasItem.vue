@@ -24,9 +24,9 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
 
-      <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
+      <!-- <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
         <b-icon icon="chat-left-text-fill" />
-      </span>
+      </span> -->
     </div>
   </div>
 </template>
