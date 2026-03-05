@@ -233,8 +233,7 @@ export default {
   position: absolute;
   bottom: var(--fixed-ui-margins);
   left: var(--fixed-ui-margins);
-  width: 200px;
-  height: 150px;
+  width: clamp(100px, 50vmin, 200px);
   z-index: 1000;
   cursor: pointer;
   overflow: hidden;
@@ -244,5 +243,6 @@ export default {
   width: 100%;
   height: 100%;
   display: block;
+  border-radius: var(--border-radius);
 }
 </style>
