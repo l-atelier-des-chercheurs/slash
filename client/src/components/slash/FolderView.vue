@@ -1,43 +1,43 @@
 <template>
   <div v-if="default_folder" class="_folderView">
-    <div v-show="filterBarOpen" class="_filterBar" aria-hidden="true">
-      <FilterBar v-model="mediaTypeFilter" />
+    <div v-show="filter_bar_open" class="_filterBar" aria-hidden="true">
+      <FilterBar v-model="media_type_filter" />
     </div>
 
     <div class="_viewArea">
       <DropMenu
         :folder_path="default_folder.$path"
-        :canvas_zoom="canvasZoom"
+        :canvas_zoom="canvas_zoom"
         :canvas_scroll="canvas_scroll"
       />
       <ViewModeBar
-        :value="viewMode"
-        :filter-open="filterBarOpen"
-        :canvas-zoom="canvasZoom"
+        :value="view_mode"
+        :filter_open="filter_bar_open"
+        :canvas_zoom="canvas_zoom"
         :zoom_range="zoom_range"
         @input="switchViewMode"
-        @toggle-filter="filterBarOpen = !filterBarOpen"
-        @update:canvasZoom="canvasZoom = $event"
+        @toggle-filter="filter_bar_open = !filter_bar_open"
+        @update:canvas_zoom="canvas_zoom = $event"
       />
       <LargeCanvas
-        v-show="viewMode === 'canvas'"
+        v-show="view_mode === 'canvas'"
         :files="filtered_files"
-        :zoom="canvasZoom"
+        :zoom="canvas_zoom"
         :zoom_range="zoom_range"
         :folder_path="default_folder.$path"
-        @update:zoom="canvasZoom = $event"
+        @update:zoom="canvas_zoom = $event"
         @update:scroll="canvas_scroll = $event"
       />
       <GeoMapView
-        v-show="viewMode === 'map'"
+        v-show="view_mode === 'map'"
         :files="filtered_files_without_canvas_items"
       />
       <TimelineView
-        v-show="viewMode === 'timeline'"
+        v-show="view_mode === 'timeline'"
         :files="filtered_files_without_canvas_items"
       />
       <MediaGridView
-        v-show="viewMode === 'grid'"
+        v-show="view_mode === 'grid'"
         :files="filtered_files_without_canvas_items"
       />
     </div>
@@ -74,10 +74,10 @@ export default {
   data() {
     return {
       default_folder: null,
-      viewMode: "canvas",
-      filterBarOpen: false,
-      mediaTypeFilter: null,
-      canvasZoom: 1,
+      view_mode: "canvas",
+      filter_bar_open: false,
+      media_type_filter: null,
+      canvas_zoom: 1,
       canvas_scroll: null,
       zoom_range: [0.1, 1],
     };
@@ -117,13 +117,13 @@ export default {
   },
   watch: {
     // Watch for route changes to sync view mode from URL
-    "$route.query.view"(newView) {
+    "$route.query.view"(new_view) {
       if (
-        newView &&
-        this.isValidViewMode(newView) &&
-        newView !== this.viewMode
+        new_view &&
+        this.isValidViewMode(new_view) &&
+        new_view !== this.view_mode
       ) {
-        this.viewMode = newView;
+        this.view_mode = new_view;
       }
     },
   },
@@ -146,7 +146,7 @@ export default {
       if (!this.default_folder || !Array.isArray(this.default_folder.$files)) {
         return [];
       }
-      const type = this.mediaTypeFilter;
+      const type = this.media_type_filter;
 
       if (!type) return this.sorted_files;
       else if (type === "3d") {
@@ -162,26 +162,28 @@ export default {
   },
   methods: {
     initializeViewMode() {
-      const validModes = ["canvas", "grid", "map", "timeline"];
+      const valid_modes = ["canvas", "grid", "map", "timeline"];
 
       // 1. Check URL query parameter first
-      const urlView = this.$route.query.view;
-      if (urlView && validModes.includes(urlView)) {
-        this.viewMode = urlView;
+      const url_view = this.$route.query.view;
+      if (url_view && valid_modes.includes(url_view)) {
+        this.view_mode = url_view;
         return;
       }
 
       // 2. Fallback to localStorage
-      const storedView = localStorage.getItem("slash_viewMode");
-      if (storedView && validModes.includes(storedView)) {
-        this.viewMode = storedView;
+      const stored_view =
+        localStorage.getItem("slash_view_mode") ||
+        localStorage.getItem("slash_viewMode");
+      if (stored_view && valid_modes.includes(stored_view)) {
+        this.view_mode = stored_view;
         // Update URL to match localStorage
-        this.updateUrlViewMode(storedView);
+        this.updateUrlViewMode(stored_view);
         return;
       }
 
       // 3. Default to "canvas"
-      this.viewMode = "canvas";
+      this.view_mode = "canvas";
       this.updateUrlViewMode("canvas");
     },
     isValidViewMode(mode) {
@@ -217,17 +219,17 @@ export default {
       });
     },
     async switchViewMode(newMode) {
-      if (this.viewMode === newMode) return;
+      if (this.view_mode === newMode) return;
 
       // 1. Capture positions of current visible items
       const firstPositions = this.capturePositions();
 
       // 2. Change view mode
-      this.viewMode = newMode;
+      this.view_mode = newMode;
 
       // 3. Update URL and localStorage
       this.updateUrlViewMode(newMode);
-      localStorage.setItem("slash_viewMode", newMode);
+      localStorage.setItem("slash_view_mode", newMode);
 
       // 4. Wait for DOM update
       await this.$nextTick();
@@ -389,11 +391,11 @@ export default {
       }
     },
     capturePositions() {
-      if (this.viewMode === "map") return new Map();
+      if (this.view_mode === "map") return new Map();
 
       const positions = new Map();
-      const container = this.getViewContainer(this.viewMode);
-      const selector = this.getItemSelector(this.viewMode);
+      const container = this.getViewContainer(this.view_mode);
+      const selector = this.getItemSelector(this.view_mode);
       if (!container || !selector) return positions;
 
       // Important: scope to the active view container only.
@@ -408,10 +410,10 @@ export default {
       return positions;
     },
     animateTransitions(firstPositions) {
-      if (this.viewMode === "map") return;
+      if (this.view_mode === "map") return;
 
-      const container = this.getViewContainer(this.viewMode);
-      const selector = this.getItemSelector(this.viewMode);
+      const container = this.getViewContainer(this.view_mode);
+      const selector = this.getItemSelector(this.view_mode);
       if (!container || !selector) return;
 
       const elements = container.querySelectorAll(selector);

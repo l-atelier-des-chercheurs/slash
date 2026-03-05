@@ -28,9 +28,9 @@
       <button
         type="button"
         class="_viewModeBar--btn"
-        :class="{ 'is--active': filterOpen }"
+        :class="{ 'is--active': filter_open }"
         aria-label="Filter"
-        aria-pressed="filterOpen"
+        :aria-pressed="filter_open"
         @click="$emit('toggle-filter')"
       >
         <b-icon icon="filter" />
@@ -44,7 +44,7 @@
       <input
         type="range"
         class="_viewModeBar--zoomSlider"
-        :value="canvasZoom"
+        :value="canvas_zoom"
         :min="zoom_range[0]"
         :max="zoom_range[1]"
         step="0.01"
@@ -62,25 +62,25 @@ export default {
       default: "canvas",
       validator: (v) => ["canvas", "grid", "map", "timeline"].includes(v),
     },
-    filterOpen: {
+    filter_open: {
       type: Boolean,
       default: false,
     },
     zoom_range: Array,
-    canvasZoom: {
+    canvas_zoom: {
       type: Number,
       default: 1,
     },
   },
   computed: {
-    zoomLabel() {
-      return `${Math.round(this.canvasZoom * 100)}%`;
+    zoom_label() {
+      return `${Math.round(this.canvas_zoom * 100)}%`;
     },
   },
   methods: {
     onZoomInput(e) {
       const v = parseFloat(e.target.value);
-      if (!Number.isNaN(v)) this.$emit("update:canvasZoom", v);
+      if (!Number.isNaN(v)) this.$emit("update:canvas_zoom", v);
     },
   },
 };

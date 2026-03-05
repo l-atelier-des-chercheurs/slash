@@ -17,6 +17,7 @@
 
     <component :is="'style'">
       {{ custom_fonts_css }}
+      {{ current_author_color_css }}
     </component>
 
     <LoaderSpinner v-if="router_is_loading" />
@@ -62,6 +63,10 @@ export default {
   computed: {
     page_is_standalone_html() {
       return window.app_infos.page_is_standalone_html === true;
+    },
+    current_author_color_css() {
+      let author_color = this.connected_as?.color || "#999";
+      return `:root { --current-author-color: ${author_color}; }`;
     },
     custom_fonts_css() {
       const custom_fonts = this.$root.app_infos.custom_fonts;

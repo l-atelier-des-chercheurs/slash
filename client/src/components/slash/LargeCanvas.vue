@@ -424,6 +424,8 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._largeCanvas {
+  --shapes-stroke-width: 5px;
+
   position: absolute;
   inset: 0;
   overflow: hidden;

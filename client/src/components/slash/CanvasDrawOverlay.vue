@@ -289,8 +289,8 @@ export default {
 }
 
 ._drawPath {
-  stroke: var(--c-noir);
-  stroke-width: 2px;
+  stroke: var(--current-author-color, var(--c-noir));
+  stroke-width: var(--shapes-stroke-width, 2px);
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;

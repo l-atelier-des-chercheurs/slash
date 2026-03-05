@@ -139,9 +139,11 @@ export default {
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
       // max width is 2000px
-      const max_width = 1000;
-      const max_height = 1000;
-      width = Math.min(width, max_width);
+      if (this.file.$type !== "canvas_shape") {
+        const max_width = 1000;
+        const max_height = 1000;
+        width = Math.min(width, max_width);
+      }
 
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
@@ -633,7 +635,7 @@ export default {
       path {
         pointer-events: auto;
         pointer-events: visibleStroke;
-        stroke-width: 5px;
+        stroke-width: var(--shapes-stroke-width, 5px);
         stroke: var(--author-color, black);
       }
     }
