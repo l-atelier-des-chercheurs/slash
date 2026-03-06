@@ -267,14 +267,14 @@ export default {
       const ph = h * sy;
 
       // Semi-transparent fill
-      ctx.fillStyle = "rgba(0, 255, 0, 0.15)";
+      ctx.fillStyle = "rgba(153, 153, 153, 0.15)";
       ctx.fillRect(px, py, pw, ph);
 
       // Dashed border
-      ctx.strokeStyle = "#ff6600";
+      ctx.strokeStyle = "transparent";
       ctx.lineWidth = 2;
       ctx.globalAlpha = 0.9;
-      ctx.setLineDash([4, 4]);
+      // ctx.setLineDash([4, 4]);
       ctx.strokeRect(px, py, pw, ph);
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
@@ -295,6 +295,7 @@ export default {
         const path_match = file.shape_svg.match(/<path[^>]*d=["']([^"']+)["']/);
         if (path_match && path_match[1]) return path_match[1];
         const parser = new DOMParser();
+        x;
         const svg_doc = parser.parseFromString(file.shape_svg, "image/svg+xml");
         const parse_error = svg_doc.querySelector("parsererror");
         if (parse_error) return null;
