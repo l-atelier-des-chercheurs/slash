@@ -405,19 +405,6 @@ export default {
       const clamped_x = Math.max(0, Math.min(x, this.canvas_width));
       const clamped_y = Math.max(0, Math.min(y, this.canvas_height));
 
-      if (event && event.type && event.type.startsWith("touch")) {
-        console.log("[LargeCanvas] touch coords", {
-          event_type: event.type,
-          client_x: pointer_event.clientX,
-          client_y: pointer_event.clientY,
-          canvas_x: clamped_x,
-          canvas_y: clamped_y,
-          zoom,
-          scroll_left,
-          scroll_top,
-        });
-      }
-
       return { x: clamped_x, y: clamped_y };
     },
   },
