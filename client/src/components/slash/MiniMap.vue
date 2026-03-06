@@ -2,100 +2,17 @@
   <div
     class="_miniMap u-overlayPanel"
     v-if="canvas_width > 0 && canvas_height > 0"
+    ref="container"
+    @mousedown="handleMouseDown"
   >
-    <svg
-      ref="svg"
-      class="_miniMapSvg"
-      :viewBox="`0 0 ${canvas_width} ${canvas_height}`"
-      preserveAspectRatio="xMidYMid meet"
-      @mousedown="handleMouseDown"
+    <div
+      class="_canvasWrapper"
+      ref="wrapper"
+      :style="{ aspectRatio: `${canvas_width} / ${canvas_height}` }"
     >
-      <!-- Canvas background -->
-      <rect
-        x="0"
-        :y="0"
-        :width="canvas_width"
-        :height="canvas_height"
-        fill="#fff"
-        stroke="#ddd"
-        stroke-width="1"
-      />
-
-      <!-- Items -->
-      <g v-for="file in files" :key="file.$path">
-        <!-- Canvas shapes: render actual shape -->
-        <g
-          v-if="file.$type === 'canvas_shape'"
-          :transform="`translate(${file.x || 0}, ${file.y || 0})`"
-        >
-          <!-- Render the path directly from parsed SVG -->
-          <path
-            v-if="getShapePath(file)"
-            :d="getShapePath(file)"
-            :fill="isSelected(file) ? '#4a9eff' : 'none'"
-            :stroke="isSelected(file) ? '#0066cc' : '#333'"
-            :stroke-width="isSelected(file) ? '2' : '1.5'"
-            :opacity="isSelected(file) ? 0.9 : 0.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <!-- Fallback: render entire SVG using foreignObject if path extraction fails -->
-          <foreignObject
-            v-else-if="file.shape_svg"
-            :width="file.width || 100"
-            :height="file.height || 100"
-            style="overflow: visible"
-          >
-            <div
-              v-html="file.shape_svg"
-              style="
-                width: 100%;
-                height: 100%;
-                pointer-events: none;
-                display: block;
-              "
-            />
-          </foreignObject>
-        </g>
-        <!-- Other items: render box -->
-        <rect
-          v-else
-          :x="file.x || 0"
-          :y="file.y || 0"
-          :width="getItemWidth(file)"
-          :height="getItemHeight(file)"
-          :fill="isSelected(file) ? '#4a9eff' : '#999'"
-          :stroke="isSelected(file) ? '#0066cc' : '#666'"
-          stroke-width="0.5"
-          :opacity="isSelected(file) ? 0.8 : 0.5"
-        />
-      </g>
-
-      <!-- Viewport rectangle -->
-      <g v-if="has_valid_viewport" class="_viewportRectangle">
-        <!-- Semi-transparent fill -->
-        <rect
-          :x="viewport_x"
-          :y="viewport_y"
-          :width="viewport_width"
-          :height="viewport_height"
-          fill="#00FF00"
-          opacity="0.15"
-        />
-        <!-- Border -->
-        <rect
-          :x="viewport_x"
-          :y="viewport_y"
-          :width="viewport_width"
-          :height="viewport_height"
-          fill="none"
-          stroke="#ff6600"
-          stroke-width="2"
-          stroke-dasharray="4 4"
-          opacity="0.9"
-        />
-      </g>
-    </svg>
+      <canvas ref="contentCanvas" class="_contentCanvas" />
+      <canvas ref="viewportCanvas" class="_viewportCanvas" />
+    </div>
   </div>
 </template>
 
@@ -132,18 +49,21 @@ export default {
       default: () => [],
     },
   },
+  data() {
+    return {
+      display_width: 0,
+      display_height: 0,
+      resize_observer: null,
+    };
+  },
   computed: {
-    viewport_x() {
-      return ((this.viewport_props.left_pct || 0) / 100) * this.canvas_width;
+    scale_x() {
+      if (this.canvas_width <= 0) return 1;
+      return this.display_width / this.canvas_width;
     },
-    viewport_y() {
-      return ((this.viewport_props.top_pct || 0) / 100) * this.canvas_height;
-    },
-    viewport_width() {
-      return ((this.viewport_props.width_pct || 0) / 100) * this.canvas_width;
-    },
-    viewport_height() {
-      return ((this.viewport_props.height_pct || 0) / 100) * this.canvas_height;
+    scale_y() {
+      if (this.canvas_height <= 0) return 1;
+      return this.display_height / this.canvas_height;
     },
     has_valid_viewport() {
       const p = this.viewport_props;
@@ -155,73 +75,261 @@ export default {
       );
     },
   },
+  watch: {
+    files: {
+      handler() {
+        this.drawContent();
+      },
+      deep: true,
+    },
+    selected_files: {
+      handler() {
+        this.drawContent();
+      },
+      deep: true,
+    },
+    canvas_width() {
+      this.$nextTick(() => {
+        this.updateSize();
+        this.drawContent();
+        this.drawViewport();
+      });
+    },
+    canvas_height() {
+      this.$nextTick(() => {
+        this.updateSize();
+        this.drawContent();
+        this.drawViewport();
+      });
+    },
+    viewport_props: {
+      handler() {
+        this.drawViewport();
+      },
+      deep: true,
+    },
+    display_width() {
+      this.drawContent();
+      this.drawViewport();
+    },
+    display_height() {
+      this.drawContent();
+      this.drawViewport();
+    },
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.updateSize();
+      this.drawContent();
+      this.drawViewport();
+    });
+    if (typeof ResizeObserver !== "undefined" && this.$refs.wrapper) {
+      this.resize_observer = new ResizeObserver(() => this.updateSize());
+      this.resize_observer.observe(this.$refs.wrapper);
+    }
+  },
+  beforeDestroy() {
+    if (this.resize_observer && this.$refs.wrapper) {
+      this.resize_observer.unobserve(this.$refs.wrapper);
+    }
+  },
   methods: {
+    updateSize() {
+      const wrapper = this.$refs.wrapper;
+      if (!wrapper) return;
+      const w = wrapper.clientWidth || 0;
+      const h = wrapper.clientHeight || 0;
+      if (w <= 0 || h <= 0) return;
+      if (this.display_width === w && this.display_height === h) return;
+      this.display_width = w;
+      this.display_height = h;
+
+      const content = this.$refs.contentCanvas;
+      const viewport = this.$refs.viewportCanvas;
+      if (content && viewport) {
+        content.width = w;
+        content.height = h;
+        viewport.width = w;
+        viewport.height = h;
+      }
+    },
+    drawContent() {
+      const canvas = this.$refs.contentCanvas;
+      if (!canvas || this.display_width <= 0 || this.display_height <= 0)
+        return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const sx = this.scale_x;
+      const sy = this.scale_y;
+
+      ctx.save();
+      ctx.scale(sx, sy);
+
+      // Background
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, this.canvas_width, this.canvas_height);
+      ctx.strokeStyle = "#ddd";
+      ctx.lineWidth = 1 / Math.min(sx, sy);
+      ctx.strokeRect(0, 0, this.canvas_width, this.canvas_height);
+
+      // Items
+      for (const file of this.files) {
+        const selected = this.selected_files.includes(file.$path);
+        if (file.$type === "canvas_shape") {
+          this.drawShape(ctx, file, selected);
+        } else {
+          this.drawItemRect(ctx, file, selected);
+        }
+      }
+
+      ctx.restore();
+    },
+    drawItemRect(ctx, file, selected) {
+      const x = file.x || 0;
+      const y = file.y || 0;
+      const w = this.getItemWidth(file);
+      const h = this.getItemHeight(file);
+
+      ctx.fillStyle = selected ? "#4a9eff" : "#999";
+      ctx.strokeStyle = selected ? "#0066cc" : "#666";
+      ctx.globalAlpha = selected ? 0.8 : 0.5;
+      ctx.lineWidth = 0.5 / Math.min(this.scale_x, this.scale_y);
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeRect(x, y, w, h);
+      ctx.globalAlpha = 1;
+    },
+    drawShape(ctx, file, selected) {
+      const x = file.x || 0;
+      const y = file.y || 0;
+      const path_d = this.getShapePath(file);
+
+      ctx.save();
+      ctx.translate(x, y);
+
+      if (path_d) {
+        try {
+          const path = new Path2D(path_d);
+          ctx.fillStyle = "transparent";
+          ctx.strokeStyle = selected ? "#0066cc" : "#333";
+          ctx.lineWidth =
+            (selected ? 1 : 1) / Math.min(this.scale_x * 2, this.scale_y * 2);
+          ctx.globalAlpha = selected ? 0.9 : 0.7;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.fill(path);
+          ctx.stroke(path);
+        } catch (err) {
+          this.drawShapeFallback(ctx, file, selected);
+        }
+      } else if (file.shape_svg) {
+        this.drawShapeFallback(ctx, file, selected);
+      }
+
+      ctx.restore();
+    },
+    drawShapeFallback(ctx, file, selected) {
+      const w = file.width || 100;
+      const h = file.height || 100;
+      ctx.fillStyle = selected ? "#4a9eff" : "#999";
+      ctx.strokeStyle = selected ? "#0066cc" : "#666";
+      ctx.globalAlpha = selected ? 0.8 : 0.5;
+      ctx.lineWidth = 0.5 / Math.min(this.scale_x, this.scale_y);
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeRect(0, 0, w, h);
+      ctx.globalAlpha = 1;
+    },
+    drawViewport() {
+      const canvas = this.$refs.viewportCanvas;
+      if (!canvas || this.display_width <= 0 || this.display_height <= 0)
+        return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, this.display_width, this.display_height);
+
+      if (!this.has_valid_viewport) return;
+
+      const x = ((this.viewport_props.left_pct || 0) / 100) * this.canvas_width;
+      const y = ((this.viewport_props.top_pct || 0) / 100) * this.canvas_height;
+      const w =
+        ((this.viewport_props.width_pct || 0) / 100) * this.canvas_width;
+      const h =
+        ((this.viewport_props.height_pct || 0) / 100) * this.canvas_height;
+
+      const sx = this.scale_x;
+      const sy = this.scale_y;
+      const px = x * sx;
+      const py = y * sy;
+      const pw = w * sx;
+      const ph = h * sy;
+
+      // Semi-transparent fill
+      ctx.fillStyle = "rgba(0, 255, 0, 0.15)";
+      ctx.fillRect(px, py, pw, ph);
+
+      // Dashed border
+      ctx.strokeStyle = "#ff6600";
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.9;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(px, py, pw, ph);
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    },
     getItemWidth(file) {
       return file.width || 160;
     },
     getItemHeight(file) {
       const width = this.getItemWidth(file);
       const ratio = file.$infos && file.$infos.ratio;
-      const default_ratio = 9 / 16; // height/width for 16:9
+      const default_ratio = 9 / 16;
       const effective_ratio = ratio !== undefined ? ratio : default_ratio;
       return width * effective_ratio;
     },
-    isSelected(file) {
-      return this.selected_files.includes(file.$path);
-    },
     getShapePath(file) {
-      if (!file.shape_svg) {
-        return null;
-      }
+      if (!file.shape_svg) return null;
       try {
-        // First try regex extraction (more reliable for simple cases)
         const path_match = file.shape_svg.match(/<path[^>]*d=["']([^"']+)["']/);
-        if (path_match && path_match[1]) {
-          return path_match[1];
-        }
-        // Fallback to DOM parsing
+        if (path_match && path_match[1]) return path_match[1];
         const parser = new DOMParser();
         const svg_doc = parser.parseFromString(file.shape_svg, "image/svg+xml");
         const parse_error = svg_doc.querySelector("parsererror");
-        if (parse_error) {
-          console.warn("SVG parse error:", parse_error.textContent);
-          return null;
-        }
+        if (parse_error) return null;
         const path_element = svg_doc.querySelector("path");
-        if (path_element) {
-          const path_d = path_element.getAttribute("d");
-          if (path_d) {
-            return path_d;
-          }
-        }
+        return path_element ? path_element.getAttribute("d") : null;
       } catch (err) {
-        console.warn("Failed to parse shape SVG:", err);
+        return null;
       }
-      return null;
     },
     handleMouseDown(event) {
-      if (!this.$refs.svg) return;
-      const svg_rect = this.$refs.svg.getBoundingClientRect();
-      // preserveAspectRatio="xMidYMid meet" scales content to fit and centers it;
-      // the visible content may not fill the element, so we must use the same math.
+      const container = this.$refs.container;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
       const scale = Math.min(
-        svg_rect.width / this.canvas_width,
-        svg_rect.height / this.canvas_height
+        rect.width / this.canvas_width,
+        rect.height / this.canvas_height
       );
       const content_w = this.canvas_width * scale;
       const content_h = this.canvas_height * scale;
-      const offset_x = (svg_rect.width - content_w) / 2;
-      const offset_y = (svg_rect.height - content_h) / 2;
+      const offset_x = (rect.width - content_w) / 2;
+      const offset_y = (rect.height - content_h) / 2;
 
-      const client_x = event.clientX - svg_rect.left;
-      const client_y = event.clientY - svg_rect.top;
+      const client_x = event.clientX - rect.left;
+      const client_y = event.clientY - rect.top;
       const x = (client_x - offset_x) / scale;
       const y = (client_y - offset_y) / scale;
 
-      // Emit event to pan to this position (center the viewport on the clicked point)
+      const viewport_w =
+        ((this.viewport_props.width_pct || 0) / 100) * this.canvas_width;
+      const viewport_h =
+        ((this.viewport_props.height_pct || 0) / 100) * this.canvas_height;
+
       this.$eventHub.$emit("panzoom.panTo", {
-        x: x - this.viewport_width / 2,
-        y: y - this.viewport_height / 2,
+        x: x - viewport_w / 2,
+        y: y - viewport_h / 2,
       });
     },
   },
@@ -237,12 +345,26 @@ export default {
   z-index: 1000;
   cursor: pointer;
   overflow: hidden;
+  border-radius: var(--border-radius);
 }
 
-._miniMapSvg {
+._canvasWrapper {
+  position: relative;
+  width: 100%;
+  /* aspect-ratio set inline from canvas_width/canvas_height */
+}
+
+._contentCanvas,
+._viewportCanvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: var(--border-radius);
+  border-radius: inherit;
+}
+
+._viewportCanvas {
+  pointer-events: none;
 }
 </style>
