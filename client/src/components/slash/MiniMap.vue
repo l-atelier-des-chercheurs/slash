@@ -1,14 +1,16 @@
 <template>
   <div
     class="_miniMap u-overlayPanel"
-    v-if="canvas_width > 0 && canvas_height > 0"
+    v-if="effective_canvas_width > 0 && effective_canvas_height > 0"
     ref="container"
     @mousedown="handleMouseDown"
   >
     <div
       class="_canvasWrapper"
       ref="wrapper"
-      :style="{ aspectRatio: `${canvas_width} / ${canvas_height}` }"
+      :style="{
+        aspectRatio: `${effective_canvas_width} / ${effective_canvas_height}`,
+      }"
     >
       <canvas ref="contentCanvas" class="_contentCanvas" />
       <canvas ref="viewportCanvas" class="_viewportCanvas" />
@@ -53,73 +55,64 @@ export default {
     return {
       display_width: 0,
       display_height: 0,
+      effective_canvas_width: 0,
+      effective_canvas_height: 0,
+      scale_x: 1,
+      scale_y: 1,
       resize_observer: null,
+      debounce_timer: null,
+      viewport_raf_id: null,
     };
   },
   computed: {
-    scale_x() {
-      if (this.canvas_width <= 0) return 1;
-      return this.display_width / this.canvas_width;
-    },
-    scale_y() {
-      if (this.canvas_height <= 0) return 1;
-      return this.display_height / this.canvas_height;
-    },
     has_valid_viewport() {
       const p = this.viewport_props;
       return (
         (p.width_pct || 0) > 0 &&
         (p.height_pct || 0) > 0 &&
-        this.canvas_width > 0 &&
-        this.canvas_height > 0
+        this.effective_canvas_width > 0 &&
+        this.effective_canvas_height > 0
       );
     },
   },
   watch: {
     files: {
       handler() {
-        this.drawContent();
+        this.scheduleUpdate();
       },
       deep: true,
     },
     selected_files: {
       handler() {
-        this.drawContent();
+        this.scheduleUpdate();
       },
       deep: true,
     },
     canvas_width() {
-      this.$nextTick(() => {
-        this.updateSize();
-        this.drawContent();
-        this.drawViewport();
-      });
+      this.scheduleUpdate();
     },
     canvas_height() {
-      this.$nextTick(() => {
-        this.updateSize();
-        this.drawContent();
-        this.drawViewport();
-      });
+      this.scheduleUpdate();
     },
     viewport_props: {
       handler() {
-        this.drawViewport();
+        this.scheduleViewportUpdate();
       },
       deep: true,
     },
     display_width() {
-      this.drawContent();
-      this.drawViewport();
+      this.scheduleUpdate();
     },
     display_height() {
-      this.drawContent();
-      this.drawViewport();
+      this.scheduleUpdate();
     },
   },
   mounted() {
+    this.effective_canvas_width = this.canvas_width;
+    this.effective_canvas_height = this.canvas_height;
     this.$nextTick(() => {
       this.updateSize();
+      this.updateScale();
       this.drawContent();
       this.drawViewport();
     });
@@ -129,11 +122,43 @@ export default {
     }
   },
   beforeDestroy() {
+    if (this.debounce_timer) clearTimeout(this.debounce_timer);
+    if (this.viewport_raf_id != null)
+      cancelAnimationFrame(this.viewport_raf_id);
     if (this.resize_observer && this.$refs.wrapper) {
       this.resize_observer.unobserve(this.$refs.wrapper);
     }
   },
   methods: {
+    scheduleUpdate() {
+      if (this.debounce_timer) clearTimeout(this.debounce_timer);
+      this.debounce_timer = setTimeout(() => {
+        this.debounce_timer = null;
+        this.effective_canvas_width = this.canvas_width;
+        this.effective_canvas_height = this.canvas_height;
+        this.updateScale();
+        this.drawContent();
+        this.drawViewport();
+      }, 500);
+    },
+    scheduleViewportUpdate() {
+      if (this.viewport_raf_id != null)
+        cancelAnimationFrame(this.viewport_raf_id);
+      this.viewport_raf_id = requestAnimationFrame(() => {
+        this.viewport_raf_id = null;
+        this.drawViewport();
+      });
+    },
+    updateScale() {
+      this.scale_x =
+        this.effective_canvas_width > 0
+          ? this.display_width / this.effective_canvas_width
+          : 1;
+      this.scale_y =
+        this.effective_canvas_height > 0
+          ? this.display_height / this.effective_canvas_height
+          : 1;
+    },
     updateSize() {
       const wrapper = this.$refs.wrapper;
       if (!wrapper) return;
@@ -169,10 +194,20 @@ export default {
 
       // Background
       ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, this.canvas_width, this.canvas_height);
+      ctx.fillRect(
+        0,
+        0,
+        this.effective_canvas_width,
+        this.effective_canvas_height
+      );
       ctx.strokeStyle = "#ddd";
       ctx.lineWidth = 1 / Math.min(sx, sy);
-      ctx.strokeRect(0, 0, this.canvas_width, this.canvas_height);
+      ctx.strokeRect(
+        0,
+        0,
+        this.effective_canvas_width,
+        this.effective_canvas_height
+      );
 
       // Items
       for (const file of this.files) {
@@ -252,12 +287,18 @@ export default {
 
       if (!this.has_valid_viewport) return;
 
-      const x = ((this.viewport_props.left_pct || 0) / 100) * this.canvas_width;
-      const y = ((this.viewport_props.top_pct || 0) / 100) * this.canvas_height;
+      const x =
+        ((this.viewport_props.left_pct || 0) / 100) *
+        this.effective_canvas_width;
+      const y =
+        ((this.viewport_props.top_pct || 0) / 100) *
+        this.effective_canvas_height;
       const w =
-        ((this.viewport_props.width_pct || 0) / 100) * this.canvas_width;
+        ((this.viewport_props.width_pct || 0) / 100) *
+        this.effective_canvas_width;
       const h =
-        ((this.viewport_props.height_pct || 0) / 100) * this.canvas_height;
+        ((this.viewport_props.height_pct || 0) / 100) *
+        this.effective_canvas_height;
 
       const sx = this.scale_x;
       const sy = this.scale_y;
@@ -295,7 +336,6 @@ export default {
         const path_match = file.shape_svg.match(/<path[^>]*d=["']([^"']+)["']/);
         if (path_match && path_match[1]) return path_match[1];
         const parser = new DOMParser();
-        x;
         const svg_doc = parser.parseFromString(file.shape_svg, "image/svg+xml");
         const parse_error = svg_doc.querySelector("parsererror");
         if (parse_error) return null;
@@ -310,11 +350,11 @@ export default {
       if (!container) return;
       const rect = container.getBoundingClientRect();
       const scale = Math.min(
-        rect.width / this.canvas_width,
-        rect.height / this.canvas_height
+        rect.width / this.effective_canvas_width,
+        rect.height / this.effective_canvas_height
       );
-      const content_w = this.canvas_width * scale;
-      const content_h = this.canvas_height * scale;
+      const content_w = this.effective_canvas_width * scale;
+      const content_h = this.effective_canvas_height * scale;
       const offset_x = (rect.width - content_w) / 2;
       const offset_y = (rect.height - content_h) / 2;
 
@@ -324,9 +364,11 @@ export default {
       const y = (client_y - offset_y) / scale;
 
       const viewport_w =
-        ((this.viewport_props.width_pct || 0) / 100) * this.canvas_width;
+        ((this.viewport_props.width_pct || 0) / 100) *
+        this.effective_canvas_width;
       const viewport_h =
-        ((this.viewport_props.height_pct || 0) / 100) * this.canvas_height;
+        ((this.viewport_props.height_pct || 0) / 100) *
+        this.effective_canvas_height;
 
       this.$eventHub.$emit("panzoom.panTo", {
         x: x - viewport_w / 2,
