@@ -46,6 +46,7 @@ jobs:
             ${{ steps.image_name.outputs.image }}:latest
 
   electron:
+    if: false
     runs-on: ${{ matrix.os }}
     needs: meta
     strategy:
