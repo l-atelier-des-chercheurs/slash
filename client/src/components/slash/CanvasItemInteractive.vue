@@ -140,8 +140,11 @@ export default {
       // Clamp for display as well
       let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
-      width = Math.min(this.item_max_width, width);
-      width = Math.max(this.item_min_width, width);
+
+      if (this.file.$type !== "canvas_shape") {
+        width = Math.min(this.item_max_width, width);
+        width = Math.max(this.item_min_width, width);
+      }
 
       const ratio = this.file.$infos?.ratio;
       const height = ratio ? width * ratio : 160;
