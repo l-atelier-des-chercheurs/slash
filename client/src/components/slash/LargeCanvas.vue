@@ -425,6 +425,7 @@ export default {
 
 ._canvasContent {
   position: relative;
+  contain: layout paint;
 
   // Dot grid pattern; pans with content (this div is inside the panned viewport)
   --background-color: white;
