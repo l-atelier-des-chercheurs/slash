@@ -60,8 +60,7 @@ export default {
       scale_x: 1,
       scale_y: 1,
       resize_observer: null,
-      debounce_timer: null,
-      viewport_raf_id: null,
+      update_raf_id: null,
     };
   },
   computed: {
@@ -122,32 +121,31 @@ export default {
     }
   },
   beforeDestroy() {
-    if (this.debounce_timer) clearTimeout(this.debounce_timer);
-    if (this.viewport_raf_id != null)
-      cancelAnimationFrame(this.viewport_raf_id);
+    if (this.update_raf_id != null) cancelAnimationFrame(this.update_raf_id);
     if (this.resize_observer && this.$refs.wrapper) {
       this.resize_observer.unobserve(this.$refs.wrapper);
     }
   },
   methods: {
     scheduleUpdate() {
-      if (this.debounce_timer) clearTimeout(this.debounce_timer);
-      this.debounce_timer = setTimeout(() => {
-        this.debounce_timer = null;
-        this.effective_canvas_width = this.canvas_width;
-        this.effective_canvas_height = this.canvas_height;
-        this.updateScale();
-        this.drawContent();
-        this.drawViewport();
-      }, 500);
+      this.scheduleRafUpdate();
     },
     scheduleViewportUpdate() {
-      if (this.viewport_raf_id != null)
-        cancelAnimationFrame(this.viewport_raf_id);
-      this.viewport_raf_id = requestAnimationFrame(() => {
-        this.viewport_raf_id = null;
-        this.drawViewport();
+      this.scheduleRafUpdate();
+    },
+    scheduleRafUpdate() {
+      if (this.update_raf_id != null) return;
+      this.update_raf_id = requestAnimationFrame(() => {
+        this.update_raf_id = null;
+        this.runMinimapUpdate();
       });
+    },
+    runMinimapUpdate() {
+      this.effective_canvas_width = this.canvas_width;
+      this.effective_canvas_height = this.canvas_height;
+      this.updateScale();
+      this.drawContent();
+      this.drawViewport();
     },
     updateScale() {
       this.scale_x =
