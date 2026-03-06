@@ -852,7 +852,7 @@ export default function () {
       },
 
       processError(err) {
-        let { code, err_infos } = err?.response?.data;
+        let { code, err_infos } = err?.response?.data ?? {};
 
         if (code) {
           if (code === "token_does_not_exist") {
@@ -874,7 +874,15 @@ export default function () {
           } else if (code === "ENOENT") code = "folder_is_missing";
           // this.$alertify.delay(4000).error("Message d'erreur : " + code);
           console.error("processError – " + code);
-        } else console.error("processError – NO ERROR CODES");
+        } else {
+          console.error("processError – NO ERROR CODES", err);
+          const msg =
+            err?.message ||
+            (err?.code === "ERR_CERT_AUTHORITY_INVALID"
+              ? "Invalid SSL certificate. If using HTTPS locally, accept the certificate in your browser first."
+              : "Network error. Check your connection.");
+          throw new Error(msg);
+        }
 
         this.setAuthorizationHeader();
 

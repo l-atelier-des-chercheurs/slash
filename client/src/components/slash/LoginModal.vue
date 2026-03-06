@@ -239,13 +239,20 @@ export default {
 
       const default_password = "slash";
 
-      await this.$api.loginToFolder({
-        path: this.selected_author.path,
-        password: default_password,
-      });
-
-      this.$alertify.success("Logged in");
-      this.$emit("close");
+      try {
+        await this.$api.loginToFolder({
+          path: this.selected_author.path,
+          password: default_password,
+        });
+        this.$alertify.success("Logged in");
+        this.$emit("close");
+      } catch (e) {
+        const msg =
+          e?.message ||
+          e?.code ||
+          (typeof e === "object" ? "Unknown error" : String(e));
+        this.$alertify.error("Login failed: " + msg);
+      }
     },
     async createAccount() {
       if (!this.can_create) return;

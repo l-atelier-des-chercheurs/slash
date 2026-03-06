@@ -73,6 +73,7 @@
       :selected_files="selected_files"
     />
     <LeftToolbar :current_mode.sync="current_mode" />
+    <FpsCounter />
   </div>
 </template>
 <script>
@@ -83,6 +84,7 @@ import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import CanvasShape from "@/components/slash/CanvasShape.vue";
 import DropMenuPanelContainer from "@/components/slash/DropMenuPanelContainer.vue";
 import MiniMap from "@/components/slash/MiniMap.vue";
+import FpsCounter from "@/components/slash/FpsCounter.vue";
 
 export default {
   props: {
@@ -105,6 +107,7 @@ export default {
     CanvasShape,
     DropMenuPanelContainer,
     MiniMap,
+    FpsCounter,
   },
   data() {
     return {
