@@ -23,7 +23,7 @@
         @update:canvas_zoom="canvas_zoom = $event"
       />
       <LargeCanvas
-        v-show="view_mode === 'canvas'"
+        v-if="view_mode === 'canvas'"
         :files="filtered_files"
         :zoom="canvas_zoom"
         :zoom_range="zoom_range"
@@ -32,15 +32,15 @@
         @update:scroll="canvas_scroll = $event"
       />
       <GeoMapView
-        v-show="view_mode === 'map'"
+        v-if="view_mode === 'map'"
         :files="filtered_files_without_canvas_items"
       />
       <TimelineView
-        v-show="view_mode === 'timeline'"
+        v-if="view_mode === 'timeline'"
         :files="filtered_files_without_canvas_items"
       />
       <MediaGridView
-        v-show="view_mode === 'grid'"
+        v-if="view_mode === 'grid'"
         :files="filtered_files_without_canvas_items"
       />
     </div>
@@ -243,7 +243,7 @@ export default {
 
       // 4. Wait for DOM update
       await this.$nextTick();
-      // Ensure layout is computed for the newly-shown view (v-show toggles display:none)
+      // Ensure layout is computed for the newly-mounted view
       await new Promise((resolve) => requestAnimationFrame(resolve));
 
       // 5. Animate to new positions
@@ -409,7 +409,6 @@ export default {
       if (!container || !selector) return positions;
 
       // Important: scope to the active view container only.
-      // Otherwise hidden views (v-show) can overwrite rects with 0x0.
       const elements = container.querySelectorAll(selector);
       elements.forEach((el) => {
         const path = el.getAttribute("data-file-path");
