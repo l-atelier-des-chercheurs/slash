@@ -101,6 +101,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    in_viewport: {
+      type: Boolean,
+      default: true,
+    },
   },
   components: {
     CanvasItem,
@@ -157,6 +161,10 @@ export default {
         width: `${width}px`,
         "--scale-factor": this.canvas_zoom,
         "--author-color": author_color,
+        display:
+          this.in_viewport || this.isDragging || this.isResizing
+            ? "block"
+            : "none",
       };
 
       if (ratio) {

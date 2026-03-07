@@ -35,6 +35,7 @@
           :canvas_zoom="zoom"
           :mode="current_mode"
           :is_selected="selected_files.includes(file.$path)"
+          :in_viewport="visible_file_paths.has(file.$path)"
           @position-update="handlePositionUpdate"
           @width-update="handleWidthUpdate"
           @select="handleSelect"
@@ -176,6 +177,52 @@ export default {
         y: this.canvas_clicked_y,
         width: base_width,
       };
+    },
+    visible_file_paths() {
+      const p = this.viewport_props;
+      const cw = this.canvas_width;
+      const ch = this.canvas_height;
+      if (!cw || !ch || !this.files?.length) return new Set();
+
+      const width_pct = p.width_pct || 0;
+      const height_pct = p.height_pct || 0;
+      // Before viewport is computed, show all items
+      if (width_pct <= 0 || height_pct <= 0) {
+        return new Set(this.files.map((f) => f.$path));
+      }
+
+      // Viewport bounds in content coordinates (with buffer to avoid flicker)
+      const buffer_pct = 0.5; // 50% of viewport size on each side
+      const v_left =
+        ((p.left_pct || 0) / 100) * cw -
+        (width_pct / 100) * cw * buffer_pct;
+      const v_top =
+        ((p.top_pct || 0) / 100) * ch -
+        (height_pct / 100) * ch * buffer_pct;
+      const v_right =
+        ((p.left_pct || 0) / 100) * cw +
+        (width_pct / 100) * cw * (1 + buffer_pct);
+      const v_bottom =
+        ((p.top_pct || 0) / 100) * ch +
+        (height_pct / 100) * ch * (1 + buffer_pct);
+
+      const visible = new Set();
+      for (const file of this.files) {
+        const { width, height } = this.getFileDimensions(file);
+        const x = file.x || 0;
+        const y = file.y || 0;
+        const item_right = x + width;
+        const item_bottom = y + height;
+        if (
+          item_right >= v_left &&
+          x <= v_right &&
+          item_bottom >= v_top &&
+          y <= v_bottom
+        ) {
+          visible.add(file.$path);
+        }
+      }
+      return visible;
     },
   },
   mounted() {
