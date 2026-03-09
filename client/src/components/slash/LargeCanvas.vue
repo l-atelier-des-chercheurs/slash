@@ -18,7 +18,6 @@
         :style="{
           width: `${canvas_width}px`,
           height: `${canvas_height}px`,
-          backgroundImage: `url(${$root.publicPath}images/bg-dot-grid.png)`,
         }"
         @click.self="handleCanvasClick"
       >
@@ -122,6 +121,8 @@ export default {
 
       min_canvas_width: 1600,
       min_canvas_height: 1000,
+      max_canvas_width: 10000,
+      max_canvas_height: 10000,
       margin_around_content: 500,
 
       lastLogTime: 0,
@@ -194,11 +195,9 @@ export default {
       // Viewport bounds in content coordinates (with buffer to avoid flicker)
       const buffer_pct = 0.5; // 50% of viewport size on each side
       const v_left =
-        ((p.left_pct || 0) / 100) * cw -
-        (width_pct / 100) * cw * buffer_pct;
+        ((p.left_pct || 0) / 100) * cw - (width_pct / 100) * cw * buffer_pct;
       const v_top =
-        ((p.top_pct || 0) / 100) * ch -
-        (height_pct / 100) * ch * buffer_pct;
+        ((p.top_pct || 0) / 100) * ch - (height_pct / 100) * ch * buffer_pct;
       const v_right =
         ((p.left_pct || 0) / 100) * cw +
         (width_pct / 100) * cw * (1 + buffer_pct);
@@ -473,6 +472,7 @@ export default {
 ._canvasContent {
   position: relative;
   contain: layout paint;
+  background-image: url("/images/bg-dot-grid.png");
 
   // Dot grid pattern; pans with content (this div is inside the panned viewport)
   --background-color: white;

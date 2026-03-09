@@ -130,7 +130,7 @@ export default {
       saveTimeout: null,
 
       item_min_width: 50,
-      item_max_width: 1400,
+      item_max_width: 1000,
     };
   },
   computed: {
@@ -476,6 +476,7 @@ export default {
 
   ._canvasItem--text {
     font-size: 200%;
+    background-color: var(--author-color);
   }
 
   ._canvasItem--open {

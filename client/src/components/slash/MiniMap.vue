@@ -306,7 +306,7 @@ export default {
       const ph = h * sy;
 
       // Semi-transparent fill
-      ctx.fillStyle = "rgba(153, 153, 153, 0.15)";
+      ctx.fillStyle = "rgba(0,0, 153, 0.25)";
       ctx.fillRect(px, py, pw, ph);
 
       // Dashed border

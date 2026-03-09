@@ -81,6 +81,9 @@ export default {
         y: this.additional_meta?.y,
         requested_slug: `text`,
       };
+      if (this.connected_as?.$path)
+        additional_meta.$authors = [this.connected_as.$path];
+
       await this.$api.uploadFile({
         path: this.folder_path,
         additional_meta,
