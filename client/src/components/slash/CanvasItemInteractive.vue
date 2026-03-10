@@ -12,7 +12,7 @@
     :data-file-type="file.$type"
     :data-file-path="file.$path"
   >
-    {{ file.width }} / {{ file.height }}
+    <!-- {{ file.width }} / {{ file.height }} -->
     <template v-if="file.$type === 'canvas_shape'">
       <div
         v-html="display_shape_svg"
@@ -135,6 +135,31 @@ export default {
       item_max_width: 1000,
     };
   },
+  mounted() {
+    document.addEventListener("mousemove", this.handleMouseMove);
+    document.addEventListener("mouseup", this.handleMouseUp);
+    document.addEventListener("keydown", this.handleKeyDown);
+    document.addEventListener("keyup", this.handleKeyUp);
+
+    // Retro compat: backfill height for canvas_shape without it
+    if (
+      this.file.$type === "canvas_shape" &&
+      this.file.width != null &&
+      this.file.height == null &&
+      this.file.shape_points?.length >= 2
+    ) {
+      this.$nextTick(() => this.backfillShapeHeight());
+    }
+  },
+  beforeDestroy() {
+    document.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("keydown", this.handleKeyDown);
+    document.removeEventListener("keyup", this.handleKeyUp);
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+  },
   computed: {
     isWidthOnly() {
       return !this.file.$infos?.ratio;
@@ -219,31 +244,6 @@ export default {
       // If required resolution is larger than all available resolutions, use the largest
       return availableResolutions[availableResolutions.length - 1];
     },
-  },
-  mounted() {
-    document.addEventListener("mousemove", this.handleMouseMove);
-    document.addEventListener("mouseup", this.handleMouseUp);
-    document.addEventListener("keydown", this.handleKeyDown);
-    document.addEventListener("keyup", this.handleKeyUp);
-
-    // Retro compat: backfill height for canvas_shape without it
-    if (
-      this.file.$type === "canvas_shape" &&
-      this.file.width != null &&
-      this.file.height == null &&
-      this.file.shape_points?.length >= 2
-    ) {
-      this.$nextTick(() => this.backfillShapeHeight());
-    }
-  },
-  beforeDestroy() {
-    document.removeEventListener("mousemove", this.handleMouseMove);
-    document.removeEventListener("mouseup", this.handleMouseUp);
-    document.removeEventListener("keydown", this.handleKeyDown);
-    document.removeEventListener("keyup", this.handleKeyUp);
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout);
-    }
   },
   methods: {
     async backfillShapeHeight() {
