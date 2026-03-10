@@ -530,10 +530,15 @@ export default {
   overflow: visible;
 
   background-color: #ffffff;
-  background-image: url("_client/images/bg-dot-grid.png");
+  /* CSS gradient instead of PNG: no image decode, no large tiled texture in RAM */
+  background-image: radial-gradient(
+    circle at center,
+    rgba(0, 0, 0, 0.22) 3px,
+    transparent 4px
+  );
   background-repeat: repeat;
   background-size: var(--bg-size) var(--bg-size);
-  background-position: -24px -24px, 0 calc(var(--bg-size) / 2);
+  background-position: -24px -24px;
 }
 
 ._largeCanvas[data-mode="draw"] {
