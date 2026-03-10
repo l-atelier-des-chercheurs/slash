@@ -13,7 +13,13 @@
         ></span>
         {{ connected_as.name }}
       </button>
-      <button
+
+      <DropMenuPanel
+        :folder_path="folder_path"
+        :additional_meta="additional_meta"
+      />
+
+      <!-- <button
         class="u-button u-button_transparent _dropMenu--openButton"
         :title="$t('import')"
         @click="openFileImport()"
@@ -36,12 +42,17 @@
         :additional_meta="additional_meta"
         @importedMedias="$emit('importedMedias', $event)"
         @close="files_to_import = []"
-      />
+      /> -->
     </div>
   </div>
 </template>
 <script>
+import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
+
 export default {
+  components: {
+    DropMenuPanel,
+  },
   props: {
     folder_path: String,
     canvas_zoom: Number,

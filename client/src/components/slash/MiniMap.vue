@@ -19,6 +19,8 @@
 </template>
 
 <script>
+import { pointsToSvgPath } from "@/utils/shapeUtils.js";
+
 export default {
   props: {
     files: {
@@ -256,7 +258,7 @@ export default {
         } catch (err) {
           this.drawShapeFallback(ctx, file, selected);
         }
-      } else if (file.shape_svg) {
+      } else if (file.shape_svg || file.shape_points) {
         this.drawShapeFallback(ctx, file, selected);
       }
 
@@ -329,6 +331,9 @@ export default {
       return width * effective_ratio;
     },
     getShapePath(file) {
+      if (file.shape_points && file.shape_points.length >= 2) {
+        return pointsToSvgPath(file.shape_points);
+      }
       if (!file.shape_svg) return null;
       try {
         const path_match = file.shape_svg.match(/<path[^>]*d=["']([^"']+)["']/);

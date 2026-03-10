@@ -27,6 +27,8 @@
   </div>
 </template>
 <script>
+import { pointsToSvgPath, roundShapePoints } from "@/utils/shapeUtils.js";
+
 export default {
   name: "CanvasDrawOverlay",
   props: {
@@ -39,13 +41,13 @@ export default {
     return {
       draw_points: [],
       draw_stroke_width: 4,
-      draw_min_distance: 2,
+      draw_min_distance: 4,
     };
   },
   computed: {
     draw_path_d() {
       if (!this.draw_points || this.draw_points.length === 0) return "";
-      return this.pointsToSvgPath(this.draw_points);
+      return pointsToSvgPath(this.draw_points);
     },
   },
   methods: {
@@ -155,36 +157,6 @@ export default {
       }
     },
 
-    pointsToSvgPath(points) {
-      if (!points || points.length === 0) return "";
-
-      const [first_point, ...rest_points] = points;
-      let d = `M ${first_point.x.toFixed(1)} ${first_point.y.toFixed(1)}`;
-
-      if (rest_points.length === 0) return d;
-      if (rest_points.length === 1) {
-        const [last_point] = rest_points;
-        d += ` L ${last_point.x.toFixed(1)} ${last_point.y.toFixed(1)}`;
-        return d;
-      }
-
-      for (let i = 1; i < points.length - 1; i += 1) {
-        const control_point = points[i];
-        const next_point = points[i + 1];
-        const mid_x = (control_point.x + next_point.x) / 2;
-        const mid_y = (control_point.y + next_point.y) / 2;
-        d += ` Q ${control_point.x.toFixed(1)} ${control_point.y.toFixed(
-          1
-        )} ${mid_x.toFixed(1)} ${mid_y.toFixed(1)}`;
-      }
-
-      const last_point = points[points.length - 1];
-      d += ` Q ${last_point.x.toFixed(1)} ${last_point.y.toFixed(
-        1
-      )} ${last_point.x.toFixed(1)} ${last_point.y.toFixed(1)}`;
-      return d;
-    },
-
     async finishDrawingShape() {
       if (!this.draw_points || this.draw_points.length < 2) {
         this.logDrawDebug("finishDrawingShape: not enough points", {
@@ -223,17 +195,12 @@ export default {
       const width = Math.max(max_x - min_x, 1);
       const height = Math.max(max_y - min_y, 1);
 
-      const normalized_points = this.draw_points.map((point) => ({
-        x: point.x - min_x,
-        y: point.y - min_y,
-      }));
-
-      const path_d = this.pointsToSvgPath(normalized_points);
+      const normalized_points = roundShapePoints(
+        this.draw_points.map((point) => [point.x - min_x, point.y - min_y])
+      );
 
       const rounded_width = Math.round(width);
       const rounded_height = Math.round(height);
-
-      const svg_content = `<svg xmlns="http://www.w3.org/2000/svg" width="${rounded_width}" height="${rounded_height}" viewBox="0 0 ${width} ${height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${this.draw_stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
 
       const random_suffix = (
         Math.random().toString(36) + "00000000000000000"
@@ -243,7 +210,7 @@ export default {
 
       const additional_meta = {
         $type: "canvas_shape",
-        shape_svg: svg_content,
+        shape_points: normalized_points,
         x: Math.round(min_x),
         y: Math.round(min_y),
         width: rounded_width,

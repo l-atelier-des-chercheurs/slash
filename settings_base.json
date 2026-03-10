@@ -154,6 +154,9 @@
             "shape_svg": {
               "type": "string"
             },
+            "shape_points": {
+              "type": "array"
+            },
             "text": {
               "type": "string"
             }

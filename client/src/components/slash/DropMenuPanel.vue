@@ -1,41 +1,38 @@
 <template>
   <div class="_dropMenu--panelWrapper">
-    <div class="_dropMenu--panel">
-      <div
-        v-for="(row, index) in typeRows"
-        :key="row.id"
-        class="_dropMenu--row"
-        :style="{
-          '--transition-delay': `${(typeRows.length - 1 - index) * 20}ms`,
-        }"
-      >
-        <template v-if="row.accept">
-          <label
-            :for="inputId(row)"
-            class="u-button u-button_glass _dropMenu--btn"
-          >
-            <b-icon :icon="row.icon" class="_dropMenu--icon" />
-            <span class="_dropMenu--label">{{ row.label }}</span>
-          </label>
-          <input
-            :id="inputId(row)"
-            type="file"
-            class="_dropMenu--fileInput"
-            :accept="row.accept"
-            multiple
-            @change="onFileSelect($event, row)"
-          />
-        </template>
-        <button
-          v-else
-          type="button"
-          class="_dropMenu--btn"
-          @click.prevent="handleLabelClick(row)"
-        >
+    <div
+      v-for="(row, index) in typeRows"
+      :key="row.id"
+      class="_dropMenu--item"
+      :style="{
+        '--transition-delay': `${(typeRows.length - 1 - index) * 20}ms`,
+      }"
+    >
+      <template v-if="row.accept">
+        <label :for="inputId(row)" class="u-button _dropMenu--btn">
           <b-icon :icon="row.icon" class="_dropMenu--icon" />
-          <span class="_dropMenu--label">{{ row.label }}</span>
-        </button>
-      </div>
+          <span v-if="with_labels" class="_dropMenu--label">{{
+            row.label
+          }}</span>
+        </label>
+        <input
+          :id="inputId(row)"
+          type="file"
+          class="_dropMenu--fileInput"
+          :accept="row.accept"
+          multiple
+          @change="onFileSelect($event, row)"
+        />
+      </template>
+      <button
+        v-else
+        type="button"
+        class="u-button _dropMenu--btn"
+        @click.prevent="handleLabelClick(row)"
+      >
+        <b-icon :icon="row.icon" class="_dropMenu--icon" />
+        <span class="_dropMenu--label">{{ row.label }}</span>
+      </button>
     </div>
 
     <UploadFiles
@@ -63,6 +60,10 @@ export default {
     additional_meta: {
       type: Object,
       default: () => ({}),
+    },
+    with_labels: {
+      type: Boolean,
+      default: true,
     },
   },
   data() {
@@ -143,19 +144,13 @@ export default {
 <style lang="scss" scoped>
 ._dropMenu--panelWrapper {
   display: flex;
-  flex-direction: column;
+  flex-flow: row nowrap;
   align-items: flex-end;
-  gap: var(--spacing);
+  gap: 0;
   user-select: none;
 }
 
 ._dropMenu--panel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-
-  pointer-events: auto;
 }
 
 ._dropMenu--row {
@@ -173,31 +168,7 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 2);
 
-  // border: none;
-  // border-radius: 50%;
-  // padding: 8px;
   cursor: pointer;
-  // color: var(--c-noir);
-  // background: white;
-  // font-size: 1.25rem;
-  font-weight: 500;
-  text-transform: lowercase;
-
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-
-  &:hover {
-    background: var(--c-noir);
-    color: white;
-  }
-  &:focus {
-    outline: none;
-  }
-
-  ._dropMenu--label {
-    position: absolute;
-    color: var(--c-noir);
-    right: calc(100% + 8px);
-  }
 }
 
 ._dropMenu--icon {

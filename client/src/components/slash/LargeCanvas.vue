@@ -33,7 +33,7 @@
           :canvas_height="canvas_height"
           :canvas_zoom="zoom"
           :mode="current_mode"
-          :is_selected="selected_files.includes(file.$path)"
+          :is_selected="currently_selected_files.includes(file.$path)"
           :in_viewport="visible_file_paths.has(file.$path)"
           @position-update="handlePositionUpdate"
           @width-update="handleWidthUpdate"
@@ -70,7 +70,7 @@
       :canvas_height="canvas_height"
       :zoom="zoom"
       :viewport_props="viewport_props"
-      :selected_files="selected_files"
+      :selected_files="currently_selected_files"
     />
     <LeftToolbar :current_mode.sync="current_mode" />
     <FpsCounter />
@@ -81,7 +81,6 @@ import SlashPanZoom2 from "@/components/slash/SlashPanZoom2.vue";
 import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
-import CanvasShape from "@/components/slash/CanvasShape.vue";
 import DropMenuPanelContainer from "@/components/slash/DropMenuPanelContainer.vue";
 import MiniMap from "@/components/slash/MiniMap.vue";
 import FpsCounter from "@/components/slash/FpsCounter.vue";
@@ -104,7 +103,6 @@ export default {
     CanvasItemInteractive,
     CanvasDrawOverlay,
     LeftToolbar,
-    CanvasShape,
     DropMenuPanelContainer,
     MiniMap,
     FpsCounter,
@@ -223,6 +221,11 @@ export default {
       }
       return visible;
     },
+    currently_selected_files() {
+      return this.selected_files && this.current_mode === "select"
+        ? this.selected_files
+        : [];
+    },
   },
   mounted() {
     this.restoreStateFromLocalStorage();
@@ -235,8 +238,6 @@ export default {
   },
   methods: {
     handleGlobalKeydown(event) {
-      if (this.selected_files.length === 0) return;
-      if (event.key !== "Backspace" && event.key !== "Delete") return;
       const target = event.target;
       const is_input =
         target.tagName === "INPUT" ||
@@ -244,8 +245,29 @@ export default {
         (target.isContentEditable &&
           target.getAttribute("contenteditable") === "true");
       if (is_input) return;
-      event.preventDefault();
-      this.removeSelectedFiles();
+
+      if (this.current_mode !== "select") return;
+
+      if (event.key === "Backspace" || event.key === "Delete") {
+        event.preventDefault();
+        if (this.selected_files.length > 0) this.removeSelectedFiles();
+      } else if (event.key === " ") {
+        event.preventDefault();
+        if (this.current_mode !== "pan-zoom") {
+          this.previous_mode = this.current_mode;
+          this.current_mode = "pan-zoom";
+        }
+        const restoreMode = (e) => {
+          if (e.key === " ") {
+            if (this.previous_mode && this.current_mode === "pan-zoom") {
+              this.current_mode = this.previous_mode;
+              this.previous_mode = null;
+            }
+            window.removeEventListener("keyup", restoreMode);
+          }
+        };
+        window.addEventListener("keyup", restoreMode);
+      }
     },
     async removeSelectedFiles() {
       const paths = [...this.selected_files];
@@ -266,9 +288,8 @@ export default {
       }
     },
     handleCanvasClick(event) {
-      if (this.current_mode === "pan-zoom") {
-        return;
-      }
+      if (this.current_mode !== "select") return;
+
       if (event.metaKey || event.shiftKey) {
         return;
       } else if (this.selected_files.length > 0) {
@@ -285,6 +306,25 @@ export default {
         this.canvas_clicked_x = event.offsetX;
         this.canvas_clicked_y = event.offsetY;
         this.show_drop_menu = true;
+
+        // Zoom to scale 1 and center the canvas on (canvas_clicked_x, canvas_clicked_y)
+        this.$emit("update:zoom", 1);
+        // Compute new scroll so that clicked x/y is centered in viewport at zoom 1
+        this.$nextTick(() => {
+          const viewer = this.$refs.viewer;
+          if (viewer && typeof viewer.getViewportSize === "function") {
+            const { width: viewportW, height: viewportH } =
+              viewer.getViewportSize();
+            const targetX = Math.max(0, this.canvas_clicked_x - viewportW / 2);
+            const targetY = Math.max(0, this.canvas_clicked_y - viewportH / 2);
+            this.$emit("update:scroll", {
+              topleft_x: targetX,
+              topleft_y: targetY,
+              center_x: this.canvas_clicked_x,
+              center_y: this.canvas_clicked_y,
+            });
+          }
+        });
         return;
       }
     },

@@ -14,7 +14,7 @@
   >
     <template v-if="file.$type === 'canvas_shape'">
       <div
-        v-html="file.shape_svg"
+        v-html="display_shape_svg"
         class="_canvasItem--shape"
         @mousedown="handleMouseDown"
       />
@@ -66,6 +66,7 @@
 
 <script>
 import CanvasItem from "./CanvasItem.vue";
+import { shapePointsToSvg } from "@/utils/shapeUtils.js";
 
 export default {
   props: {
@@ -136,6 +137,15 @@ export default {
   computed: {
     isWidthOnly() {
       return !this.file.$infos?.ratio;
+    },
+    display_shape_svg() {
+      if (this.file.$type !== "canvas_shape") return "";
+      if (this.file.shape_points && this.file.shape_points.length >= 2) {
+        const w = this.file.width || 160;
+        const h = this.file.height || 100;
+        return shapePointsToSvg(this.file.shape_points, w, h, 4);
+      }
+      return this.file.shape_svg || "";
     },
     itemStyle() {
       // Canvas mode: absolute positioning
@@ -489,7 +499,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
+    // opacity: 0;
     pointer-events: none;
 
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
@@ -498,12 +508,12 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 10rem;
-      height: 6rem;
+      width: 6rem;
+      height: 3rem;
       text-align: center;
       border-radius: 8rem;
       pointer-events: auto;
-      font-size: 3rem;
+      font-size: 1.5rem;
 
       &:not(:hover) {
         background-color: rgba(255, 255, 255, 0.6);

@@ -4,7 +4,6 @@
     :style="{
       left: position_x + 'px',
       top: position_y + 'px',
-      transform: `scale(${scale})`,
     }"
   >
     <div class="_text_input_container">
@@ -116,24 +115,6 @@ export default {
     background: var(--color-rule);
     border-radius: 50%;
     z-index: -1;
-  }
-
-  ::v-deep {
-    ._dropMenu--panel {
-      flex-flow: row wrap;
-    }
-    ._dropMenu--btn {
-      border-radius: 1rem;
-    }
-    ._dropMenu--btn ._dropMenu--label {
-      position: relative;
-      right: auto;
-      left: auto;
-      // margin-left: 12px;
-    }
-    ._dropMenu--panelWrapper {
-      align-items: flex-start;
-    }
   }
 }
 
