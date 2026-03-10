@@ -521,7 +521,6 @@ export default {
 ._canvasContent {
   position: relative;
   contain: layout paint;
-  background-image: url("/images/bg-dot-grid.png");
 
   // Dot grid pattern; pans with content (this div is inside the panned viewport)
   --background-color: white;
@@ -531,6 +530,7 @@ export default {
   overflow: visible;
 
   background-color: #ffffff;
+  background-image: url("_client/images/bg-dot-grid.png");
   background-repeat: repeat;
   background-size: var(--bg-size) var(--bg-size);
   background-position: -24px -24px, 0 calc(var(--bg-size) / 2);

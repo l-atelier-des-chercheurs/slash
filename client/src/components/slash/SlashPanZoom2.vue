@@ -620,15 +620,11 @@ export default {
       const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
       const clamped = Math.min(Math.max(zoom, min_zoom), max_zoom);
 
-      this.$refs.viewport.style.transition =
-        "all 1.5s cubic-bezier(0.19, 1, 0.22, 1)";
-      // this.$refs.viewport.addEventListener(
-      //   "transitionend",
-      //   () => {
-      //     this.$refs.viewport.style.transition = "none";
-      //   },
-      //   { once: true }
-      // );
+      const duration = 1.5;
+      this.$refs.viewport.style.transition = `all ${duration}s cubic-bezier(0.19, 1, 0.22, 1)`;
+      setTimeout(() => {
+        this.$refs.viewport.style.transition = "none";
+      }, duration * 1000);
 
       this.current_zoom = clamped;
       this.scroll_left = (content_x || 0) * clamped - this.wrapper_ow / 2;

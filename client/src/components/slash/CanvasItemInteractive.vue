@@ -665,6 +665,12 @@ export default {
     }
   }
 
+  /* path-hitbox only in select mode for non-selected items (helps with selection) */
+  &:not([data-mode="select"]) ._canvasItem--shape ::v-deep path.path-hitbox,
+  &.is--selected ._canvasItem--shape ::v-deep path.path-hitbox {
+    display: none;
+  }
+
   &[data-mode="pan-zoom"] {
     &,
     ._canvasItemContent,
@@ -764,11 +770,16 @@ export default {
         stroke-width: var(--shapes-stroke-width, 5px);
         stroke: var(--author-color, black);
       }
+
+      path.path-hitbox {
+        stroke: transparent !important;
+        stroke-width: 20px !important;
+      }
     }
   }
 
   &:hover {
-    ::v-deep path {
+    ::v-deep path:not(.path-hitbox) {
       stroke-width: 7px;
     }
   }

@@ -104,5 +104,6 @@ export function shapePointsToSvg(
   const bounds = getPointsBounds(shape_points);
   const h = height != null ? height : width * (bounds.height / bounds.width);
   const path_d = pointsToSvgPath(shape_points);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="${bounds.min_x} ${bounds.min_y} ${bounds.width} ${bounds.height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+  const hit_stroke_width = 20;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="${bounds.min_x} ${bounds.min_y} ${bounds.width} ${bounds.height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${stroke_width}" stroke-linecap="round" stroke-linejoin="round" /><path class="path-hitbox" d="${path_d}" fill="none" stroke="transparent" stroke-width="${hit_stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
 }
