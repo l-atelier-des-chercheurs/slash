@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { pointsToSvgPath } from "@/utils/shapeUtils.js";
+import { pointsToSvgPath, getPointsBounds } from "@/utils/shapeUtils.js";
 
 export default {
   props: {
@@ -265,8 +265,8 @@ export default {
       ctx.restore();
     },
     drawShapeFallback(ctx, file, selected) {
-      const w = file.width || 100;
-      const h = file.height || 100;
+      const w = this.getItemWidth(file);
+      const h = this.getItemHeight(file);
       ctx.fillStyle = selected ? "#4a9eff" : "#999";
       ctx.strokeStyle = selected ? "#0066cc" : "#666";
       ctx.globalAlpha = selected ? 0.8 : 0.5;
@@ -326,9 +326,17 @@ export default {
     getItemHeight(file) {
       const width = this.getItemWidth(file);
       const ratio = file.$infos && file.$infos.ratio;
-      const default_ratio = 9 / 16;
-      const effective_ratio = ratio !== undefined ? ratio : default_ratio;
-      return width * effective_ratio;
+      if (ratio !== undefined) return width * ratio;
+      if (file.$type === "canvas_shape") {
+        if (file.height != null && file.width) {
+          return width * (file.height / file.width);
+        }
+        if (file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(file.shape_points);
+          return width * (bounds.height / bounds.width);
+        }
+      }
+      return width * (9 / 16); // default for PDF/embed
     },
     getShapePath(file) {
       if (file.shape_points && file.shape_points.length >= 2) {

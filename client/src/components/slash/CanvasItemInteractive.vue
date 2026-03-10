@@ -12,6 +12,7 @@
     :data-file-type="file.$type"
     :data-file-path="file.$path"
   >
+    {{ file.width }} / {{ file.height }}
     <template v-if="file.$type === 'canvas_shape'">
       <div
         v-html="display_shape_svg"
@@ -66,7 +67,7 @@
 
 <script>
 import CanvasItem from "./CanvasItem.vue";
-import { shapePointsToSvg } from "@/utils/shapeUtils.js";
+import { shapePointsToSvg, getPointsBounds } from "@/utils/shapeUtils.js";
 
 export default {
   props: {
@@ -142,8 +143,11 @@ export default {
       if (this.file.$type !== "canvas_shape") return "";
       if (this.file.shape_points && this.file.shape_points.length >= 2) {
         const w = this.file.width || 160;
-        const h = this.file.height || 100;
-        return shapePointsToSvg(this.file.shape_points, w, h, 4);
+        const h =
+          this.file.height != null && this.file.width
+            ? w * (this.file.height / this.file.width)
+            : undefined;
+        return shapePointsToSvg(this.file.shape_points, w, 4, h);
       }
       return this.file.shape_svg || "";
     },
@@ -175,7 +179,18 @@ export default {
       };
 
       const ratio = this.file.$infos?.ratio;
-      if (ratio) style.height = `${width * ratio}px`;
+      if (ratio) {
+        style.height = `${width * ratio}px`;
+      } else if (this.file.$type === "canvas_shape") {
+        if (this.file.height != null) {
+          style.height = `${
+            width * (this.file.height / (this.file.width || 160))
+          }px`;
+        } else if (this.file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(this.file.shape_points);
+          style.height = `${width * (bounds.height / bounds.width)}px`;
+        }
+      }
 
       return style;
     },
@@ -210,6 +225,16 @@ export default {
     document.addEventListener("mouseup", this.handleMouseUp);
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
+
+    // Retro compat: backfill height for canvas_shape without it
+    if (
+      this.file.$type === "canvas_shape" &&
+      this.file.width != null &&
+      this.file.height == null &&
+      this.file.shape_points?.length >= 2
+    ) {
+      this.$nextTick(() => this.backfillShapeHeight());
+    }
   },
   beforeDestroy() {
     document.removeEventListener("mousemove", this.handleMouseMove);
@@ -221,6 +246,26 @@ export default {
     }
   },
   methods: {
+    async backfillShapeHeight() {
+      if (
+        this.file.$type !== "canvas_shape" ||
+        this.file.height != null ||
+        !this.file.shape_points?.length
+      )
+        return;
+      const width = this.file.width || 160;
+      const bounds = getPointsBounds(this.file.shape_points);
+      const height = Math.round(width * (bounds.height / bounds.width));
+      try {
+        await this.$api.updateMeta({
+          path: this.file.$path,
+          new_meta: { height },
+        });
+        this.$set(this.file, "height", height);
+      } catch (err) {
+        console.error("Failed to backfill canvas_shape height:", err);
+      }
+    },
     handleKeyDown(event) {
       if (event.key === "Shift" || event.key === "Meta") {
         this.shift_or_cmd_pressed = true;
@@ -302,11 +347,23 @@ export default {
         );
         this.currentWidth = Math.round(newWidth);
 
-        // Emit width update
-        this.$emit("width-update", {
-          file: this.file,
-          width: this.currentWidth,
-        });
+        // Emit width update (include height for canvas_shape so parent can update locally)
+        const payload = { file: this.file, width: this.currentWidth };
+        if (this.file.$type === "canvas_shape") {
+          const old_width = this.file.width || 160;
+          const old_height =
+            this.file.height ??
+            (this.file.shape_points?.length >= 2
+              ? (() => {
+                  const b = getPointsBounds(this.file.shape_points);
+                  return old_width * (b.height / b.width);
+                })()
+              : 100);
+          payload.height = Math.round(
+            this.currentWidth * (old_height / old_width)
+          );
+        }
+        this.$emit("width-update", payload);
 
         return;
       }
@@ -347,7 +404,21 @@ export default {
       const currentWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
       const ratio = this.file.$infos?.ratio;
-      const currentHeight = ratio ? currentWidth * ratio : 160;
+      let currentHeight;
+      if (ratio) {
+        currentHeight = currentWidth * ratio;
+      } else if (this.file.$type === "canvas_shape") {
+        if (this.file.height != null && this.file.width) {
+          currentHeight = currentWidth * (this.file.height / this.file.width);
+        } else if (this.file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(this.file.shape_points);
+          currentHeight = currentWidth * (bounds.height / bounds.width);
+        } else {
+          currentHeight = 160;
+        }
+      } else {
+        currentHeight = 160;
+      }
 
       newX = Math.min(newX, this.canvas_width - currentWidth);
       newY = Math.min(newY, this.canvas_height - currentHeight);
@@ -381,7 +452,20 @@ export default {
         }
 
         this.saveTimeout = setTimeout(() => {
-          this.saveWidth(finalWidth);
+          const payload = { width: finalWidth };
+          if (this.file.$type === "canvas_shape") {
+            const old_width = this.file.width || 160;
+            const old_height =
+              this.file.height ??
+              (this.file.shape_points?.length >= 2
+                ? (() => {
+                    const b = getPointsBounds(this.file.shape_points);
+                    return old_width * (b.height / b.width);
+                  })()
+                : 100);
+            payload.height = Math.round(finalWidth * (old_height / old_width));
+          }
+          this.saveWidth(payload);
         }, 300);
 
         return;
@@ -405,7 +489,21 @@ export default {
       const currentWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
       const ratio = this.file.$infos?.ratio;
-      const currentHeight = ratio ? currentWidth * ratio : 160;
+      let currentHeight;
+      if (ratio) {
+        currentHeight = currentWidth * ratio;
+      } else if (this.file.$type === "canvas_shape") {
+        if (this.file.height != null && this.file.width) {
+          currentHeight = currentWidth * (this.file.height / this.file.width);
+        } else if (this.file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(this.file.shape_points);
+          currentHeight = currentWidth * (bounds.height / bounds.width);
+        } else {
+          currentHeight = 160;
+        }
+      } else {
+        currentHeight = 160;
+      }
 
       let finalX = this.currentX !== null ? this.currentX : this.file.x || 0;
       let finalY = this.currentY !== null ? this.currentY : this.file.y || 0;
@@ -445,11 +543,18 @@ export default {
         console.error("Failed to save canvas position:", err);
       }
     },
-    async saveWidth(width) {
+    async saveWidth(payload) {
       try {
+        const new_meta =
+          typeof payload === "number"
+            ? { width: payload }
+            : {
+                width: payload.width,
+                ...(payload.height != null && { height: payload.height }),
+              };
         await this.$api.updateMeta({
           path: this.file.$path,
-          new_meta: { width },
+          new_meta,
         });
       } catch (err) {
         console.error("Failed to save canvas width:", err);

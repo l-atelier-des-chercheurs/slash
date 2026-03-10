@@ -56,16 +56,40 @@ export function pointsToSvgPath(points) {
   return d;
 }
 
+/** Get bounding box of points: { min_x, min_y, width, height }. */
+export function getPointsBounds(points) {
+  if (!points || points.length === 0)
+    return { min_x: 0, min_y: 0, width: 1, height: 1 };
+  let min_x = Infinity,
+    min_y = Infinity,
+    max_x = -Infinity,
+    max_y = -Infinity;
+  for (const p of points) {
+    const x = px(p);
+    const y = py(p);
+    if (x < min_x) min_x = x;
+    if (y < min_y) min_y = y;
+    if (x > max_x) max_x = x;
+    if (y > max_y) max_y = y;
+  }
+  const width = Math.max(max_x - min_x, 0.1);
+  const height = Math.max(max_y - min_y, 0.1);
+  return { min_x, min_y, width, height };
+}
+
 /**
  * Build full SVG string for a canvas shape from shape_points.
+ * Height is derived from the path's bounding box aspect ratio when not provided.
  */
 export function shapePointsToSvg(
   shape_points,
   width,
-  height,
-  stroke_width = 4
+  stroke_width = 4,
+  height
 ) {
   if (!shape_points || shape_points.length < 2) return "";
+  const bounds = getPointsBounds(shape_points);
+  const h = height != null ? height : width * (bounds.height / bounds.width);
   const path_d = pointsToSvgPath(shape_points);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="${bounds.min_x} ${bounds.min_y} ${bounds.width} ${bounds.height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
 }

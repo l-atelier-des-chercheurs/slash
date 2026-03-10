@@ -79,6 +79,7 @@
 <script>
 import SlashPanZoom2 from "@/components/slash/SlashPanZoom2.vue";
 import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue";
+import { getPointsBounds } from "@/utils/shapeUtils.js";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import DropMenuPanelContainer from "@/components/slash/DropMenuPanelContainer.vue";
@@ -394,17 +395,32 @@ export default {
         }
       }
     },
-    handleWidthUpdate({ file, width }) {
-      // Update file width locally
+    handleWidthUpdate({ file, width, height }) {
       this.$set(file, "width", width);
+      if (file.$type === "canvas_shape" && height != null) {
+        this.$set(file, "height", height);
+      }
     },
     getFileDimensions(file) {
       const width = file.width || 160;
       const ratio = file.$infos && file.$infos.ratio;
-      // PDF and embed have fixed aspect ratio in UI (e.g. 16/9); use default when no ratio
-      const default_ratio = 9 / 16; // height/width for 16:9
-      const effective_ratio = ratio !== undefined ? ratio : default_ratio;
-      const height = width * effective_ratio;
+      let height;
+      if (ratio !== undefined) {
+        height = width * ratio;
+      } else if (file.$type === "canvas_shape") {
+        if (file.height != null && file.width) {
+          height = width * (file.height / file.width);
+        } else if (file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(file.shape_points);
+          height = width * (bounds.height / bounds.width);
+        } else {
+          height = 100;
+        }
+      } else {
+        // PDF and embed have fixed aspect ratio in UI (e.g. 16/9); use default when no ratio
+        const default_ratio = 9 / 16; // height/width for 16:9
+        height = width * default_ratio;
+      }
       return { width, height };
     },
     getStorageKey() {
