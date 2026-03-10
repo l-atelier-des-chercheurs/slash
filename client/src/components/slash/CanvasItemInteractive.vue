@@ -8,7 +8,7 @@
       'is--selected': is_selected,
     }"
     :data-mode="mode"
-    :style="itemStyle"
+    :style="[itemDimensions, itemDisplay]"
     :data-file-type="file.$type"
     :data-file-path="file.$path"
   >
@@ -176,11 +176,9 @@ export default {
       }
       return this.file.shape_svg || "";
     },
-    itemStyle() {
-      // Canvas mode: absolute positioning
+    itemDimensions() {
       const x = this.currentX !== null ? this.currentX : this.file.x || 0;
       const y = this.currentY !== null ? this.currentY : this.file.y || 0;
-      // Clamp for display as well
       let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
@@ -197,10 +195,6 @@ export default {
         width: `${width}px`,
         "--scale-factor": this.canvas_zoom,
         "--author-color": author_color,
-        display:
-          this.in_viewport || this.isDragging || this.isResizing
-            ? "block"
-            : "none",
       };
 
       const ratio = this.file.$infos?.ratio;
@@ -218,6 +212,14 @@ export default {
       }
 
       return style;
+    },
+    itemDisplay() {
+      return {
+        display:
+          this.in_viewport || this.isDragging || this.isResizing
+            ? "block"
+            : "none",
+      };
     },
     optimalResolution() {
       // Available thumbnail resolutions

@@ -56,8 +56,9 @@ export function pointsToSvgPath(points) {
   return d;
 }
 
-/** Get bounding box of points: { min_x, min_y, width, height }. */
-export function getPointsBounds(points) {
+const bounds_cache = new WeakMap();
+
+function computePointsBounds(points) {
   if (!points || points.length === 0)
     return { min_x: 0, min_y: 0, width: 1, height: 1 };
   let min_x = Infinity,
@@ -75,6 +76,18 @@ export function getPointsBounds(points) {
   const width = Math.max(max_x - min_x, 0.1);
   const height = Math.max(max_y - min_y, 0.1);
   return { min_x, min_y, width, height };
+}
+
+/** Get bounding box of points: { min_x, min_y, width, height }. Cached by array reference. */
+export function getPointsBounds(points) {
+  if (!points || points.length === 0)
+    return { min_x: 0, min_y: 0, width: 1, height: 1 };
+  let cached = bounds_cache.get(points);
+  if (!cached) {
+    cached = computePointsBounds(points);
+    bounds_cache.set(points, cached);
+  }
+  return cached;
 }
 
 /**

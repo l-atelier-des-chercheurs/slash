@@ -97,7 +97,9 @@ export default {
       debounce_interaction: undefined,
 
       resize_observer: null,
-      viewport_change_raf: null,
+      viewport_throttle_ms: 500,
+      viewport_last_emit: 0,
+      viewport_throttle_timer: null,
     };
   },
   computed: {
@@ -166,9 +168,9 @@ export default {
     }
   },
   beforeDestroy() {
-    if (this.viewport_change_raf != null) {
-      cancelAnimationFrame(this.viewport_change_raf);
-      this.viewport_change_raf = null;
+    if (this.viewport_throttle_timer != null) {
+      clearTimeout(this.viewport_throttle_timer);
+      this.viewport_throttle_timer = null;
     }
     if (this.resize_observer && this.$refs.wrapper) {
       this.resize_observer.unobserve(this.$refs.wrapper);
@@ -462,11 +464,18 @@ export default {
       };
     },
     scheduleViewportChange() {
-      if (this.viewport_change_raf != null) return;
-      this.viewport_change_raf = requestAnimationFrame(() => {
-        this.viewport_change_raf = null;
+      const now = Date.now();
+      const elapsed = now - this.viewport_last_emit;
+      if (elapsed >= this.viewport_throttle_ms) {
+        this.viewport_last_emit = now;
         this.emitViewportChange();
-      });
+      } else if (!this.viewport_throttle_timer) {
+        this.viewport_throttle_timer = setTimeout(() => {
+          this.viewport_throttle_timer = null;
+          this.viewport_last_emit = Date.now();
+          this.emitViewportChange();
+        }, this.viewport_throttle_ms - elapsed);
+      }
     },
     emitViewportChange() {
       this.$emit("viewport-change", this.getViewportPct());
