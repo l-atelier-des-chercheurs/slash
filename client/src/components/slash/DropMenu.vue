@@ -17,6 +17,7 @@
       <DropMenuPanel
         :folder_path="folder_path"
         :additional_meta="additional_meta"
+        :show_labels="false"
       />
 
       <!-- <button

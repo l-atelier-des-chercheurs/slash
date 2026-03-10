@@ -160,9 +160,6 @@ export default {
         width = Math.max(this.item_min_width, width);
       }
 
-      const ratio = this.file.$infos?.ratio;
-      const height = ratio ? width * ratio : 160;
-
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
 
       const style = {
@@ -177,9 +174,8 @@ export default {
             : "none",
       };
 
-      if (ratio) {
-        style.height = `${height}px`;
-      }
+      const ratio = this.file.$infos?.ratio;
+      if (ratio) style.height = `${width * ratio}px`;
 
       return style;
     },

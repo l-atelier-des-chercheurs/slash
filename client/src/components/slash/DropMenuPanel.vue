@@ -9,9 +9,13 @@
       }"
     >
       <template v-if="row.accept">
-        <label :for="inputId(row)" class="u-button _dropMenu--btn">
+        <label
+          :for="inputId(row)"
+          class="u-button u-button_icon _dropMenu--btn"
+          :title="row.label"
+        >
           <b-icon :icon="row.icon" class="_dropMenu--icon" />
-          <span v-if="with_labels" class="_dropMenu--label">{{
+          <span v-if="show_labels" class="_dropMenu--label">{{
             row.label
           }}</span>
         </label>
@@ -27,11 +31,12 @@
       <button
         v-else
         type="button"
-        class="u-button _dropMenu--btn"
+        class="u-button u-button_icon _dropMenu--btn"
+        :title="row.label"
         @click.prevent="handleLabelClick(row)"
       >
         <b-icon :icon="row.icon" class="_dropMenu--icon" />
-        <span class="_dropMenu--label">{{ row.label }}</span>
+        <span v-if="show_labels" class="_dropMenu--label">{{ row.label }}</span>
       </button>
     </div>
 
@@ -61,7 +66,7 @@ export default {
       type: Object,
       default: () => ({}),
     },
-    with_labels: {
+    show_labels: {
       type: Boolean,
       default: true,
     },
@@ -86,7 +91,7 @@ export default {
         {
           id: "text",
           label: this.$t("write"),
-          icon: "file-earmark-text",
+          icon: "text-paragraph",
         },
         // {
         //   id: "video",

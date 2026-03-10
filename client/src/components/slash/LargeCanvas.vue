@@ -308,23 +308,16 @@ export default {
         this.show_drop_menu = true;
 
         // Zoom to scale 1 and center the canvas on (canvas_clicked_x, canvas_clicked_y)
-        this.$emit("update:zoom", 1);
-        // Compute new scroll so that clicked x/y is centered in viewport at zoom 1
         this.$nextTick(() => {
-          const viewer = this.$refs.viewer;
-          if (viewer && typeof viewer.getViewportSize === "function") {
-            const { width: viewportW, height: viewportH } =
-              viewer.getViewportSize();
-            const targetX = Math.max(0, this.canvas_clicked_x - viewportW / 2);
-            const targetY = Math.max(0, this.canvas_clicked_y - viewportH / 2);
-            this.$emit("update:scroll", {
-              topleft_x: targetX,
-              topleft_y: targetY,
-              center_x: this.canvas_clicked_x,
-              center_y: this.canvas_clicked_y,
-            });
+          if (this.$refs.viewer && this.$refs.viewer.zoomAndCenterTo) {
+            this.$refs.viewer.zoomAndCenterTo(
+              this.canvas_clicked_x,
+              this.canvas_clicked_y,
+              1
+            );
           }
         });
+
         return;
       }
     },

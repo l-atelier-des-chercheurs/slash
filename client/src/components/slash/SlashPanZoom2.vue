@@ -122,14 +122,12 @@ export default {
     viewportStyle() {
       const translate = `translate3d(${-this.scroll_left}px, ${-this
         .scroll_top}px, 0)`;
-      const scale = `scale3d(${this.current_zoom}, ${this.current_zoom}, 1)`;
+      const scale = `scale(${this.current_zoom})`;
       const transform = `${translate} ${scale}`;
       return {
         width: this.content_width ? `${this.content_width}px` : "100%",
         height: this.content_height ? `${this.content_height}px` : "100%",
-        transformOrigin: "0 0",
         transform,
-        willChange: "transform",
       };
     },
     overlayStyle() {
@@ -607,6 +605,31 @@ export default {
         this.handleInteractionEnd();
       }
     },
+    zoomAndCenterTo(content_x, content_y, zoom, options = {}) {
+      if (!zoom) return;
+
+      const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
+      const clamped = Math.min(Math.max(zoom, min_zoom), max_zoom);
+
+      this.$refs.viewport.style.transition =
+        "all 1.5s cubic-bezier(0.19, 1, 0.22, 1)";
+      // this.$refs.viewport.addEventListener(
+      //   "transitionend",
+      //   () => {
+      //     this.$refs.viewport.style.transition = "none";
+      //   },
+      //   { once: true }
+      // );
+
+      this.current_zoom = clamped;
+      this.scroll_left = (content_x || 0) * clamped - this.wrapper_ow / 2;
+      this.scroll_top = (content_y || 0) * clamped - this.wrapper_oh / 2;
+      this.clampScroll();
+
+      if (options.emit !== false) {
+        this.handleInteractionEnd();
+      }
+    },
   },
 };
 </script>
@@ -630,6 +653,8 @@ export default {
 
 ._pzViewport {
   position: relative;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 ._panZoomOverlay {
