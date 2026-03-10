@@ -581,7 +581,9 @@ export default {
   // cursor: pointer;
   user-select: none;
 
-  transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
+  &:not(.is--dragging, .is--resizing) {
+    transition: all 0.12s cubic-bezier(0.19, 1, 0.22, 1);
+  }
 
   &[data-file-type="canvas_shape"] {
     pointer-events: none;
