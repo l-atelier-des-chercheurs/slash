@@ -394,6 +394,17 @@ export default function () {
         const logs = response.data.logs;
         return logs;
       },
+      async downloadLog({ filename }) {
+        const response = await this.$axios({
+          url: `_logs/${encodeURIComponent(filename)}`,
+          method: "GET",
+          responseType: "blob",
+        }).catch((err) => {
+          throw this.processError(err);
+        });
+
+        saveAs(response.data, filename);
+      },
       async restartApp() {
         await this.$axios.post(`_restartApp`);
       },
@@ -803,7 +814,11 @@ export default function () {
         return response.data;
       },
       async regenerateThumbs({ path }) {
-        const response = await this.$axios.patch(`${path}/_regenerateThumbs`);
+        const response = await this.$axios
+          .patch(`${path}/_regenerateThumbs`)
+          .catch((err) => {
+            throw this.processError(err);
+          });
         this.$eventHub.$emit("hooks.regenerateThumbs", { path });
         return response.data;
       },

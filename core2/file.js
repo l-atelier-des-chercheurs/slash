@@ -156,7 +156,7 @@ module.exports = (function () {
           media_filename
         );
 
-      if (media_type) {
+      if (media_type && media_filename) {
         const _thumbs = await thumbs
           .makeThumbForMedia({
             media_type,
@@ -332,17 +332,25 @@ module.exports = (function () {
       await thumbs.removeFileThumbs({ path_to_folder, meta_filename });
 
       if ($type) {
-        const $thumbs = await thumbs
-          .makeThumbForMedia({
-            media_type: $type,
-            media_filename: $media_filename,
-            path_to_folder,
-          })
-          .catch((err) => {
-            if (err.message) dev.error(err.message);
-            else dev.error(err);
-          });
-        if ($thumbs) return { $thumbs };
+        const $thumbs = await thumbs.makeThumbForMedia({
+          media_type: $type,
+          media_filename: $media_filename,
+          path_to_folder,
+        });
+
+        const no_thumbs_were_generated =
+          !$thumbs ||
+          $thumbs === "no_preview" ||
+          (typeof $thumbs === "object" && Object.keys($thumbs).length === 0);
+
+        if (no_thumbs_were_generated) {
+          const err = new Error("No thumbnails were generated");
+          err.code = "failed_to_regenerate_thumbs";
+          err.err_infos = { path_to_meta, meta_filename, media_type: $type };
+          throw err;
+        }
+
+        return { $thumbs };
       }
       return { $thumbs: {} };
     },
@@ -619,8 +627,10 @@ module.exports = (function () {
           new_meta.$type = "stl";
           break;
         case ".mp3":
+        case ".weba":
         case ".wav":
         case ".aac":
+        case ".m4a":
         case ".ogg":
           new_meta.$type = "audio";
           break;

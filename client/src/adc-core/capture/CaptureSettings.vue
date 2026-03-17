@@ -7,270 +7,249 @@
       />
     </transition>
 
-    <!-- <RadioSwitch
-      :content.sync="current_mode"
-      :options="[
-        {
-          label: $t('stream_local_mode'),
-          value: 'LocalSources',
-        },
-        {
-          label: $t('stream_remote_mode'),
-          value: 'RemoteSources',
-        },
-      ]"
-    /> -->
-
     <div class="m_captureSettings--settings">
-      <div class>
-        <div v-if="status === 'not_allowed'">
-          <div class="padding-top-verysmall">
-            {{ $t("camera_access_refused") }}
-          </div>
+      <div v-if="status === 'not_allowed'">
+        <div class="padding-top-verysmall">
+          {{ $t("camera_access_refused") }}
         </div>
+      </div>
 
-        <label class="u-label _sourcesTitle">
-          {{ $t("sources") }}
-          <button
-            type="button"
-            class="u-buttonLink margin-none margin-left padding-bottom-none"
-            @click="manualRefreshDevices"
-          >
-            {{ $t("reload") }}
-          </button>
-        </label>
+      <label class="u-label _sourcesTitle">
+        {{ $t("sources") }}
+        <button
+          type="button"
+          class="u-buttonLink margin-none margin-left padding-bottom-none"
+          @click="manualRefreshDevices"
+        >
+          {{ $t("reload") }}
+        </button>
+      </label>
 
+      <div class="">
         <div class="">
-          <div class="">
-            <label class="u-label">{{ $t("camera") }}</label>
+          <label class="u-label">{{ $t("camera") }}</label>
 
-            <div>
-              <small v-if="all_video_input_devices.length === 0">
-                {{ $t("no_video_input_available") }}
-              </small>
-              <select
-                v-else
-                id="devices"
-                name="Video devices"
-                title="devices"
-                class=""
-                v-model="selected_devices.video_input_device"
-              >
-                <option
-                  v-for="d in all_video_input_devices"
-                  :key="d.deviceId"
-                  :value="d"
-                >
-                  {{ d.label }}
-                </option>
-              </select>
-            </div>
-
-            <div
-              v-if="
-                selected_devices.video_input_device &&
-                selected_devices.video_input_device.deviceId ===
-                  'screen_capture'
-              "
-              class="margin-top-veryverysmall"
-            >
-              <span class="u-switch u-switch-xs">
-                <input
-                  id="show_cursor"
-                  type="checkbox"
-                  v-model="advanced_capture_options.cursor.enabled"
-                  :disabled="!advanced_capture_options.cursor.supported"
-                  true-value="always"
-                  false-value="never"
-                />
-                <label class="u-label" for="show_cursor">{{
-                  $t("show_cursor")
-                }}</label>
-                <small v-if="!advanced_capture_options.cursor.supported">
-                  {{ $t("not_supported_on_this_device") }}
-                </small>
-              </span>
-            </div>
-          </div>
           <div>
-            <label class="u-label">{{ $t("audioinput") }}</label>
-            <div>
-              <small v-if="all_audio_input_devices.length === 0">
-                {{ $t("no_audio_input_available") }}
-              </small>
-              <select
-                v-else
-                id="devices"
-                name="Video devices"
-                title="devices"
-                class=""
-                v-model="selected_devices.audio_input_device"
-              >
-                <option
-                  v-for="d in all_audio_input_devices"
-                  :key="d.deviceId"
-                  :value="d"
-                >
-                  {{ d.label }}
-                </option>
-              </select>
-            </div>
-
-            <div
-              v-if="selected_devices.audio_input_device"
-              class="margin-top-veryverysmall"
-            >
-              <span class="u-switch u-switch-xs">
-                <input
-                  id="echoCancellation"
-                  type="checkbox"
-                  :disabled="
-                    !advanced_capture_options.echoCancellation.supported
-                  "
-                  v-model="advanced_capture_options.echoCancellation.enabled"
-                />
-                <label class="u-label" for="echoCancellation">{{
-                  $t("echoCancellation")
-                }}</label>
-                <small
-                  v-if="!advanced_capture_options.echoCancellation.supported"
-                >
-                  {{ $t("not_supported_on_this_device") }}
-                </small>
-              </span>
-            </div>
-            <div
-              v-if="selected_devices.audio_input_device"
-              class="margin-top-veryverysmall"
-            >
-              <span class="u-switch u-switch-xs">
-                <input
-                  id="noiseSuppression"
-                  type="checkbox"
-                  :disabled="
-                    !advanced_capture_options.noiseSuppression.supported
-                  "
-                  v-model="advanced_capture_options.noiseSuppression.enabled"
-                />
-                <label class="u-label" for="noiseSuppression">{{
-                  $t("noiseSuppression")
-                }}</label>
-                <small
-                  v-if="!advanced_capture_options.noiseSuppression.supported"
-                >
-                  {{ $t("not_supported_on_this_device") }}
-                </small>
-              </span>
-            </div>
-          </div>
-          <div>
-            <label class="u-label">{{ $t("audiooutput") }}</label>
-
-            <div>
-              <small v-if="all_audio_output_devices.length === 0">
-                {{ $t("no_audio_output_available") }}
-              </small>
-              <select
-                v-else
-                id="devices"
-                name="Video devices"
-                title="devices"
-                class=""
-                v-model="selected_devices.audio_output_device"
-              >
-                <option
-                  v-for="d in all_audio_output_devices"
-                  :key="d.deviceId"
-                  :value="d"
-                >
-                  {{ d.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="u-spacingBottom" />
-
-        <label class="u-label">{{ $t("resolutions") }}</label>
-        <div>
-          <div
-            v-if="
-              !selected_devices.video_input_device ||
-              !selected_devices.video_input_device.deviceId
-            "
-          >
-            <small>
-              {{ $t("pick_a_camera") }}
+            <small v-if="all_video_input_devices.length === 0">
+              {{ $t("no_video_input_available") }}
             </small>
+            <select
+              v-else
+              id="devices"
+              name="Video devices"
+              title="devices"
+              class=""
+              v-model="selected_devices.video_input_device"
+            >
+              <option
+                v-for="d in all_video_input_devices"
+                :key="d.deviceId"
+                :value="d"
+              >
+                {{ d.label }}
+              </option>
+            </select>
           </div>
+
           <div
             v-if="
               selected_devices.video_input_device &&
-              (selected_devices.video_input_device.deviceId ===
-                'screen_capture' ||
-                selected_devices.video_input_device.chromeMediaSource)
+              selected_devices.video_input_device.deviceId === 'screen_capture'
             "
+            class="margin-top-veryverysmall"
           >
-            <small>
-              {{ $t("cant_pick_resolution_when_screen_capture") }}
-            </small>
+            <span class="u-switch u-switch-xs">
+              <input
+                id="show_cursor"
+                type="checkbox"
+                v-model="advanced_capture_options.cursor.enabled"
+                :disabled="!advanced_capture_options.cursor.supported"
+                true-value="always"
+                false-value="never"
+              />
+              <label class="u-label" for="show_cursor">{{
+                $t("show_cursor")
+              }}</label>
+              <small v-if="!advanced_capture_options.cursor.supported">
+                {{ $t("not_supported_on_this_device") }}
+              </small>
+            </span>
           </div>
-          <div class="m_captureSettings--settings--resolutions" v-else>
-            <div
-              v-for="res in predefined_resolutions.concat(
-                custom_camera_resolution
-              )"
-              :key="res.name"
+        </div>
+        <div>
+          <label class="u-label">{{ $t("audioinput") }}</label>
+          <div>
+            <small v-if="all_audio_input_devices.length === 0">
+              {{ $t("no_audio_input_available") }}
+            </small>
+            <select
+              v-else
+              id="devices"
+              name="Video devices"
+              title="devices"
+              class=""
+              v-model="selected_devices.audio_input_device"
             >
-              <label :for="res.label" class="">
-                <input
-                  type="radio"
-                  :id="res.label"
-                  :value="res"
-                  :disabled="unavailable_camera_resolutions.includes(res.label)"
-                  v-model="desired_camera_resolution"
-                />
-                <span class="_resolutionLabel">
-                  <DLabel
-                    :str="res.label"
-                    tag="div"
-                    :instructions="resInstructions(res)"
-                  />
-                </span>
-              </label>
-            </div>
+              <option
+                v-for="d in all_audio_input_devices"
+                :key="d.deviceId"
+                :value="d"
+              >
+                {{ d.label }}
+              </option>
+            </select>
+          </div>
 
-            <div
-              v-if="
-                desired_camera_resolution &&
-                desired_camera_resolution.type === 'custom'
-              "
-              class="u-sameRow _customResolution"
+          <div
+            v-if="selected_devices.audio_input_device"
+            class="margin-top-veryverysmall"
+          >
+            <span class="u-switch u-switch-xs">
+              <input
+                id="echoCancellation"
+                type="checkbox"
+                :disabled="!advanced_capture_options.echoCancellation.supported"
+                v-model="advanced_capture_options.echoCancellation.enabled"
+              />
+              <label class="u-label" for="echoCancellation">{{
+                $t("echoCancellation")
+              }}</label>
+              <small
+                v-if="!advanced_capture_options.echoCancellation.supported"
+              >
+                {{ $t("not_supported_on_this_device") }}
+              </small>
+            </span>
+          </div>
+          <div
+            v-if="selected_devices.audio_input_device"
+            class="margin-top-veryverysmall"
+          >
+            <span class="u-switch u-switch-xs">
+              <input
+                id="noiseSuppression"
+                type="checkbox"
+                :disabled="!advanced_capture_options.noiseSuppression.supported"
+                v-model="advanced_capture_options.noiseSuppression.enabled"
+              />
+              <label class="u-label" for="noiseSuppression">{{
+                $t("noiseSuppression")
+              }}</label>
+              <small
+                v-if="!advanced_capture_options.noiseSuppression.supported"
+              >
+                {{ $t("not_supported_on_this_device") }}
+              </small>
+            </span>
+          </div>
+        </div>
+        <div>
+          <label class="u-label">{{ $t("audiooutput") }}</label>
+
+          <div>
+            <small v-if="all_audio_output_devices.length === 0">
+              {{ $t("no_audio_output_available") }}
+            </small>
+            <select
+              v-else
+              id="devices"
+              name="Video devices"
+              title="devices"
+              class=""
+              v-model="selected_devices.audio_output_device"
             >
-              <label class="u-label" for="custom_width">
-                <input
-                  name="custom_width"
-                  type="number"
-                  min="2"
-                  max="4096"
-                  step="2"
-                  v-model.number="desired_camera_resolution.width"
+              <option
+                v-for="d in all_audio_output_devices"
+                :key="d.deviceId"
+                :value="d"
+              >
+                {{ d.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="u-spacingBottom" />
+
+      <label class="u-label">{{ $t("resolutions") }}</label>
+      <div>
+        <div
+          v-if="
+            !selected_devices.video_input_device ||
+            !selected_devices.video_input_device.deviceId
+          "
+        >
+          <small>
+            {{ $t("pick_a_camera") }}
+          </small>
+        </div>
+        <div
+          v-if="
+            selected_devices.video_input_device &&
+            (selected_devices.video_input_device.deviceId ===
+              'screen_capture' ||
+              selected_devices.video_input_device.chromeMediaSource)
+          "
+        >
+          <small>
+            {{ $t("cant_pick_resolution_when_screen_capture") }}
+          </small>
+        </div>
+        <div class="m_captureSettings--settings--resolutions" v-else>
+          <div
+            v-for="res in predefined_resolutions.concat(
+              custom_camera_resolution
+            )"
+            :key="res.name"
+          >
+            <label :for="res.label" class="">
+              <input
+                type="radio"
+                :id="res.label"
+                :value="res"
+                :disabled="unavailable_camera_resolutions.includes(res.label)"
+                v-model="desired_camera_resolution"
+              />
+              <span class="_resolutionLabel">
+                <DLabel
+                  :str="res.label"
+                  tag="div"
+                  :instructions="resInstructions(res)"
                 />
-              </label>
-              <span class="u-padding_verysmall _customResolutionX"> × </span>
-              <label class="u-label" for="custom_height">
-                <input
-                  name="custom_height"
-                  type="number"
-                  min="2"
-                  max="2160"
-                  step="2"
-                  v-model.number="desired_camera_resolution.height"
-                />
-                {{ $t("pixels") }}
-              </label>
-            </div>
+              </span>
+            </label>
+          </div>
+
+          <div
+            v-if="
+              desired_camera_resolution &&
+              desired_camera_resolution.type === 'custom'
+            "
+            class="u-sameRow _customResolution"
+          >
+            <label class="u-label" for="custom_width">
+              <input
+                name="custom_width"
+                type="number"
+                min="2"
+                max="4096"
+                step="2"
+                v-model.number="desired_camera_resolution.width"
+              />
+            </label>
+            <span class="u-padding_verysmall _customResolutionX"> × </span>
+            <label class="u-label" for="custom_height">
+              <input
+                name="custom_height"
+                type="number"
+                min="2"
+                max="2160"
+                step="2"
+                v-model.number="desired_camera_resolution.height"
+              />
+              {{ $t("pixels") }}
+            </label>
           </div>
         </div>
       </div>
@@ -311,6 +290,9 @@ export default {
   components: {},
   data() {
     return {
+      is_destroying_capture_settings: false,
+      stream_request_counter: 0,
+
       is_loading_available_devices: false,
       is_loading_feed: false,
       status: undefined,
@@ -400,6 +382,9 @@ export default {
   },
   async beforeDestroy() {
     try {
+      this.is_destroying_capture_settings = true;
+      // Invalidate in-flight async stream requests.
+      this.stream_request_counter += 1;
       await this.cleanupStream();
     } catch (error) {
       console.warn("Error during component cleanup:", error);
@@ -509,18 +494,22 @@ export default {
         console.log("Requesting initial permissions...");
         // Request initial permissions
         await this.requestInitialPermissions();
+        if (this.is_destroying_capture_settings) return;
 
         console.log("Refreshing available devices...");
         // Refresh available devices
         await this.refreshAvailableDevices();
+        if (this.is_destroying_capture_settings) return;
 
         console.log("Setting default inputs and outputs...");
         // Set default inputs and outputs
         this.setDefaultInputsAndOutputs();
+        if (this.is_destroying_capture_settings) return;
 
         console.log("Setting up camera stream...");
         // Set up camera stream
         await this.setCameraStreamFromDefaults();
+        if (this.is_destroying_capture_settings) return;
 
         console.log("Initialization completed successfully");
         this.is_loading_feed = false;
@@ -565,12 +554,21 @@ export default {
     },
 
     async requestInitialPermissions() {
+      const request_id = this.stream_request_counter;
       try {
         console.log("Requesting getUserMedia permissions...");
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
         });
+
+        if (
+          this.is_destroying_capture_settings ||
+          request_id !== this.stream_request_counter
+        ) {
+          this.stopStreamTracks(stream);
+          return;
+        }
 
         console.log("Permissions granted, stream created:", stream);
 
@@ -581,6 +579,9 @@ export default {
         this.handlePermissionError(error);
         throw error;
       }
+    },
+    stopStreamTracks(stream) {
+      stream?.getTracks?.().forEach((track) => track.stop());
     },
 
     handlePermissionError(error) {
@@ -1015,6 +1016,9 @@ export default {
         console.log(`CaptureSettings • METHODS : setCameraStreamFromDefaults`);
       }
 
+      if (this.is_destroying_capture_settings) return;
+
+      const request_id = ++this.stream_request_counter;
       this.is_loading_feed = true;
 
       try {
@@ -1026,7 +1030,15 @@ export default {
           );
         }
 
-        await this.startLocalStream();
+        await this.startLocalStream({ request_id });
+
+        // Ignore stale responses from older async requests.
+        if (
+          this.is_destroying_capture_settings ||
+          request_id !== this.stream_request_counter
+        ) {
+          return;
+        }
 
         this.stream_current_settings = this.current_settings;
         this.last_working_resolution = this.desired_camera_resolution;
@@ -1070,14 +1082,30 @@ export default {
         }
       }
     },
-    async startLocalStream() {
+    async startLocalStream({ request_id } = {}) {
       if (this.$root.debug_mode === true) {
         console.log(`CaptureSettings • METHODS : startLocalStream`);
       }
 
       try {
+        if (
+          this.is_destroying_capture_settings ||
+          (request_id !== undefined &&
+            request_id !== this.stream_request_counter)
+        ) {
+          return;
+        }
+
         // Clean up any existing stream
         await this.cleanupStream();
+
+        if (
+          this.is_destroying_capture_settings ||
+          (request_id !== undefined &&
+            request_id !== this.stream_request_counter)
+        ) {
+          return;
+        }
 
         // Create constraints from selected devices
         const constraints = this.createConstraintsFromSelected();
@@ -1087,6 +1115,15 @@ export default {
 
         // Start the media device feed
         const stream = await this.startMediaDeviceFeed(constraints);
+
+        if (
+          this.is_destroying_capture_settings ||
+          (request_id !== undefined &&
+            request_id !== this.stream_request_counter)
+        ) {
+          stream?.getTracks?.().forEach((track) => track.stop());
+          return;
+        }
 
         this.local_stream = stream;
 
@@ -1109,7 +1146,7 @@ export default {
     async cleanupStream() {
       if (this.local_stream) {
         try {
-          this.local_stream.getTracks().forEach((track) => track.stop());
+          this.stopStreamTracks(this.local_stream);
           this.local_stream = undefined;
           // Wait a bit for cleanup to complete
           await new Promise((resolve) => setTimeout(resolve, 200));
@@ -1237,13 +1274,11 @@ export default {
 }
 
 .m_captureSettings--settings {
-  overflow-y: auto;
-  flex: 1 1 auto;
   // padding-bottom: var(--spacing);
 
   > div {
-    padding: calc(var(--spacing) / 2);
-    padding-top: calc(var(--spacing) / 4);
+    // padding: calc(var(--spacing) / 2);
+    // padding-top: calc(var(--spacing) / 4);
     > div {
       background-color: rgba(0, 0, 0, 0.1);
       padding: 0 calc(var(--spacing) / 2) calc(var(--spacing) / 2);

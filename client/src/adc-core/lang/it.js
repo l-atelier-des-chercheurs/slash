@@ -22,6 +22,8 @@ export default {
   select_all: "Seleziona tutto",
   back: "Indietro",
   save: "Salva",
+  set_timer: "Imposta timer",
+  disable_timer: "Disattiva timer",
   input_url: "URL verso un sito da integrare",
   input_url_instr: "Indica una URL vero una risorsa.",
   url_to_open: "URL della pagina da aprire",
@@ -1191,6 +1193,8 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
   navigate_to_page: "Naviga verso una pagina",
 
   regenerate_thumbs: "Rigenera l'anteprima",
+  failed_to_regenerate_thumbs: "Impossibile rigenerare l'anteprima",
+  thumbs_regenerated: "Anteprima rigenerata",
   embed_link: "Link per l'embedding",
   direct_link_to_file:
     "Questo link punta direttamente al file multimediale e può essere utilizzato in altre applicazioni o siti web. La pagina di questo link non conterrà la didascalia o altre informazioni sul media.",

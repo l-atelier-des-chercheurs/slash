@@ -14,6 +14,12 @@ const ffmpegPath = require("ffmpeg-static").replace(
 );
 ffmpeg.setFfmpegPath(ffmpegPath);
 
+function _logFfmpegCommand({ context, command_line }) {
+  dev.log(
+    `THUMBS • FFMPEG (${context}) • BIN ${ffmpegPath} • CMD ${command_line}`
+  );
+}
+
 module.exports = (function () {
   const API = {
     makeFolderCover: ({ path_to_folder }) =>
@@ -69,7 +75,7 @@ module.exports = (function () {
             ext: "png",
           },
         ];
-      } else if (media_type === "stl") {
+      } else if (["stl", "obj"].includes(media_type)) {
         settings = [
           {
             camera_angle: [10, 50, 100],
@@ -300,7 +306,7 @@ module.exports = (function () {
                 full_media_path,
                 full_path_to_thumb,
               });
-            else if (media_type === "stl")
+            else if (["stl", "obj"].includes(media_type))
               await _makeSTLThumbs({
                 full_media_path,
                 full_path_to_thumb,
@@ -586,14 +592,26 @@ module.exports = (function () {
   }) {
     return new Promise((resolve, reject) => {
       dev.logfunction({ thumb_name, thumb_folder, timemark_key });
+      dev.logfunction({
+        context: "video_screenshot",
+        ffmpeg_path: ffmpegPath,
+      });
 
       ffmpeg(full_media_path)
+        .on("start", (command_line) => {
+          _logFfmpegCommand({ context: "video_screenshot", command_line });
+        })
         // setup event handlers
         .on("end", () => {
           return resolve();
         })
-        .on("error", (err) => {
-          dev.error(`ffmpeg failed: ${err.message}`);
+        .on("error", (err, stdout, stderr) => {
+          dev.error({
+            context: "video_screenshot",
+            ffmpeg_path: ffmpegPath,
+            message: err?.message || err,
+            stderr,
+          });
           return reject(err.message);
         })
         .screenshots({
@@ -610,17 +628,24 @@ module.exports = (function () {
 
       ffmpeg()
         .input(full_media_path)
-        .input(`color=white:s=3000x2000`)
-        .inputFormat("lavfi")
         .complexFilter(
-          "[0:a]aformat=channel_layouts=mono,showwavespic=s=3000x2000:colors=#fc4b60[fg];[1:v][fg]overlay=format=auto"
+          "color=c=white:s=3000x2000[bg];[0:a]aformat=channel_layouts=mono,showwavespic=s=3000x2000:colors=#fc4b60[fg];[bg][fg]overlay=format=auto"
         )
         .outputOptions(["-vframes 1"])
+        .on("start", (command_line) => {
+          _logFfmpegCommand({ context: "audio_waveform", command_line });
+        })
         // setup event handlers
         .on("end", () => {
           return resolve();
         })
-        .on("error", function (err) {
+        .on("error", function (err, stdout, stderr) {
+          dev.error({
+            context: "audio_waveform",
+            ffmpeg_path: ffmpegPath,
+            message: err?.message || err,
+            stderr,
+          });
           return reject(err.message);
         })
         .save(full_path_to_thumb);

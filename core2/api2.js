@@ -42,6 +42,7 @@ module.exports = (function () {
     app.post("/_api2/_restartApp", _onlyAdmins, _restartApp);
 
     app.get("/_api2/_logs", _getLogs);
+    app.get("/_api2/_logs/:filename", _onlyAdmins, _downloadLog);
 
     app.get("/_api2/_users", _getAllUsers);
     app.patch("/_api2/_users/:id", _updateUser);
@@ -2091,6 +2092,7 @@ module.exports = (function () {
   // Helper function for regenerate thumbs error handling
   function _handleRegenerateThumbsError(err, res, context) {
     const { message, code, err_infos } = err;
+    const error_code = code || "failed_to_regenerate_thumbs";
     const error_msg = `Failed to regenerate thumbs for ${context.path_to_meta}: ${message}`;
 
     dev.error(error_msg);
@@ -2101,11 +2103,12 @@ module.exports = (function () {
         outcome: "error",
         path_to_meta: context.path_to_meta,
         error_message: message,
+        error_code,
         author_path: context.token_path,
       },
     });
 
-    res.status(500).send({ code, err_infos });
+    res.status(500).send({ code: error_code, err_infos, message });
   }
 
   async function _removeFile(req, res, next) {
@@ -2258,6 +2261,12 @@ module.exports = (function () {
   async function _getLogs(req, res, next) {
     const logs = await journal.getLogs();
     res.json({ logs });
+  }
+  async function _downloadLog(req, res, next) {
+    return await journal.downloadLog({
+      filename: req.params.filename,
+      res,
+    });
   }
   async function _getStoragePath(req, res, next) {
     const pathToUserContent = await settings.getStoragePath();

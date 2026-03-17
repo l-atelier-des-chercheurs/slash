@@ -23,6 +23,8 @@ export default {
   select: "Select",
   back: "Back",
   save: "Save",
+  set_timer: "Set timer",
+  disable_timer: "Disable timer",
   input_url: "URL of the website to embed",
   image_url: "URL of an image",
   image_url_instr:
@@ -35,8 +37,7 @@ export default {
   importing_from_url: "Importing from URL...",
   preview_of_image: "Preview of the image",
   failed_to_import_from_url: "Failed to import image from URL",
-  file_size_limit_exceeded:
-    "File too large. Maximum size: {maxSize} MB.",
+  file_size_limit_exceeded: "File too large. Maximum size: {maxSize} MB.",
   embed: "Embed",
   table: "Table",
   from_project: "From project",
@@ -1179,6 +1180,8 @@ export default {
   navigate_to_page: "Navigate to page",
 
   regenerate_thumbs: "Regenerate preview",
+  failed_to_regenerate_thumbs: "Failed to regenerate preview",
+  thumbs_regenerated: "Preview regenerated",
   embed_link: "Embed link",
   direct_link_to_file:
     "This link points directly to the media file, it can be used in other applications or websites.",
@@ -1521,6 +1524,7 @@ export default {
   list_of_notes_todo: "No task | {count} task | {count} tasks",
   archived: "No task archived | {count} task archived | {count} tasks archived",
   done_on: "Done on",
+  task_list: "Task list",
 
   create_list: "Create list",
   create_list_instructions: "Create a new list to organize your tasks.",
