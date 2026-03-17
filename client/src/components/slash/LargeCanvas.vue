@@ -69,7 +69,6 @@
       :canvas_width="canvas_width"
       :canvas_height="canvas_height"
       :zoom="zoom"
-      :viewport_props="viewport_props"
       :selected_files="currently_selected_files"
     />
     <LeftToolbar :current_mode.sync="current_mode" />
@@ -132,12 +131,14 @@ export default {
 
       selected_files: [],
 
-      viewport_props: {
+      viewport_props_throttled: {
         left_pct: 0,
         top_pct: 0,
         width_pct: 0,
         height_pct: 0,
       },
+      viewport_throttle_timer: null,
+      viewport_throttle_last: 0,
     };
   },
   computed: {
@@ -179,7 +180,7 @@ export default {
       };
     },
     visible_file_paths() {
-      const p = this.viewport_props;
+      const p = this.viewport_props_throttled;
       const cw = this.canvas_width;
       const ch = this.canvas_height;
       if (!cw || !ch || !this.files?.length) return new Set();
@@ -236,6 +237,8 @@ export default {
   beforeDestroy() {
     this.$eventHub.$off("canvas.dragEnd", this.handleDragEnd);
     window.removeEventListener("keydown", this.handleGlobalKeydown);
+    if (this.viewport_throttle_timer)
+      clearTimeout(this.viewport_throttle_timer);
   },
   methods: {
     handleGlobalKeydown(event) {
@@ -332,7 +335,20 @@ export default {
       }
     },
     handleViewportChange(pct) {
-      this.viewport_props = { ...pct };
+      this.$eventHub.$emit("canvas.viewportChange", pct);
+      this._latest_viewport_pct = pct;
+      const now = Date.now();
+      const elapsed = now - this.viewport_throttle_last;
+      if (elapsed >= 500) {
+        this.viewport_throttle_last = now;
+        this.viewport_props_throttled = { ...pct };
+      } else if (!this.viewport_throttle_timer) {
+        this.viewport_throttle_timer = setTimeout(() => {
+          this.viewport_throttle_timer = null;
+          this.viewport_throttle_last = Date.now();
+          this.viewport_props_throttled = { ...this._latest_viewport_pct };
+        }, 500 - elapsed);
+      }
     },
     updateScrollAndZoom({
       center_x,
@@ -409,7 +425,7 @@ export default {
         height = width * ratio;
       } else if (file.$type === "canvas_shape") {
         if (file.height != null && file.width) {
-          height = width * (file.height / file.width);
+          height = file.height;
         } else if (file.shape_points?.length >= 2) {
           const bounds = getPointsBounds(file.shape_points);
           height = width * (bounds.height / bounds.width);

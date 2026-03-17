@@ -39,15 +39,6 @@ export default {
       type: Number,
       default: 1,
     },
-    viewport_props: {
-      type: Object,
-      default: () => ({
-        left_pct: 0,
-        top_pct: 0,
-        width_pct: 0,
-        height_pct: 0,
-      }),
-    },
     selected_files: {
       type: Array,
       default: () => [],
@@ -63,6 +54,13 @@ export default {
       scale_y: 1,
       resize_observer: null,
       update_raf_id: null,
+      viewport_raf_id: null,
+      viewport_props: {
+        left_pct: 0,
+        top_pct: 0,
+        width_pct: 0,
+        height_pct: 0,
+      },
     };
   },
   computed: {
@@ -95,12 +93,6 @@ export default {
     canvas_height() {
       this.scheduleUpdate();
     },
-    viewport_props: {
-      handler() {
-        this.scheduleViewportUpdate();
-      },
-      deep: true,
-    },
     display_width() {
       this.scheduleUpdate();
     },
@@ -121,25 +113,34 @@ export default {
       this.resize_observer = new ResizeObserver(() => this.updateSize());
       this.resize_observer.observe(this.$refs.wrapper);
     }
+    this.$eventHub.$on("canvas.viewportChange", this.onViewportChange);
   },
   beforeDestroy() {
     if (this.update_raf_id != null) cancelAnimationFrame(this.update_raf_id);
+    if (this.viewport_raf_id != null)
+      cancelAnimationFrame(this.viewport_raf_id);
     if (this.resize_observer && this.$refs.wrapper) {
       this.resize_observer.unobserve(this.$refs.wrapper);
     }
+    this.$eventHub.$off("canvas.viewportChange", this.onViewportChange);
   },
   methods: {
+    onViewportChange(pct) {
+      this.viewport_props = pct;
+      this.scheduleViewportUpdate();
+    },
     scheduleUpdate() {
-      this.scheduleRafUpdate();
-    },
-    scheduleViewportUpdate() {
-      this.scheduleRafUpdate();
-    },
-    scheduleRafUpdate() {
       if (this.update_raf_id != null) return;
       this.update_raf_id = requestAnimationFrame(() => {
         this.update_raf_id = null;
         this.runMinimapUpdate();
+      });
+    },
+    scheduleViewportUpdate() {
+      if (this.viewport_raf_id != null) return;
+      this.viewport_raf_id = requestAnimationFrame(() => {
+        this.viewport_raf_id = null;
+        this.drawViewport();
       });
     },
     runMinimapUpdate() {
@@ -179,6 +180,7 @@ export default {
       }
     },
     drawContent() {
+      console.log("drawContent", new Date().toISOString());
       const canvas = this.$refs.contentCanvas;
       if (!canvas || this.display_width <= 0 || this.display_height <= 0)
         return;
@@ -276,6 +278,7 @@ export default {
       ctx.globalAlpha = 1;
     },
     drawViewport() {
+      console.log("drawViewport", new Date().toISOString());
       const canvas = this.$refs.viewportCanvas;
       if (!canvas || this.display_width <= 0 || this.display_height <= 0)
         return;

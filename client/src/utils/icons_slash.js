@@ -11,6 +11,7 @@ import {
   BIconLayoutWtf,
   BIconCalendarDay,
   BIconHandIndex,
+  BIconRecordCircle,
 } from "bootstrap-vue";
 
 Vue.component("BIconChatLeft", BIconChatLeft);
@@ -20,3 +21,4 @@ Vue.component("BIconGrid", BIconGrid);
 Vue.component("BIconLayoutWtf", BIconLayoutWtf);
 Vue.component("BIconCalendarDay", BIconCalendarDay);
 Vue.component("BIconHandIndex", BIconHandIndex);
+Vue.component("BIconRecordCircle", BIconRecordCircle);

@@ -30,21 +30,27 @@
           >
             <b-icon icon="chat-left-text-fill" />
           </button>
+          <button
+            class="u-button u-button_icon"
+            :class="{ 'is--active': current_view === 'qrcode' }"
+            @click="setView('qrcode')"
+            :title="$t('share')"
+          >
+            <b-icon icon="qr-code" />
+          </button>
         </div>
         <div class="_meta--content">
           <div
             class="_flipCard"
             :class="{ 'is--flipped': current_view === 'chats' }"
+            v-show="current_view !== 'qrcode'"
           >
             <div class="_flipCard--inner">
               <section
                 class="_flipCard--face _flipCard--faceFront"
                 :aria-hidden="current_view !== 'informations'"
               >
-                <ItemMeta
-                  :file="file"
-                  @removed="$emit('close')"
-                />
+                <ItemMeta :file="file" @removed="$emit('close')" />
               </section>
               <section
                 class="_flipCard--face _flipCard--faceBack"
@@ -59,6 +65,12 @@
                 </div>
               </section>
             </div>
+          </div>
+          <div
+            class="_meta--content--qrcode"
+            v-show="current_view === 'qrcode'"
+          >
+            <QRCodeWithLink v-if="has_opened_qrcode" :url="media_preview_url" />
           </div>
         </div>
       </div>
@@ -77,6 +89,7 @@
 <script>
 import ItemChat from "./ItemChat.vue";
 import ItemMeta from "./ItemMeta.vue";
+import QRCodeWithLink from "@/adc-core/ui/QRCodeWithLink.vue";
 
 export default {
   props: {
@@ -88,11 +101,13 @@ export default {
   components: {
     ItemChat,
     ItemMeta,
+    QRCodeWithLink,
   },
   data() {
     return {
       current_view: "informations",
       has_opened_chats: false,
+      has_opened_qrcode: false,
     };
   },
   created() {},
@@ -109,9 +124,18 @@ export default {
   watch: {
     current_view(new_view) {
       if (new_view === "chats") this.has_opened_chats = true;
+      if (new_view === "qrcode") this.has_opened_qrcode = true;
     },
   },
   computed: {
+    media_preview_url() {
+      if (!this.file.$path) return "";
+      return (
+        window.location.origin +
+        "/_previewmedia?path_to_meta=" +
+        this.file.$path
+      );
+    },
     has_geolocation() {
       return (
         !!this.file.$location &&
@@ -274,6 +298,17 @@ export default {
 ._flipCard--faceBack {
   transform: rotateY(180deg);
   pointer-events: none;
+}
+
+._meta--content--qrcode {
+  position: absolute;
+  inset: 0;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  overflow: auto;
+  pointer-events: auto;
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 1.5);
 }
 
 ._flipCard.is--flipped ._flipCard--faceFront {

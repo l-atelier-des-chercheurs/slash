@@ -107,6 +107,7 @@ export default {
   flex-direction: row nowrap;
   align-items: center;
   overflow: hidden;
+  gap: calc(var(--spacing) / 4);
 }
 
 ._dropMenu--fileInput {

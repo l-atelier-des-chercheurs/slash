@@ -12,7 +12,6 @@
     :data-file-type="file.$type"
     :data-file-path="file.$path"
   >
-    <!-- {{ file.width }} / {{ file.height }} -->
     <template v-if="file.$type === 'canvas_shape'">
       <div
         v-html="display_shape_svg"

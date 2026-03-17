@@ -1,6 +1,6 @@
 <template>
   <div
-    class="_dropMenuPanelContainer"
+    class="u-overlayPanel _dropMenuPanelContainer"
     :style="{
       left: position_x + 'px',
       top: position_y + 'px',

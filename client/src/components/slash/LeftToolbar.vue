@@ -1,6 +1,6 @@
 <template>
   <div class="_leftToolbar">
-    <div class="_leftToolbar--content u-overlayPanel">
+    <div class="u-overlayPanel _leftToolbar--content">
       <div>
         <button
           type="button"
@@ -95,7 +95,7 @@ export default {
 ._leftToolbar--content {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) / 2);
+  gap: calc(var(--spacing) / 4);
   pointer-events: auto;
 }
 </style>

@@ -79,7 +79,7 @@ export default {
         {
           id: "audio",
           label: this.$t("audio"),
-          icon: "record-circle-fill",
+          icon: "record-circle",
           accept: "audio/*",
         },
         {
@@ -151,7 +151,7 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: flex-end;
-  gap: 0;
+  gap: calc(var(--spacing) / 4);
   user-select: none;
 }
 
