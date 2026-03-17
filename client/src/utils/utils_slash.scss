@@ -316,8 +316,8 @@ input[type="file"] {
 .u-overlayPanel {
   // outline: 2px solid rgba(241, 241, 241, 0.4);
   backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 5px 0px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 4px 0px rgba(0, 0, 0, 0.2);
   padding: calc(var(--spacing) / 4);
   border-radius: var(--border-radius);
 

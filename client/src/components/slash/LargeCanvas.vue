@@ -153,7 +153,10 @@ export default {
         right_edge = Math.max(right_edge, x + width);
       });
       const cw = Math.round(right_edge + this.margin_around_content);
-      return Math.min(Math.max(this.min_canvas_width, cw), this.max_canvas_width);
+      return Math.min(
+        Math.max(this.min_canvas_width, cw),
+        this.max_canvas_width
+      );
     },
     canvas_height() {
       if (!this.files || this.files.length === 0) {
@@ -166,7 +169,10 @@ export default {
         bottom_edge = Math.max(bottom_edge, y + height);
       });
       const ch = Math.round(bottom_edge + this.margin_around_content);
-      return Math.min(Math.max(this.min_canvas_height, ch), this.max_canvas_height);
+      return Math.min(
+        Math.max(this.min_canvas_height, ch),
+        this.max_canvas_height
+      );
     },
     additional_meta() {
       if (!this.canvas_clicked_x || !this.canvas_clicked_y) return null;
@@ -512,31 +518,19 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #f9f9f9;
-
-  // Inset shadow painted in the viewport layer, not the 21000×10000 canvas layer
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    box-shadow: inset 0 0 55px 0px rgba(0, 0, 0, 0.1);
-    z-index: 1;
-  }
+  background: var(--c-gris);
 }
 
 ._canvasContent {
   position: relative;
   contain: layout paint;
 
-  // Dot grid pattern; pans with content (this div is inside the panned viewport)
   --background-color: white;
   --bg-size: 100px;
 
   overflow: visible;
 
   background-color: #ffffff;
-  /* CSS gradient instead of PNG: no image decode, no large tiled texture in RAM */
   background-image: radial-gradient(
     circle at center,
     rgba(0, 0, 0, 0.22) 3px,
@@ -545,6 +539,9 @@ export default {
   background-repeat: repeat;
   background-size: var(--bg-size) var(--bg-size);
   background-position: -24px -24px;
+
+  border-radius: 40px;
+  outline: 10px solid var(--c-gris);
 }
 
 ._largeCanvas[data-mode="draw"] {
