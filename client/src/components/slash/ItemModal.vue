@@ -36,42 +36,50 @@
             @click="setView('qrcode')"
             :title="$t('share')"
           >
-            <b-icon icon="qr-code" />
+            <svg
+              enable-background="new 0 0 90 90"
+              viewBox="0 0 90 90"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.35rem"
+              height="1.35rem"
+            >
+              <path
+                d="m48 0v42h42v-42zm36 36h-30v-30h30zm-71 41h16v-16h-16zm-13 13h42v-42h-42zm6-36h30v30h-30zm57-6h-15v13h15zm6 6h8v7h-8v12h-8v-8h-9v8h5v9h-9v8h21v-8h13v-9h-5v-8h13v-17h-21zm-69-12h42v-42h-42zm6-36h30v30h-30zm84 84v-8h-8v8zm-77-61h16v-16h-16zm64-16h-16v16h16z"
+              ></path>
+            </svg>
           </button>
         </div>
         <div class="_meta--content">
-          <div
-            class="_flipCard"
-            :class="{ 'is--flipped': current_view === 'chats' }"
-            v-show="current_view !== 'qrcode'"
-          >
-            <div class="_flipCard--inner">
-              <section
-                class="_flipCard--face _flipCard--faceFront"
-                :aria-hidden="current_view !== 'informations'"
-              >
-                <ItemMeta :file="file" @removed="$emit('close')" />
-              </section>
-              <section
-                class="_flipCard--face _flipCard--faceBack"
-                :aria-hidden="current_view !== 'chats'"
-              >
-                <div class="_meta--content--chats">
-                  <ItemChat
-                    v-if="has_opened_chats"
-                    :file="file"
-                    @close="setView('informations')"
-                  />
-                </div>
-              </section>
+          <transition name="flip-panel" mode="out-in">
+            <div
+              v-if="current_view === 'informations'"
+              key="informations"
+              class="_panel"
+            >
+              <ItemMeta :file="file" @removed="$emit('close')" />
             </div>
-          </div>
-          <div
-            class="_meta--content--qrcode"
-            v-show="current_view === 'qrcode'"
-          >
-            <QRCodeWithLink v-if="has_opened_qrcode" :url="media_preview_url" />
-          </div>
+            <div
+              v-else-if="current_view === 'chats'"
+              key="chats"
+              class="_panel _panel_chats"
+            >
+              <ItemChat
+                v-if="has_opened_chats"
+                :file="file"
+                @close="setView('informations')"
+              />
+            </div>
+            <div
+              v-else-if="current_view === 'qrcode'"
+              key="qrcode"
+              class="_panel _panel_qrcode"
+            >
+              <QRCodeWithLink
+                v-if="has_opened_qrcode"
+                :url="media_preview_url"
+              />
+            </div>
+          </transition>
         </div>
       </div>
       <div class="_file">
@@ -254,73 +262,48 @@ export default {
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: visible;
+  overflow: hidden;
+  perspective: 1200px;
 }
 
-._meta--content--chats {
-  height: 100%;
+._panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+._panel_chats {
   border-radius: var(--border-radius);
   background: var(--c-noir);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
-._flipCard {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  perspective: 1200px;
-}
-
-._flipCard--inner {
-  position: absolute;
-  inset: 0;
-  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-._flipCard.is--flipped ._flipCard--inner {
-  transform: rotateY(180deg);
-}
-
-._flipCard--face {
-  position: absolute;
-  inset: 0;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-._flipCard--faceFront {
-  transform: rotateY(0deg);
-  pointer-events: auto;
-}
-
-._flipCard--faceBack {
-  transform: rotateY(180deg);
-  pointer-events: none;
-}
-
-._meta--content--qrcode {
-  position: absolute;
-  inset: 0;
+._panel_qrcode {
   background: white;
   border-radius: var(--border-radius);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
   overflow: auto;
-  pointer-events: auto;
   padding: calc(var(--spacing) * 1) calc(var(--spacing) * 1.5);
 }
 
-._flipCard.is--flipped ._flipCard--faceFront {
-  pointer-events: none;
+.flip-panel-enter-active,
+.flip-panel-leave-active {
+  transition: transform 0.25s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.25s ease;
 }
 
-._flipCard.is--flipped ._flipCard--faceBack {
-  pointer-events: auto;
+.flip-panel-enter {
+  transform: perspective(1200px) rotateY(-90deg);
+  opacity: 0;
+}
+
+.flip-panel-leave-to {
+  transform: perspective(1200px) rotateY(90deg);
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ._flipCard--inner {
+  .flip-panel-enter-active,
+  .flip-panel-leave-active {
     transition: none;
   }
 }

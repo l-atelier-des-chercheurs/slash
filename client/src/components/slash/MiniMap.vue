@@ -100,6 +100,10 @@ export default {
       this.scheduleUpdate();
     },
   },
+  created() {
+    this._content_last = 0;
+    this._content_timer = null;
+  },
   mounted() {
     this.effective_canvas_width = this.canvas_width;
     this.effective_canvas_height = this.canvas_height;
@@ -119,6 +123,7 @@ export default {
     if (this.update_raf_id != null) cancelAnimationFrame(this.update_raf_id);
     if (this.viewport_raf_id != null)
       cancelAnimationFrame(this.viewport_raf_id);
+    if (this._content_timer != null) clearTimeout(this._content_timer);
     if (this.resize_observer && this.$refs.wrapper) {
       this.resize_observer.unobserve(this.$refs.wrapper);
     }
@@ -130,11 +135,25 @@ export default {
       this.scheduleViewportUpdate();
     },
     scheduleUpdate() {
-      if (this.update_raf_id != null) return;
-      this.update_raf_id = requestAnimationFrame(() => {
-        this.update_raf_id = null;
-        this.runMinimapUpdate();
-      });
+      const now = Date.now();
+      const elapsed = now - this._content_last;
+      if (elapsed >= 500) {
+        if (this._content_timer != null) {
+          clearTimeout(this._content_timer);
+          this._content_timer = null;
+        }
+        if (this.update_raf_id != null) return;
+        this.update_raf_id = requestAnimationFrame(() => {
+          this.update_raf_id = null;
+          this._content_last = Date.now();
+          this.runMinimapUpdate();
+        });
+      } else if (this._content_timer == null) {
+        this._content_timer = setTimeout(() => {
+          this._content_timer = null;
+          this.scheduleUpdate();
+        }, 500 - elapsed);
+      }
     },
     scheduleViewportUpdate() {
       if (this.viewport_raf_id != null) return;

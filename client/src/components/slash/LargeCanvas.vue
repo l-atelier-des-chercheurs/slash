@@ -18,6 +18,7 @@
         :style="{
           width: `${canvas_width}px`,
           height: `${canvas_height}px`,
+          backgroundImage: zoom > 0.25 ? undefined : 'none',
         }"
         @click.self="handleCanvasClick"
       >
@@ -35,7 +36,6 @@
           :mode="current_mode"
           :is_selected="currently_selected_files.includes(file.$path)"
           :in_viewport="visible_file_paths.has(file.$path)"
-          @position-update="handlePositionUpdate"
           @width-update="handleWidthUpdate"
           @select="handleSelect"
         />
@@ -153,7 +153,7 @@ export default {
         right_edge = Math.max(right_edge, x + width);
       });
       const cw = Math.round(right_edge + this.margin_around_content);
-      return Math.max(this.min_canvas_width, cw);
+      return Math.min(Math.max(this.min_canvas_width, cw), this.max_canvas_width);
     },
     canvas_height() {
       if (!this.files || this.files.length === 0) {
@@ -166,7 +166,7 @@ export default {
         bottom_edge = Math.max(bottom_edge, y + height);
       });
       const ch = Math.round(bottom_edge + this.margin_around_content);
-      return Math.max(this.min_canvas_height, ch);
+      return Math.min(Math.max(this.min_canvas_height, ch), this.max_canvas_height);
     },
     additional_meta() {
       if (!this.canvas_clicked_x || !this.canvas_clicked_y) return null;
@@ -363,51 +363,32 @@ export default {
       this.$emit("update:scroll", { topleft_x, topleft_y, center_x, center_y });
       this.saveStateToLocalStorage();
     },
-    handlePositionUpdate({ file, x, y }) {
-      // Clamp to >= 0 so all content stays within the canvas (no negative coords)
-      const clamped_x = Math.max(0, x);
-      const clamped_y = Math.max(0, y);
-      const old_x = file.x || 0;
-      const old_y = file.y || 0;
-      const delta_x = clamped_x - old_x;
-      const delta_y = clamped_y - old_y;
+    async handleDragEnd({ file: dragged_file, x, y, delta_x, delta_y }) {
+      // Commit the dragged file's final position into reactive state
+      this.$set(dragged_file, "x", x);
+      this.$set(dragged_file, "y", y);
 
-      this.$set(file, "x", clamped_x);
-      this.$set(file, "y", clamped_y);
-
-      // If multiple items are selected, move all of them by the same delta
+      // For multi-select: commit all other selected files' positions at once
       if (
         this.selected_files.length > 1 &&
-        this.selected_files.includes(file.$path)
+        this.selected_files.includes(dragged_file.$path)
       ) {
         for (const path of this.selected_files) {
-          if (path === file.$path) continue;
-          const other = this.files.find((f) => f.$path === path);
-          if (!other) continue;
-          const other_x = Math.max(0, (other.x || 0) + delta_x);
-          const other_y = Math.max(0, (other.y || 0) + delta_y);
-          const { width, height } = this.getFileDimensions(other);
-          const max_x = Math.max(0, this.canvas_width - width);
-          const max_y = Math.max(0, this.canvas_height - height);
-          this.$set(other, "x", Math.min(other_x, max_x));
-          this.$set(other, "y", Math.min(other_y, max_y));
-        }
-      }
-    },
-    async handleDragEnd({ file: dragged_file }) {
-      // Persist position for other selected files (the dragged file is saved by CanvasItemInteractive)
-      if (this.selected_files.length <= 1) return;
-      for (const path of this.selected_files) {
-        if (path === dragged_file.$path) continue;
-        const f = this.files.find((file) => file.$path === path);
-        if (!f) continue;
-        try {
-          await this.$api.updateMeta({
-            path: f.$path,
-            new_meta: { x: f.x || 0, y: f.y || 0 },
-          });
-        } catch (err) {
-          console.error("Failed to save canvas position:", err);
+          if (path === dragged_file.$path) continue;
+          const f = this.files.find((file) => file.$path === path);
+          if (!f) continue;
+          const new_x = Math.max(0, (f.x || 0) + delta_x);
+          const new_y = Math.max(0, (f.y || 0) + delta_y);
+          this.$set(f, "x", new_x);
+          this.$set(f, "y", new_y);
+          try {
+            await this.$api.updateMeta({
+              path: f.$path,
+              new_meta: { x: new_x, y: new_y },
+            });
+          } catch (err) {
+            console.error("Failed to save canvas position:", err);
+          }
         }
       }
     },
@@ -532,6 +513,16 @@ export default {
   inset: 0;
   overflow: hidden;
   background: #f9f9f9;
+
+  // Inset shadow painted in the viewport layer, not the 21000×10000 canvas layer
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 55px 0px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+  }
 }
 
 ._canvasContent {
@@ -542,7 +533,6 @@ export default {
   --background-color: white;
   --bg-size: 100px;
 
-  box-shadow: 0 0 55px 0px rgba(0, 0, 0, 0.1);
   overflow: visible;
 
   background-color: #ffffff;

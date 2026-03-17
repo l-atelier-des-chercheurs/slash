@@ -79,7 +79,7 @@ export default {
         {
           id: "audio",
           label: this.$t("audio"),
-          icon: "record-circle",
+          icon: "record-circle-fill",
           accept: "audio/*",
         },
         {

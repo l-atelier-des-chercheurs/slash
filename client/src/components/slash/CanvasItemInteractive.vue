@@ -139,6 +139,7 @@ export default {
     document.addEventListener("mouseup", this.handleMouseUp);
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
+    this.$eventHub.$on("canvas.dragMove", this.onOtherItemDragMove);
 
     // Retro compat: backfill height for canvas_shape without it
     if (
@@ -155,6 +156,7 @@ export default {
     document.removeEventListener("mouseup", this.handleMouseUp);
     document.removeEventListener("keydown", this.handleKeyDown);
     document.removeEventListener("keyup", this.handleKeyUp);
+    this.$eventHub.$off("canvas.dragMove", this.onOtherItemDragMove);
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
@@ -290,6 +292,12 @@ export default {
     },
     handleOpen() {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
+    },
+    onOtherItemDragMove({ source_path, total_dx, total_dy }) {
+      if (source_path === this.file.$path) return;
+      if (!this.is_selected) return;
+      this.currentX = Math.max(0, (this.file.x || 0) + total_dx);
+      this.currentY = Math.max(0, (this.file.y || 0) + total_dy);
     },
     handleMouseDown(event) {
       event.preventDefault();
@@ -427,11 +435,10 @@ export default {
       this.currentX = newX;
       this.currentY = newY;
 
-      // Emit position update
-      this.$emit("position-update", {
-        file: this.file,
-        x: this.currentX,
-        y: this.currentY,
+      this.$eventHub.$emit("canvas.dragMove", {
+        source_path: this.file.$path,
+        total_dx: newX - this.dragStartFileX,
+        total_dy: newY - this.dragStartFileY,
       });
     },
     handleMouseUp(event) {
@@ -472,7 +479,14 @@ export default {
         return;
       }
 
-      if (!this.isDragging) return;
+      if (!this.isDragging) {
+        // Clear position set by multi-select drag from another item
+        if (this.currentX !== null || this.currentY !== null) {
+          this.currentX = null;
+          this.currentY = null;
+        }
+        return;
+      }
 
       this.isDragging = false;
 
@@ -523,6 +537,8 @@ export default {
         file: this.file,
         x: finalX,
         y: finalY,
+        delta_x: finalX - this.dragStartFileX,
+        delta_y: finalY - this.dragStartFileY,
       });
 
       // Debounce API call
