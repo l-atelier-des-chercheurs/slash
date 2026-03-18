@@ -190,8 +190,13 @@ export default {
 
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
 
-      const ratio = this.file.$infos?.ratio;
-      let height = 160;
+      let ratio = this.file.$infos?.ratio;
+
+      if (!ratio && this.file.$type === "pdf") {
+        ratio = 9 / 16;
+      }
+
+      let height = 52;
       if (ratio) {
         height = width * ratio;
       } else if (this.file.$type === "canvas_shape") {
