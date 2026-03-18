@@ -662,13 +662,14 @@ export default {
 
   --background-color: white;
   --bg-size: 100px;
+  --dot-size: 1px;
 
   overflow: visible;
 
   background-color: #ffffff;
   background-image: radial-gradient(
     circle at center,
-    rgba(0, 0, 0, 0.22) 3px,
+    rgba(0, 0, 0, 0.22) var(--dot-size),
     transparent 4px
   );
   background-repeat: repeat;

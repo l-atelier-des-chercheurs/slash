@@ -24,6 +24,9 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
 
+      <div class="_canvasItem--caption" v-if="caption">
+        <span v-html="caption" />
+      </div>
       <!-- <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
         <b-icon icon="chat-left-text-fill" />
       </span> -->
@@ -64,8 +67,15 @@ export default {
       };
     },
     itemStyle() {
+      const author_color = this.$getFirstAuthorColor(this.file.$authors);
+
+      let style = {
+        "--author-color": author_color,
+      };
+
       if (this.mode === "grid") {
-        return { width: "100%", height: "100%" };
+        style.width = "100%";
+        style.height = "100%";
       }
       if (this.mode === "timeline") {
         // Timeline mode: flex layout
@@ -74,9 +84,7 @@ export default {
         const height =
           this.timelineHeight || (ratio ? width * ratio : null) || 200;
 
-        const style = {
-          width: `${width}px`,
-        };
+        style.width = `${width}px`;
 
         if (height !== null) {
           style.height = `${height}px`;
@@ -86,10 +94,11 @@ export default {
         if (this.file.$type === "image" && ratio) {
           style.aspectRatio = ratio;
         }
-
-        return style;
       }
-      return {};
+      return style;
+    },
+    caption() {
+      return this.$sanitize(this.file.caption);
     },
   },
   methods: {
@@ -238,5 +247,23 @@ export default {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+._canvasItem--caption {
+  position: absolute;
+  top: calc(var(--spacing) / 2);
+  left: calc(var(--spacing) / 2);
+  max-width: calc(100% - var(--spacing));
+  background: white;
+  padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
+  border-radius: var(--border-radius);
+
+  span {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 </style>

@@ -28,14 +28,6 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-const CITIES = [
-  { name: "Lisbon", lon: -9.1393, lat: 38.7223 },
-  { name: "Nantes", lon: -1.5536, lat: 47.2184 },
-  { name: "Innsbruck", lon: 11.4041, lat: 47.2692 },
-  { name: "Tunis", lon: 10.1815, lat: 36.8065 },
-  { name: "Tbilisi", lon: 44.8271, lat: 41.7151 },
-];
-
 export default {
   props: {
     files: {
@@ -210,35 +202,24 @@ export default {
       if (!this.files || !this.files.length) {
         return { type: "FeatureCollection", features: [] };
       }
-      const features = this.files.map((file, index) => {
-        const seed = this.hashCode(
-          file.$path || file.name || Math.random().toString()
-        );
-        const city = CITIES[Math.abs(seed) % CITIES.length];
+      const features = this.files
+        .map((file, index) => {
+          const coordinates = this.getFileCoordinates(file);
+          if (!coordinates) return null;
 
-        // Add jitter to coordinates so points don't stack exactly
-        // This allows them to separate at high zoom levels
-        const randomX = this.seededRandom(seed) - 0.5;
-        const randomY = this.seededRandom(seed + 1) - 0.5;
-        const jitter = 0.05; // approx 5km
+          return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              // MapLibre expects [longitude, latitude]
+              coordinates,
+            },
+            properties: { index },
+          };
+        })
+        .filter(Boolean);
 
-        return {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [
-              city.lon + randomX * jitter,
-              city.lat + randomY * jitter,
-            ],
-          },
-          properties: { index },
-        };
-      });
       return { type: "FeatureCollection", features };
-    },
-    seededRandom(seed) {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
     },
     updateGeoJSON() {
       if (!this.map || !this.map.getSource("points")) return;
@@ -248,14 +229,16 @@ export default {
       this.selectedFile = null;
       this.popupLngLat = null;
     },
-    hashCode(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = (hash << 5) - hash + char;
-        hash = hash & hash;
-      }
-      return hash;
+    getFileCoordinates(file) {
+      const latitude = file?.$location?.latitude ?? file?.$location?.lat;
+      const longitude = file?.$location?.longitude ?? file?.$location?.lon;
+
+      // Ensure we only return real, finite numbers.
+      const lat = Number(latitude);
+      const lon = Number(longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+      return [lon, lat];
     },
   },
 };
