@@ -588,7 +588,10 @@ export default {
 ._canvasItem {
   --shadow-size: 5px;
   --selected-border-width: max(calc(3px / var(--scale-factor)), 3px);
-  --selected-border-color: var(--active-color, var(--c-gris_fonce));
+  --selected-border-color: var(
+    --author-color,
+    var(--active-color, var(--c-gris_fonce))
+  );
 
   position: absolute;
   width: 160px;
@@ -713,6 +716,8 @@ export default {
     inset: 0;
     opacity: 0;
     outline: var(--selected-border-width) solid var(--selected-border-color);
+    // outline-offset: 0.25rem;
+    border-radius: var(--border-radius);
     pointer-events: none;
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
   }

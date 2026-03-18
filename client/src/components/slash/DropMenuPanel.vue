@@ -73,6 +73,7 @@ export default {
   },
   data() {
     return {
+      panel_uid: `dropmenu-${Math.random().toString(36).slice(2, 10)}`,
       typeRows: [
         // { id: "text", label: this.$t("text"), icon: "file-earmark-text" },
         // { id: "embed", label: this.$t("embed"), icon: "puzzle" },
@@ -111,7 +112,7 @@ export default {
   },
   methods: {
     inputId(row) {
-      return `_dropMenu--file-${row.id}`;
+      return `_dropMenu--file-${this.panel_uid}-${row.id}`;
     },
     onFileSelect($event, row) {
       const files = Array.from($event.target.files || []);
@@ -122,20 +123,34 @@ export default {
     },
     async handleLabelClick(row) {
       if (row.id === "text") {
-        const requested_slug = `shape`;
-
+        const filename = `text-${+new Date()}.txt`;
         const additional_meta = {
-          $type: "canvas_text",
-          text: "Default",
           x: this.additional_meta?.x,
           y: this.additional_meta?.y,
-          requested_slug,
+          width: this.additional_meta?.width,
         };
-        await this.$api.uploadFile({
-          $type: "canvas_text",
+        if (this.connected_as?.$path) {
+          additional_meta.$authors = [this.connected_as.$path];
+        }
+
+        const { meta_filename } = await this.$api.uploadText({
           path: this.folder_path,
+          filename,
           additional_meta,
         });
+
+        const path = `${this.folder_path}/${meta_filename}`;
+        this.$eventHub.$emit("canvasItem.openWithTransition", path);
+        this.$nextTick(() => {
+          // Trigger once when modal is likely mounted, then retry once for safety.
+          setTimeout(() => {
+            this.$eventHub.$emit(`media.enableEditor.${path}`);
+          }, 350);
+          setTimeout(() => {
+            this.$eventHub.$emit(`media.enableEditor.${path}`);
+          }, 900);
+        });
+
         this.$emit("close");
       }
     },

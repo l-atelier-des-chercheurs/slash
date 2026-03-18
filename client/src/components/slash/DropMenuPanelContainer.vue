@@ -25,6 +25,7 @@
       :additional_meta="additional_meta"
       @close="handleClose"
     />
+    {{ additional_meta }}
   </div>
 </template>
 <script>
@@ -100,6 +101,7 @@ export default {
 
   top: 0;
   left: 0;
+  border-top-left-radius: 0;
   width: 320px;
 
   transform-origin: top left;
@@ -124,7 +126,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: calc(var(--spacing) / 2);
-  margin-bottom: calc(var(--spacing) / 2);
+  margin-bottom: calc(var(--spacing) / 4);
 
   button {
   }

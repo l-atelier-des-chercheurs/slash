@@ -89,6 +89,7 @@
           :context="'full'"
           :show_fs_button="true"
           :zoom_on_click="false"
+          :can_edit="true"
         />
       </div>
     </div>
@@ -224,6 +225,12 @@ export default {
       width: 100%;
       height: 100%;
       overflow: hidden;
+
+      &[data-filetype="text"] {
+        padding: calc(var(--spacing) * 1);
+        overflow: auto;
+        align-items: flex-start;
+      }
 
       ._mediaContent--image {
         position: absolute;

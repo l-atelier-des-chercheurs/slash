@@ -24,8 +24,8 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
 
-      <div class="_canvasItem--caption" v-if="caption">
-        <span v-html="caption" />
+      <div class="_canvasItem--caption">
+        <span v-if="caption" v-html="caption" />
       </div>
       <!-- <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
         <b-icon icon="chat-left-text-fill" />
@@ -145,6 +145,10 @@ export default {
     overflow: hidden;
   }
 
+  &[data-filetype="text"] {
+    padding: calc(var(--spacing) * 1);
+  }
+
   ::v-deep .plyr__controls {
     border-radius: var(--border-radius, 4px);
     padding-right: calc(var(--spacing) * 3);
@@ -253,10 +257,15 @@ export default {
   position: absolute;
   top: calc(var(--spacing) / 2);
   left: calc(var(--spacing) / 2);
-  max-width: calc(100% - var(--spacing));
-  background: white;
-  padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
+  max-width: calc(100% - var(--spacing) * 1);
+  background: var(--author-color);
+  color: white;
+  padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
+
+  &:empty {
+    padding: calc(var(--spacing) / 4);
+  }
 
   span {
     display: block;

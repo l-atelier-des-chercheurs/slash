@@ -19,31 +19,6 @@
         :additional_meta="additional_meta"
         :show_labels="false"
       />
-
-      <!-- <button
-        class="u-button u-button_transparent _dropMenu--openButton"
-        :title="$t('import')"
-        @click="openFileImport()"
-      >
-        <b-icon icon="plus" scale="1.5" />
-      </button>
-      <input
-        ref="file_input"
-        type="file"
-        class="_dropMenu--fileInput"
-        accept="*/*"
-        multiple
-        @change="onFileSelect"
-      />
-      <UploadFiles
-        v-if="files_to_import.length > 0"
-        :files_to_import="files_to_import"
-        :path="folder_path"
-        :allow_caption_edition="true"
-        :additional_meta="additional_meta"
-        @importedMedias="$emit('importedMedias', $event)"
-        @close="files_to_import = []"
-      /> -->
     </div>
   </div>
 </template>

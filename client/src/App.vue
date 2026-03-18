@@ -189,7 +189,7 @@ export default {
   --c-barbgcolor: rgba(255, 255, 255, 0);
   --c-thumbcolor: black;
   --label-color: var(--c-gris_fonce);
-  --border-radius: 8px;
+  --border-radius: 1rem;
 
   --input-font-family: inherit;
   --input-font-size: var(--sl-font-size-normal);

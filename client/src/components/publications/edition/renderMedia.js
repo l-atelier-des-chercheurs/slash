@@ -78,7 +78,8 @@ function renderMediaHTML({
       return `<img src="${src}"${alt_attr}${img_style_attr} />`;
     case "embed":
       // External embed (e.g. PeerTube, YouTube) as iframe in HTML view
-      const embed_style = iframe_style_attr || ' style="width: 100%; min-height: 400px;"';
+      const embed_style =
+        iframe_style_attr || ' style="width: 100%; min-height: 400px;"';
       return `<iframe src="${src}" frameborder="0" allowfullscreen${embed_style}></iframe>`;
     case "text":
       return media?.$content || "";

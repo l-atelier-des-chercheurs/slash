@@ -148,6 +148,8 @@
   </BaseModal2>
 </template>
 <script>
+import randomcolor from "randomcolor";
+
 export default {
   props: {},
   components: {},
@@ -209,13 +211,10 @@ export default {
       );
     },
     suggested_colors() {
-      return [
-        "hsl(227, 63%, 61%)",
-        "#52c5b9",
-        "#ffbe32",
-        "#fc4b60",
-        "transparent",
-      ];
+      return randomcolor({
+        luminosity: "light",
+        count: 25,
+      });
     },
   },
   methods: {
