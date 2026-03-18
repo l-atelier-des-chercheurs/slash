@@ -25,7 +25,6 @@
       :additional_meta="additional_meta"
       @close="handleClose"
     />
-    {{ additional_meta }}
   </div>
 </template>
 <script>

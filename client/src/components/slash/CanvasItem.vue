@@ -4,7 +4,7 @@
     :class="wrapperClasses"
     :style="itemStyle"
   >
-    <div class="_canvasItem--shadow" />
+    <!-- <div class="_canvasItem--shadow" /> -->
 
     <div
       class="_canvasItem--content"
@@ -140,6 +140,9 @@ export default {
   width: 100%;
   cursor: pointer;
 
+  background: var(--author-color, var(--c-gris_fonce));
+  // color: white;
+
   &:not([data-filetype="audio"]) {
     // not audio because we need to keep the controls tooltip when hovering the seek bar
     overflow: hidden;
@@ -147,6 +150,10 @@ export default {
 
   &[data-filetype="text"] {
     padding: calc(var(--spacing) * 1);
+
+    ._mediaContent {
+      align-items: flex-start;
+    }
   }
 
   ::v-deep .plyr__controls {
@@ -259,7 +266,7 @@ export default {
   left: calc(var(--spacing) / 2);
   max-width: calc(100% - var(--spacing) * 1);
   background: var(--author-color);
-  color: white;
+  // color: white;
   padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
 
