@@ -45,6 +45,14 @@ export default {
       type: Number,
       default: 1,
     },
+    initial_topleft_x: {
+      type: Number,
+      default: 0,
+    },
+    initial_topleft_y: {
+      type: Number,
+      default: 0,
+    },
     zoom_range: {
       type: Array,
       default: () => [0.01, 1],
@@ -95,8 +103,10 @@ export default {
       pinch_start_zoom: 1,
 
       debounce_interaction: undefined,
+      zoom_center_transition_timeout: null,
 
       resize_observer: null,
+      initial_view_applied: false,
     };
   },
   computed: {
@@ -158,9 +168,12 @@ export default {
     this.$eventHub.$on(`panzoom.panTo`, this.panTo);
 
     this.updateWrapperSize();
+    this.applyInitialTopLeft();
     const wrapper = this.$refs.wrapper;
     if (wrapper && typeof ResizeObserver !== "undefined") {
-      this.resize_observer = new ResizeObserver(() => this.updateWrapperSize());
+      this.resize_observer = new ResizeObserver(() => {
+        this.updateWrapperSize();
+      });
       this.resize_observer.observe(wrapper);
     }
   },
@@ -175,10 +188,33 @@ export default {
     if (this.debounce_interaction) {
       clearTimeout(this.debounce_interaction);
     }
+    this.cancelZoomAndCenterTransition();
 
     this.$eventHub.$off(`panzoom.panTo`, this.panTo);
   },
   methods: {
+    cancelZoomAndCenterTransition() {
+      if (this.zoom_center_transition_timeout) {
+        clearTimeout(this.zoom_center_transition_timeout);
+        this.zoom_center_transition_timeout = null;
+      }
+      const viewport = this.$refs.viewport;
+      if (viewport) {
+        viewport.style.transition = "none";
+      }
+    },
+    applyInitialTopLeft() {
+      if (this.initial_view_applied) return;
+      if (!Number.isFinite(this.initial_topleft_x)) return;
+      if (!Number.isFinite(this.initial_topleft_y)) return;
+
+      const zoom = this.current_zoom || this.zoom || 1;
+      this.scroll_left = this.initial_topleft_x * zoom;
+      this.scroll_top = this.initial_topleft_y * zoom;
+      this.clampScroll();
+      this.initial_view_applied = true;
+      this.handleInteractionEnd();
+    },
     getContentPointFromClient(client_x, client_y) {
       const wrapper = this.$refs.wrapper;
       const zoom = this.current_zoom || 1;
@@ -201,6 +237,7 @@ export default {
     },
     onMouseDown(event) {
       if (event.button !== 0) return;
+      this.cancelZoomAndCenterTransition();
 
       // Cmd-drag should zoom instead of panning
       if (event.metaKey) {
@@ -294,6 +331,7 @@ export default {
       this.handleInteractionEnd();
     },
     onWheel(event) {
+      this.cancelZoomAndCenterTransition();
       // Cmd + wheel = zoom (instead of wheel-pan)
       if (event.metaKey) {
         const zoom_delta = -event.deltaY * 0.005;
@@ -345,6 +383,7 @@ export default {
       this.handleInteractionEnd();
     },
     onTouchStart(event) {
+      this.cancelZoomAndCenterTransition();
       const touches = event.touches;
 
       // Two-finger pinch start
@@ -595,19 +634,54 @@ export default {
     },
     zoomAndCenterTo(content_x, content_y, zoom, options = {}) {
       if (!zoom) return;
+      this.cancelZoomAndCenterTransition();
 
       const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
       const clamped = Math.min(Math.max(zoom, min_zoom), max_zoom);
 
-      const duration = 1.5;
+      const duration = 0.5;
       this.$refs.viewport.style.transition = `all ${duration}s cubic-bezier(0.19, 1, 0.22, 1)`;
-      setTimeout(() => {
-        this.$refs.viewport.style.transition = "none";
+      this.zoom_center_transition_timeout = setTimeout(() => {
+        this.zoom_center_transition_timeout = null;
+        if (this.$refs.viewport) {
+          this.$refs.viewport.style.transition = "none";
+        }
       }, duration * 1000);
 
       this.current_zoom = clamped;
       this.scroll_left = (content_x || 0) * clamped - this.wrapper_ow / 2;
       this.scroll_top = (content_y || 0) * clamped - this.wrapper_oh / 2;
+      this.clampScroll();
+
+      if (options.emit !== false) {
+        this.handleInteractionEnd();
+      }
+    },
+    zoomAndPanToClientPoint(client_x, client_y, zoom, options = {}) {
+      if (!zoom) return;
+      this.cancelZoomAndCenterTransition();
+
+      const viewport_el = this.$refs.viewport;
+      if (!viewport_el) return;
+
+      const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
+      const clamped = Math.min(Math.max(zoom, min_zoom), max_zoom);
+
+      const { content_x, content_y, offset_x, offset_y } =
+        this.getContentPointFromClient(client_x, client_y);
+
+      const duration = 0.35;
+      viewport_el.style.transition = `all ${duration}s cubic-bezier(0.19, 1, 0.22, 1)`;
+      this.zoom_center_transition_timeout = setTimeout(() => {
+        this.zoom_center_transition_timeout = null;
+        if (this.$refs.viewport) {
+          this.$refs.viewport.style.transition = "none";
+        }
+      }, duration * 1000);
+
+      this.current_zoom = clamped;
+      this.scroll_left = (content_x || 0) * clamped - offset_x;
+      this.scroll_top = (content_y || 0) * clamped - offset_y;
       this.clampScroll();
 
       if (options.emit !== false) {

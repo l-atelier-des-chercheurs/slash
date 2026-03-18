@@ -3,6 +3,8 @@
     <SlashPanZoom2
       ref="viewer"
       :zoom="zoom"
+      :initial_topleft_x="initial_topleft_x"
+      :initial_topleft_y="initial_topleft_y"
       :zoom_range="zoom_range"
       :content_width="canvas_width"
       :content_height="canvas_height"
@@ -122,6 +124,8 @@ export default {
     return {
       canvas_topleft_x: 0,
       canvas_topleft_y: 0,
+      initial_topleft_x: 0,
+      initial_topleft_y: 0,
 
       canvas_clicked_x: null,
       canvas_clicked_y: null,
@@ -192,7 +196,9 @@ export default {
       );
     },
     additional_meta() {
-      if (!this.canvas_clicked_x || !this.canvas_clicked_y) return null;
+      // Allow 0 coordinates (top/left edge clicks).
+      if (this.canvas_clicked_x == null || this.canvas_clicked_y == null)
+        return null;
 
       const base_width = 640;
 
@@ -264,8 +270,10 @@ export default {
       };
     },
   },
-  mounted() {
+  created() {
     this.restoreStateFromLocalStorage();
+  },
+  mounted() {
     this.$eventHub.$on("canvas.dragEnd", this.handleDragEnd);
     window.addEventListener("keydown", this.handleGlobalKeydown);
   },
@@ -352,29 +360,33 @@ export default {
         return;
       }
 
-      if (this.canvas_clicked_x !== null && this.canvas_clicked_y !== null) {
-        this.canvas_clicked_x = null;
-        this.canvas_clicked_y = null;
-        this.show_drop_menu = false;
-        return;
-      } else {
-        this.canvas_clicked_x = event.offsetX;
-        this.canvas_clicked_y = event.offsetY;
-        this.show_drop_menu = true;
+      // if (this.canvas_clicked_x !== null && this.canvas_clicked_y !== null) {
+      //   this.canvas_clicked_x = null;
+      //   this.canvas_clicked_y = null;
+      //   this.show_drop_menu = false;
+      //   return;
+      // } else {
+      const coords = this.getCanvasCoordinatesFromEvent(event);
+      if (!coords) return;
+      this.canvas_clicked_x = coords.x;
+      this.canvas_clicked_y = coords.y;
+      this.show_drop_menu = true;
 
-        // Zoom to scale 1 and center the canvas on (canvas_clicked_x, canvas_clicked_y)
-        this.$nextTick(() => {
-          if (this.$refs.viewer && this.$refs.viewer.zoomAndCenterTo) {
-            this.$refs.viewer.zoomAndCenterTo(
-              this.canvas_clicked_x,
-              this.canvas_clicked_y,
-              1
-            );
-          }
-        });
+      // Zoom to scale 1 while keeping the clicked point under the mouse.
+      const click_client_x = event.clientX;
+      const click_client_y = event.clientY;
+      this.$nextTick(() => {
+        if (this.$refs.viewer && this.$refs.viewer.zoomAndPanToClientPoint) {
+          this.$refs.viewer.zoomAndPanToClientPoint(
+            click_client_x,
+            click_client_y,
+            1
+          );
+        }
+      });
 
-        return;
-      }
+      return;
+      // }
     },
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;
@@ -545,27 +557,29 @@ export default {
         const storedState = localStorage.getItem(this.getStorageKey());
         if (storedState) {
           const state = JSON.parse(storedState);
-          if (state.zoom) {
+          if (typeof state.zoom === "number" && Number.isFinite(state.zoom)) {
             this.$emit("update:zoom", state.zoom);
+          }
+          if (
+            typeof state.topleft_x === "number" &&
+            Number.isFinite(state.topleft_x) &&
+            typeof state.topleft_y === "number" &&
+            Number.isFinite(state.topleft_y)
+          ) {
+            this.canvas_topleft_x = state.topleft_x;
+            this.canvas_topleft_y = state.topleft_y;
+            this.initial_topleft_x = state.topleft_x;
+            this.initial_topleft_y = state.topleft_y;
+            return;
           }
         }
       } catch (err) {
         console.error("Failed to restore canvas state:", err);
       }
-      this.centerOnOrigin();
-    },
-    centerOnOrigin() {
-      // Start at canvas origin (0,0) so content is visible; all content is clamped to >= 0
-      this.$nextTick(() => {
-        if (this.$refs.viewer && this.$refs.viewer.scrollTo) {
-          setTimeout(() => {
-            this.$refs.viewer.scrollTo(0, 0, {
-              duration: 0,
-              absolute: true,
-            });
-          }, 100);
-        }
-      });
+      this.canvas_topleft_x = 0;
+      this.canvas_topleft_y = 0;
+      this.initial_topleft_x = 0;
+      this.initial_topleft_y = 0;
     },
 
     getCanvasCoordinatesFromEvent(event) {
@@ -591,6 +605,26 @@ export default {
         return null;
       }
 
+      // Prefer the viewer's own coordinate conversion to avoid mismatches.
+      if (
+        this.$refs.viewer &&
+        typeof this.$refs.viewer.getContentPointFromClient === "function"
+      ) {
+        const { content_x, content_y } =
+          this.$refs.viewer.getContentPointFromClient(
+            pointer_event.clientX,
+            pointer_event.clientY
+          );
+        const clamped_x = Math.round(
+          Math.max(0, Math.min(content_x, this.canvas_width))
+        );
+        const clamped_y = Math.round(
+          Math.max(0, Math.min(content_y, this.canvas_height))
+        );
+        return { x: clamped_x, y: clamped_y };
+      }
+
+      // Fallback: older math (kept for safety if viewer ref is missing).
       const zoom = this.zoom;
       const scroll_left = this.canvas_topleft_x;
       const scroll_top = this.canvas_topleft_y;
@@ -602,8 +636,10 @@ export default {
       const x = scroll_left + mouse_screen_x / zoom;
       const y = scroll_top + mouse_screen_y / zoom;
 
-      const clamped_x = Math.max(0, Math.min(x, this.canvas_width));
-      const clamped_y = Math.max(0, Math.min(y, this.canvas_height));
+      const clamped_x = Math.round(Math.max(0, Math.min(x, this.canvas_width)));
+      const clamped_y = Math.round(
+        Math.max(0, Math.min(y, this.canvas_height))
+      );
 
       return { x: clamped_x, y: clamped_y };
     },
