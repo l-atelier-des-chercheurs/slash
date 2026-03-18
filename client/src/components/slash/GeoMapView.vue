@@ -10,11 +10,7 @@
       <div class="_geoMapView--popupContent" v-if="selectedFile">
         <button class="_geoMapView--closePopup" @click="closePopup">×</button>
         <div class="_geoMapView--media">
-          <MediaContent
-            :file="selectedFile"
-            :context="'full'"
-            :resolution="320"
-          />
+          <CanvasItem :file="selectedFile" :resolution="320" />
         </div>
         <div class="_geoMapView--info">
           {{ selectedFile.name }}
@@ -27,6 +23,7 @@
 <script>
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import CanvasItem from "./CanvasItem.vue";
 
 export default {
   props: {
@@ -35,6 +32,7 @@ export default {
       default: () => [],
     },
   },
+  components: { CanvasItem },
   data() {
     return {
       map: null,
