@@ -116,6 +116,7 @@ export default function () {
         this.socket.on("fileCreated", this.fileCreated);
         this.socket.on("fileUpdated", this.fileUpdated);
         this.socket.on("fileRemoved", this.fileRemoved);
+        this.socket.on("filesRemoved", this.filesRemoved);
 
         this.socket.on("taskStatus", this.taskStatus);
         this.socket.on("taskEnded", this.taskEnded);
@@ -325,10 +326,15 @@ export default function () {
         if (
           Object.prototype.hasOwnProperty.call(this.store, parent_folder_path)
         ) {
-          const folder_to_update = this.store[parent_folder_path].find(
-            (f) => f.$path === folder_path
-          );
-          this.updateProps({ changed_data, folder_to_update });
+          const parent_folder = this.store[parent_folder_path];
+          if (Array.isArray(parent_folder)) {
+            const folder_to_update = parent_folder.find(
+              (f) => f.$path === folder_path
+            );
+            if (folder_to_update) {
+              this.updateProps({ changed_data, folder_to_update });
+            }
+          }
         }
       },
       folderRemoved({ path, path_to_folder }) {
@@ -348,11 +354,13 @@ export default function () {
         if (
           Object.prototype.hasOwnProperty.call(this.store, parent_folder_path)
         ) {
-          const folder_index = this.store[parent_folder_path].findIndex(
-            (f) => f.$path === folder_path
-          );
-          if (folder_index !== -1)
-            this.store[parent_folder_path].splice(folder_index, 1);
+          const parent_folder = this.store[parent_folder_path];
+          if (Array.isArray(parent_folder)) {
+            const folder_index = parent_folder.findIndex(
+              (f) => f.$path === folder_path
+            );
+            if (folder_index !== -1) parent_folder.splice(folder_index, 1);
+          }
         }
 
         this.$eventHub.$emit("folder.removed", { path: folder_path });
@@ -379,8 +387,17 @@ export default function () {
       },
       fileRemoved({ path_to_folder, path_to_meta }) {
         const folder = this.store[path_to_folder];
+        if (!folder) return;
         folder.$files = folder.$files.filter(
           (file) => file.$path !== path_to_meta
+        );
+      },
+      filesRemoved({ path_to_folder, paths_to_meta }) {
+        const folder = this.store[path_to_folder];
+        if (!folder) return;
+        const removed = new Set(paths_to_meta);
+        folder.$files = folder.$files.filter(
+          (file) => !removed.has(file.$path)
         );
       },
 
@@ -858,6 +875,20 @@ export default function () {
         });
         this.$eventHub.$emit("hooks.deleteItem", { path });
         return response.data;
+      },
+      async deleteItems({ path, meta_filenames }) {
+        const response = await this.$axios
+          .post(`${path}/_removefiles`, { meta_filenames })
+          .catch((err) => {
+            throw this.processError(err);
+          });
+        const { success, failed } = response.data;
+        this.$eventHub.$emit("hooks.deleteItems", { path, success, failed });
+        if (failed.length > 0)
+          this.$alertify
+            .delay(4000)
+            .error(`${failed.length} file(s) could not be deleted.`);
+        return { success, failed };
       },
 
       resetToken() {
