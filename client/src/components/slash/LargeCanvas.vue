@@ -20,6 +20,7 @@
           height: `${canvas_height}px`,
           backgroundImage: zoom > 0.25 ? undefined : 'none',
         }"
+        @mousedown.self="startLasso"
         @click.self="handleCanvasClick"
       >
         <CanvasItemInteractive
@@ -55,6 +56,16 @@
             @close="show_drop_menu = false"
           />
         </transition>
+        <div
+          v-if="lasso_rect"
+          class="_lassoRect"
+          :style="{
+            left: lasso_rect.x + 'px',
+            top: lasso_rect.y + 'px',
+            width: lasso_rect.width + 'px',
+            height: lasso_rect.height + 'px',
+          }"
+        />
       </div>
       <!-- <div
         class="_currentCenterDot"
@@ -139,6 +150,11 @@ export default {
       },
       viewport_throttle_timer: null,
       viewport_throttle_last: 0,
+
+      lasso_start: null,
+      lasso_end: null,
+      lasso_active: false,
+      lasso_dragged: false,
     };
   },
   computed: {
@@ -234,6 +250,18 @@ export default {
         ? this.selected_files
         : [];
     },
+    lasso_rect() {
+      if (!this.lasso_active || !this.lasso_start || !this.lasso_end)
+        return null;
+      const x = Math.min(this.lasso_start.x, this.lasso_end.x);
+      const y = Math.min(this.lasso_start.y, this.lasso_end.y);
+      return {
+        x,
+        y,
+        width: Math.abs(this.lasso_end.x - this.lasso_start.x),
+        height: Math.abs(this.lasso_end.y - this.lasso_start.y),
+      };
+    },
   },
   mounted() {
     this.restoreStateFromLocalStorage();
@@ -243,6 +271,8 @@ export default {
   beforeDestroy() {
     this.$eventHub.$off("canvas.dragEnd", this.handleDragEnd);
     window.removeEventListener("keydown", this.handleGlobalKeydown);
+    window.removeEventListener("mousemove", this.updateLasso);
+    window.removeEventListener("mouseup", this.endLasso);
     if (this.viewport_throttle_timer)
       clearTimeout(this.viewport_throttle_timer);
   },
@@ -282,23 +312,33 @@ export default {
     async removeSelectedFiles() {
       const paths = [...this.selected_files];
       this.selected_files = [];
-      for (const path of paths) {
-        try {
-          await this.$api.deleteItem({ path });
-        } catch (err) {
-          console.error("Failed to delete:", path, err);
-        }
+      if (paths.length === 0) return;
+
+      const meta_filenames = paths.map((p) => p.split("/").pop());
+      try {
+        await this.$api.deleteItems({
+          path_to_folder: this.folder_path,
+          meta_filenames,
+        });
+      } catch (err) {
+        console.error("Failed to delete items:", err);
+        return;
       }
-      if (paths.length > 0) {
-        this.$alertify
-          .closeLogOnClick(true)
-          .delay(4000)
-          .success(this.$t("removed_successfully"));
-        this.$emit("items-removed", paths);
-      }
+
+      this.$alertify
+        .closeLogOnClick(true)
+        .delay(4000)
+        .success(this.$t("removed_successfully"));
+      this.$emit("items-removed", paths);
     },
     handleCanvasClick(event) {
       if (this.current_mode !== "select") return;
+
+      // A lasso drag just ended — don't open the drop menu
+      if (this.lasso_dragged) {
+        this.lasso_dragged = false;
+        return;
+      }
 
       if (event.metaKey || event.shiftKey) {
         return;
@@ -339,6 +379,60 @@ export default {
       } else {
         this.selected_files = [file_path];
       }
+    },
+    startLasso(event) {
+      if (this.current_mode !== "select") return;
+      const coords = this.getCanvasCoordinatesFromEvent(event);
+      if (!coords) return;
+      this.lasso_start = coords;
+      this.lasso_end = coords;
+      this.lasso_active = false;
+      this.lasso_dragged = false;
+      window.addEventListener("mousemove", this.updateLasso);
+      window.addEventListener("mouseup", this.endLasso);
+    },
+    updateLasso(event) {
+      if (!this.lasso_start) return;
+      const coords = this.getCanvasCoordinatesFromEvent(event);
+      if (!coords) return;
+      const threshold = 5 / (this.zoom || 1);
+      const dx = coords.x - this.lasso_start.x;
+      const dy = coords.y - this.lasso_start.y;
+      if (!this.lasso_active && Math.hypot(dx, dy) > threshold) {
+        this.lasso_active = true;
+        this.lasso_dragged = true;
+        this.show_drop_menu = false;
+      }
+      if (this.lasso_active) {
+        this.lasso_end = coords;
+        this.applyLassoSelection();
+      }
+    },
+    applyLassoSelection() {
+      const rect = this.lasso_rect;
+      if (!rect) return;
+      const selected = [];
+      for (const file of this.files) {
+        const { width, height } = this.getFileDimensions(file);
+        const x = file.x || 0;
+        const y = file.y || 0;
+        if (
+          x < rect.x + rect.width &&
+          x + width > rect.x &&
+          y < rect.y + rect.height &&
+          y + height > rect.y
+        ) {
+          selected.push(file.$path);
+        }
+      }
+      this.selected_files = selected;
+    },
+    endLasso() {
+      window.removeEventListener("mousemove", this.updateLasso);
+      window.removeEventListener("mouseup", this.endLasso);
+      this.lasso_active = false;
+      this.lasso_start = null;
+      this.lasso_end = null;
     },
     handleViewportChange(pct) {
       this.$eventHub.$emit("canvas.viewportChange", pct);
@@ -551,6 +645,15 @@ export default {
 ._canvasContent[data-mode="draw"] {
   cursor: crosshair;
   user-select: none;
+}
+
+._lassoRect {
+  position: absolute;
+  border: 1.5px solid var(--c-orange);
+  background: rgba(var(--c-orange-rgb, 255, 120, 50), 0.08);
+  pointer-events: none;
+  z-index: 100;
+  border-radius: 3px;
 }
 
 ._currentCenterDot {
