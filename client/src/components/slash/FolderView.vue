@@ -250,131 +250,72 @@ export default {
       this.animateTransitions(firstPositions);
     },
     async closeItemModalWithTransition() {
-      const current_file = this.opened_file;
-      if (!current_file) {
-        this.closeItemModal();
-        return;
-      }
-
-      // 1. Capture positions of items in current view
-      const positions = this.capturePositions();
-      const target = positions.get(current_file.$path);
-
-      // If item is not visible in current view, just close without animation
-      if (!target) {
-        this.closeItemModal();
-        return;
-      }
-
-      // 2. Get modal media element (source state)
       const modalEl = this.$el.querySelector("._itemModal");
-      const mediaEl = modalEl
-        ? modalEl.querySelector("._file ._mediaContent")
-        : null;
-
-      if (!modalEl || !mediaEl) {
+      if (!modalEl) {
         this.closeItemModal();
         return;
       }
 
-      const first = mediaEl.getBoundingClientRect();
-      const last = target;
-      if (!first.width || !first.height || !last.width || !last.height) {
+      // Disable "between media" transform animations on close:
+      // keep only the modal fade-out.
+      const prefersReducedMotion = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)"
+      )?.matches;
+      if (prefersReducedMotion) {
         this.closeItemModal();
         return;
       }
 
-      // 3. Compute deltas from modal to item in view
-      const deltaX = last.left - first.left;
-      const deltaY = last.top - first.top;
-      // Use a uniform scale factor to avoid object-fit stretching artefacts
-      const scale = last.width / first.width;
-
-      // 4. Animate from identity to the target transform, then close
-      // Prepare modal for fade-out
+      // Ensure we start from visible state
       modalEl.style.opacity = "1";
 
-      mediaEl.style.transition = "none";
-      mediaEl.style.transformOrigin = "top left";
-      mediaEl.style.transform = "none";
-
-      // Force reflow
-      // eslint-disable-next-line no-unused-expressions
-      document.body.offsetHeight;
-
-      const onTransitionEnd = () => {
-        mediaEl.style.transition = "";
-        mediaEl.style.transform = "";
-        mediaEl.style.transformOrigin = "";
-        mediaEl.removeEventListener("transitionend", onTransitionEnd);
+      const onTransitionEnd = (event) => {
+        if (event?.propertyName && event.propertyName !== "opacity") return;
+        modalEl.removeEventListener("transitionend", onTransitionEnd);
         modalEl.style.opacity = "";
         this.closeItemModal();
       };
 
-      mediaEl.addEventListener("transitionend", onTransitionEnd);
+      modalEl.addEventListener("transitionend", onTransitionEnd);
 
+      // Allow styles to apply before triggering the transition.
       requestAnimationFrame(() => {
-        // Play both transform and modal fade-out
         modalEl.style.opacity = "0";
-        mediaEl.style.transition =
-          "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
-        mediaEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
       });
+
+      // Fallback: if transitionend doesn't fire for any reason.
+      setTimeout(() => {
+        if (!document.contains(modalEl)) return;
+        modalEl.removeEventListener("transitionend", onTransitionEnd);
+        modalEl.style.opacity = "";
+        this.closeItemModal();
+      }, 400);
     },
     async switchToFileWithTransition(path) {
-      // 1. Capture initial rect of clicked item in current view
-      const firstPositions = this.capturePositions();
+      // Only animate when opening the modal.
+      // When switching media while the modal is already open, swap instantly.
+      const modal_was_open = !!this.opened_file;
 
-      // 2. Find rect for this specific file
-      const first = firstPositions.get(path);
-      if (!first) {
-        // Fallback: no FLIP data, just open directly
-        this.openItemModal(path);
-        return;
-      }
-
-      // 3. Open modal (updates route)
       this.openItemModal(path);
 
-      // 4. Wait for modal to be in DOM and layout to settle
+      if (modal_was_open) return;
+
       await this.$nextTick();
       await new Promise((resolve) => requestAnimationFrame(resolve));
 
       const modalEl = this.$el.querySelector("._itemModal");
-      const mediaEl = modalEl
-        ? modalEl.querySelector("._file ._mediaContent")
-        : null;
-      if (!modalEl || !mediaEl) {
+      if (!modalEl) {
         return;
       }
 
-      // Prepare modal for fade-in
+      // Start hidden so CSS opacity transition can animate in.
       modalEl.style.opacity = "0";
-
-      const last = mediaEl.getBoundingClientRect();
-      if (!last.width || !last.height) return;
-
-      // 5. Compute deltas
-      const deltaX = first.left - last.left;
-      const deltaY = first.top - last.top;
-      // Use a uniform scale factor to avoid object-fit stretching artefacts
-      const scale = first.width / last.width;
-
-      // 6. Apply inverted transform and animate to identity
-      mediaEl.style.transition = "none";
-      mediaEl.style.transformOrigin = "top left";
-      mediaEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
-
-      // Force reflow
+      // Force reflow so the browser registers the initial opacity.
       // eslint-disable-next-line no-unused-expressions
-      document.body.offsetHeight;
+      void document.body.offsetHeight;
 
       requestAnimationFrame(() => {
-        // Play both transform and modal fade-in
         modalEl.style.opacity = "1";
-        mediaEl.style.transition =
-          "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
-        mediaEl.style.transform = "none";
       });
     },
     getViewContainer(mode) {

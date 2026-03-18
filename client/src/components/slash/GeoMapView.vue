@@ -171,7 +171,18 @@ export default {
           const feature = e.features[0];
           const index = feature.properties.index;
           if (index !== undefined && this.files[index]) {
-            this.selectedFile = this.files[index];
+            const file = this.files[index];
+            // Open the item modal right away (same mechanism as CanvasItem clicks).
+            if (file?.$path) {
+              this.$eventHub.$emit(
+                "canvasItem.openWithTransition",
+                file.$path
+              );
+              return;
+            }
+
+            // Fallback: show popup if the file has no path.
+            this.selectedFile = file;
             this.popupLngLat = feature.geometry.coordinates.slice();
           }
         });
