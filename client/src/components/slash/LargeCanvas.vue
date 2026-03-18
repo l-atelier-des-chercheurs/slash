@@ -129,10 +129,10 @@ export default {
       current_mode: "pan-zoom",
 
       min_canvas_width: 1600,
-      min_canvas_height: 1000,
+      min_canvas_height: 1600,
       max_canvas_width: 10000,
       max_canvas_height: 10000,
-      margin_around_content: 500,
+      margin_around_content: 800,
 
       lastLogTime: 0,
       saveStateTimeout: null,
@@ -169,6 +169,7 @@ export default {
         right_edge = Math.max(right_edge, x + width);
       });
       const cw = Math.round(right_edge + this.margin_around_content);
+
       return Math.min(
         Math.max(this.min_canvas_width, cw),
         this.max_canvas_width
@@ -315,9 +316,10 @@ export default {
       if (paths.length === 0) return;
 
       const meta_filenames = paths.map((p) => p.split("/").pop());
+      let result;
       try {
-        await this.$api.deleteItems({
-          path_to_folder: this.folder_path,
+        result = await this.$api.deleteItems({
+          path: this.folder_path,
           meta_filenames,
         });
       } catch (err) {
@@ -325,11 +327,14 @@ export default {
         return;
       }
 
-      this.$alertify
-        .closeLogOnClick(true)
-        .delay(4000)
-        .success(this.$t("removed_successfully"));
-      this.$emit("items-removed", paths);
+      const succeeded = result?.success ?? [];
+      if (succeeded.length > 0) {
+        this.$alertify
+          .closeLogOnClick(true)
+          .delay(4000)
+          .success(this.$t("removed_successfully"));
+        this.$emit("items-removed", paths);
+      }
     },
     handleCanvasClick(event) {
       if (this.current_mode !== "select") return;
@@ -636,6 +641,9 @@ export default {
 
   border-radius: 40px;
   outline: 10px solid var(--c-gris);
+
+  transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1),
+    height 0.3s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 ._largeCanvas[data-mode="draw"] {

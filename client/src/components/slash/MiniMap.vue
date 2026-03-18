@@ -297,7 +297,6 @@ export default {
       ctx.globalAlpha = 1;
     },
     drawViewport() {
-      console.log("drawViewport", new Date().toISOString());
       const canvas = this.$refs.viewportCanvas;
       if (!canvas || this.display_width <= 0 || this.display_height <= 0)
         return;

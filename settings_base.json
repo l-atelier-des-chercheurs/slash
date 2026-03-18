@@ -9,7 +9,7 @@
   "versioning": true,
   "tokenIsValidForXDays": 30,
 
-  "contentPath": "slash_docs",
+  "contentPath": "SLASH",
 
   "privateKeyPath": "",
   "certificatePath": "",

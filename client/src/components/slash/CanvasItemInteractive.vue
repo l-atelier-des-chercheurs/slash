@@ -178,8 +178,8 @@ export default {
       return this.file.shape_svg || "";
     },
     itemDimensions() {
-      const x = this.currentX !== null ? this.currentX : this.file.x || 0;
-      const y = this.currentY !== null ? this.currentY : this.file.y || 0;
+      let x = this.currentX !== null ? this.currentX : this.file.x || 0;
+      let y = this.currentY !== null ? this.currentY : this.file.y || 0;
       let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
@@ -190,27 +190,30 @@ export default {
 
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
 
+      const ratio = this.file.$infos?.ratio;
+      let height = 160;
+      if (ratio) {
+        height = width * ratio;
+      } else if (this.file.$type === "canvas_shape") {
+        if (this.file.height != null) {
+          height = width * (this.file.height / (this.file.width || 160));
+        } else if (this.file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(this.file.shape_points);
+          height = width * (bounds.height / bounds.width);
+        }
+      }
+
+      x = Math.min(x, this.canvas_width - width);
+      y = Math.min(y, this.canvas_height - height);
+
       const style = {
         left: `${x}px`,
         top: `${y}px`,
         width: `${width}px`,
+        height: `${height}px`,
         "--scale-factor": this.canvas_zoom,
         "--author-color": author_color,
       };
-
-      const ratio = this.file.$infos?.ratio;
-      if (ratio) {
-        style.height = `${width * ratio}px`;
-      } else if (this.file.$type === "canvas_shape") {
-        if (this.file.height != null) {
-          style.height = `${
-            width * (this.file.height / (this.file.width || 160))
-          }px`;
-        } else if (this.file.shape_points?.length >= 2) {
-          const bounds = getPointsBounds(this.file.shape_points);
-          style.height = `${width * (bounds.height / bounds.width)}px`;
-        }
-      }
 
       return style;
     },
