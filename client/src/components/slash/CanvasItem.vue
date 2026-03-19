@@ -12,11 +12,6 @@
       @click.stop="openItemModal"
       :data-file-path="file.$path"
     >
-      <!-- <div
-        class="_canvasItem--authorIndicator"
-        :style="{ backgroundColor: $getFirstAuthorColor(file.$authors) }"
-      /> -->
-
       <MediaContent
         :file="file"
         :context="'full'"
@@ -24,7 +19,7 @@
         :plyr_options="{ controls: ['play', 'progress'] }"
       />
 
-      <div class="_canvasItem--caption">
+      <div class="_canvasItem--caption" v-if="file.$type !== 'text'">
         <span v-if="caption" v-html="caption" />
       </div>
       <!-- <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
@@ -183,19 +178,6 @@ export default {
   }
 }
 
-._canvasItem--authorIndicator {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  z-index: 1;
-
-  transform-origin: top left;
-  transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
-}
-
 ._canvasItem--chatBubble {
   position: absolute;
   top: calc(var(--spacing) / 1);
@@ -244,12 +226,12 @@ export default {
   }
 
   ._canvasItem--content[data-filetype="text"] {
-    background-color: #fff9c4; /* Post-it yellow */
-    padding: 10px;
+    // background-color: #fff9c4; /* Post-it yellow */
+    // padding: 10px;
 
     ::v-deep ._mediaContent {
-      font-family: var(--sl-font-handwritten, cursive);
-      font-size: 1.1em;
+      // font-family: var(--sl-font-handwritten, cursive);
+      // font-size: 1.1em;
     }
   }
 }
@@ -269,6 +251,10 @@ export default {
   // color: white;
   padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
+  transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
+  transform-origin: top left;
+
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.15s;
 
   &:empty {
     padding: calc(var(--spacing) / 4);

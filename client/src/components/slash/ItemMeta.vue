@@ -6,7 +6,7 @@
 
     <hr class="_itemMeta--separator" />
 
-    <div class="u-spacingBottom">
+    <div class="u-spacingBottom" v-if="file.$type !== 'text'">
       <TitleField
         :label="$t('caption')"
         :field_name="'caption'"
