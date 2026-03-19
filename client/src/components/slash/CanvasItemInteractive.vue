@@ -169,11 +169,15 @@ export default {
       if (this.file.$type !== "canvas_shape") return "";
       if (this.file.shape_points && this.file.shape_points.length >= 2) {
         const w = this.file.width || 160;
+        const shape_stroke_width =
+          Number(this.file.shape_stroke_width) > 0
+            ? Number(this.file.shape_stroke_width)
+            : 5;
         const h =
           this.file.height != null && this.file.width
             ? w * (this.file.height / this.file.width)
             : undefined;
-        return shapePointsToSvg(this.file.shape_points, w, 4, h);
+        return shapePointsToSvg(this.file.shape_points, w, shape_stroke_width, h);
       }
       return this.file.shape_svg || "";
     },
@@ -797,7 +801,6 @@ export default {
       path {
         pointer-events: auto;
         pointer-events: visibleStroke;
-        stroke-width: var(--shapes-stroke-width, 5px);
         stroke: var(--author-color, black);
       }
 
@@ -808,10 +811,5 @@ export default {
     }
   }
 
-  &:hover {
-    ::v-deep path:not(.path-hitbox) {
-      stroke-width: 7px;
-    }
-  }
 }
 </style>

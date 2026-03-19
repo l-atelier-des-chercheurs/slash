@@ -157,6 +157,9 @@
             "shape_points": {
               "type": "array"
             },
+            "shape_stroke_width": {
+              "type": "number"
+            },
             "text": {
               "type": "string"
             }

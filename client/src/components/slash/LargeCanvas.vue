@@ -48,6 +48,7 @@
           :canvas_height="canvas_height"
           :folder_path="folder_path"
           :getCanvasCoords="getCanvasCoordinatesFromEvent"
+          :draw_stroke_width="draw_stroke_width"
         />
         <transition name="fade">
           <DropMenuPanelContainer
@@ -84,7 +85,10 @@
       :zoom="zoom"
       :selected_files="currently_selected_files"
     />
-    <LeftToolbar :current_mode.sync="current_mode" />
+    <LeftToolbar
+      :current_mode.sync="current_mode"
+      :draw_stroke_width.sync="draw_stroke_width"
+    />
     <FpsCounter />
   </div>
 </template>
@@ -159,6 +163,7 @@ export default {
       lasso_end: null,
       lasso_active: false,
       lasso_dragged: false,
+      draw_stroke_width: 5,
     };
   },
   computed: {
@@ -648,8 +653,6 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._largeCanvas {
-  --shapes-stroke-width: 5px;
-
   position: absolute;
   inset: 0;
   overflow: hidden;

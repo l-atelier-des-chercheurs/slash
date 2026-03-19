@@ -36,11 +36,11 @@ export default {
     canvas_height: { type: Number, required: true },
     folder_path: { type: String, default: "" },
     getCanvasCoords: { type: Function, required: true },
+    draw_stroke_width: { type: Number, default: 5 },
   },
   data() {
     return {
       draw_points: [],
-      draw_stroke_width: 4,
       draw_min_distance: 4,
     };
   },
@@ -211,6 +211,7 @@ export default {
       const additional_meta = {
         $type: "canvas_shape",
         shape_points: normalized_points,
+        shape_stroke_width: this.draw_stroke_width,
         x: Math.round(min_x),
         y: Math.round(min_y),
         width: rounded_width,
@@ -258,7 +259,6 @@ export default {
 
 ._drawPath {
   stroke: var(--current-author-color, var(--c-noir));
-  stroke-width: var(--shapes-stroke-width, 2px);
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;

@@ -44,6 +44,18 @@
         >
           <b-icon icon="pencil" />
         </button>
+        <div v-if="current_mode === 'draw'" class="_drawSizeMenu">
+          <button
+            v-for="option in draw_size_options"
+            :key="option.key"
+            type="button"
+            class="u-button _drawSizeMenu--btn"
+            :class="{ 'is--active': draw_stroke_width === option.width }"
+            @click="setDrawStrokeWidth(option.width)"
+          >
+            {{ option.key }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -56,6 +68,10 @@ export default {
       default: "pan-zoom",
       validator: (v) => ["pan-zoom", "draw", "select"].includes(v),
     },
+    draw_stroke_width: {
+      type: Number,
+      default: 5,
+    },
   },
   components: {},
   data() {
@@ -65,10 +81,23 @@ export default {
   mounted() {},
   beforeDestroy() {},
   watch: {},
-  computed: {},
+  computed: {
+    draw_size_options() {
+      return [
+        { key: "S", width: 3 },
+        { key: "M", width: 5 },
+        { key: "L", width: 7 },
+        { key: "XL", width: 10 },
+      ];
+    },
+  },
   methods: {
     selectMode(mode) {
       this.$emit("update:current_mode", mode);
+    },
+    setDrawStrokeWidth(width) {
+      if (!Number.isFinite(width)) return;
+      this.$emit("update:draw_stroke_width", width);
     },
   },
 };
@@ -97,5 +126,19 @@ export default {
   flex-direction: column;
   gap: calc(var(--spacing) / 4);
   pointer-events: auto;
+}
+
+._drawSizeMenu {
+  margin-top: calc(var(--spacing) / 3);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 5);
+}
+
+._drawSizeMenu--btn {
+  min-width: 2.2rem;
+  padding: calc(var(--spacing) / 4) calc(var(--spacing) / 3);
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-font-size-x-small);
 }
 </style>
