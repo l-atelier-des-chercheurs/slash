@@ -6,9 +6,9 @@
   >
     <div>
       <p class="u-spacingBottom">
-        Before using the app, please pick your name and structure/role so all
-        your contributions are credited to you. Choose an existing account or
-        create a new one below.
+        Before using the app, please pick your name so all your contributions
+        are credited to you. Choose an existing account or create a new one
+        below.
       </p>
 
       <div v-if="!is_logged_in">
@@ -171,16 +171,7 @@ export default {
       new_author_color: "",
 
       authors_from_api: [],
-      structure_role_options: [
-        "Artist",
-        "L’École de Design Nantes Atlantique",
-        "L’Art Rue",
-        "Casa De Capitão",
-        "Mutant Radio",
-        "OpenSpace",
-        "Trempo",
-        "Other",
-      ],
+      structure_role_options: ["Artist"],
       show_color_input: false,
     };
   },
