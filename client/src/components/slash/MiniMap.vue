@@ -1,6 +1,6 @@
 <template>
   <div
-    class="_miniMap u-overlayPanel"
+    class="u-overlayPanel _miniMap"
     v-if="effective_canvas_width > 0 && effective_canvas_height > 0"
     ref="container"
     @mousedown="handleMouseDown"
@@ -413,14 +413,16 @@ export default {
 
 <style lang="scss" scoped>
 ._miniMap {
+  // --border-radius: var(--border-radius);
+
   position: absolute;
   bottom: var(--fixed-ui-margins);
   left: var(--fixed-ui-margins);
   width: clamp(100px, 50vmin, 200px);
   z-index: 1000;
   cursor: pointer;
-  overflow: hidden;
   border-radius: var(--border-radius);
+  overflow: hidden;
 }
 
 ._canvasWrapper {
@@ -436,7 +438,7 @@ export default {
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: inherit;
+  border-radius: var(--border-radius);
 }
 
 ._viewportCanvas {
