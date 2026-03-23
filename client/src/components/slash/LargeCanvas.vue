@@ -515,8 +515,10 @@ export default {
       }
     },
     handleWidthUpdate({ file, width, height }) {
-      this.$set(file, "width", width);
-      if (file.$type === "canvas_shape" && height != null) {
+      if (width != null) {
+        this.$set(file, "width", width);
+      }
+      if (height != null) {
         this.$set(file, "height", height);
       }
     },
@@ -526,6 +528,8 @@ export default {
       let height;
       if (ratio !== undefined) {
         height = width * ratio;
+      } else if (file.$type === "canvas_text") {
+        height = file.height || 52;
       } else if (file.$type === "canvas_shape") {
         if (file.height != null && file.width) {
           height = file.height;

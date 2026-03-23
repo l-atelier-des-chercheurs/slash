@@ -251,8 +251,8 @@ export default {
   // color: white;
   padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
-  transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
-  transform-origin: top left;
+  //transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
+  // transform-origin: top left;
 
   transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.15s;
 

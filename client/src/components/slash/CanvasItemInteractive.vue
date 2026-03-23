@@ -43,7 +43,13 @@
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
-      @mousedown.stop="handleResizeStart"
+      @mousedown.stop="handleResizeStart($event, 'width')"
+    />
+    <div
+      v-if="file.$type === 'canvas_text' && is_selected"
+      class="_canvasItem--resizeHandle is--heightOnly"
+      :style="'--scale-factor: ' + canvas_zoom"
+      @mousedown.stop="handleResizeStart($event, 'height')"
     />
 
     <div
@@ -126,12 +132,18 @@ export default {
       currentX: null,
       currentY: null,
       currentWidth: null,
+      currentHeight: null,
       resizeStartX: 0,
+      resizeStartY: 0,
       resizeStartWidth: 0,
+      resizeStartHeight: 0,
+      resize_mode: "width",
       saveTimeout: null,
 
       item_min_width: 50,
       item_max_width: 1000,
+      item_min_height: 40,
+      item_max_height: 1000,
     };
   },
   mounted() {
@@ -165,6 +177,12 @@ export default {
     isWidthOnly() {
       return !this.file.$infos?.ratio;
     },
+    default_item_height() {
+      if (this.file.$type === "canvas_text") {
+        return this.file.height || 52;
+      }
+      return 52;
+    },
     display_shape_svg() {
       if (this.file.$type !== "canvas_shape") return "";
       if (this.file.shape_points && this.file.shape_points.length >= 2) {
@@ -177,7 +195,12 @@ export default {
           this.file.height != null && this.file.width
             ? w * (this.file.height / this.file.width)
             : undefined;
-        return shapePointsToSvg(this.file.shape_points, w, shape_stroke_width, h);
+        return shapePointsToSvg(
+          this.file.shape_points,
+          w,
+          shape_stroke_width,
+          h
+        );
       }
       return this.file.shape_svg || "";
     },
@@ -200,7 +223,7 @@ export default {
         ratio = 9 / 16;
       }
 
-      let height = 52;
+      let height = this.default_item_height;
       if (ratio) {
         height = width * ratio;
       } else if (this.file.$type === "canvas_shape") {
@@ -209,6 +232,15 @@ export default {
         } else if (this.file.shape_points?.length >= 2) {
           const bounds = getPointsBounds(this.file.shape_points);
           height = width * (bounds.height / bounds.width);
+        }
+      } else if (this.file.$type === "canvas_text") {
+        const target_height =
+          this.currentHeight !== null ? this.currentHeight : this.file.height;
+        if (target_height != null) {
+          height = Math.min(
+            this.item_max_height,
+            Math.max(this.item_min_height, target_height)
+          );
         }
       }
 
@@ -291,16 +323,43 @@ export default {
         this.shift_or_cmd_pressed = false;
       }
     },
-    handleResizeStart(event) {
+    getItemHeightFromWidth(width) {
+      const ratio = this.file.$infos?.ratio;
+      if (ratio) return width * ratio;
+      if (this.file.$type === "canvas_shape") {
+        if (this.file.height != null && this.file.width) {
+          return width * (this.file.height / this.file.width);
+        }
+        if (this.file.shape_points?.length >= 2) {
+          const bounds = getPointsBounds(this.file.shape_points);
+          return width * (bounds.height / bounds.width);
+        }
+        return 160;
+      }
+      if (this.file.$type === "canvas_text") {
+        const target_height =
+          this.currentHeight !== null ? this.currentHeight : this.file.height;
+        if (target_height != null) return target_height;
+        return 52;
+      }
+      return 160;
+    },
+    handleResizeStart(event, resize_mode = "width") {
       event.preventDefault();
       event.stopPropagation();
 
       this.isResizing = true;
+      this.resize_mode = resize_mode;
 
-      // Store initial mouse position and width
+      // Store initial mouse position and current dimensions
       this.resizeStartX = event.clientX;
+      this.resizeStartY = event.clientY;
       this.resizeStartWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+      this.resizeStartHeight =
+        this.currentHeight !== null
+          ? this.currentHeight
+          : this.default_item_height;
     },
     handleOpen() {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
@@ -353,38 +412,53 @@ export default {
     },
     handleMouseMove(event) {
       if (this.isResizing) {
-        // Mouse delta in screen pixels; convert to canvas coordinates using zoom
-        const deltaX = event.clientX - this.resizeStartX;
-        const adjustedDeltaX = deltaX / this.canvas_zoom;
-
-        // Calculate new width (in canvas coordinates)
-        let newWidth = Math.max(
-          this.item_min_width,
-          this.resizeStartWidth + adjustedDeltaX
-        );
-        newWidth = Math.min(
-          this.item_max_width,
-          this.resizeStartWidth + adjustedDeltaX
-        );
-        this.currentWidth = Math.round(newWidth);
-
-        // Emit width update (include height for canvas_shape so parent can update locally)
-        const payload = { file: this.file, width: this.currentWidth };
-        if (this.file.$type === "canvas_shape") {
-          const old_width = this.file.width || 160;
-          const old_height =
-            this.file.height ??
-            (this.file.shape_points?.length >= 2
-              ? (() => {
-                  const b = getPointsBounds(this.file.shape_points);
-                  return old_width * (b.height / b.width);
-                })()
-              : 100);
-          payload.height = Math.round(
-            this.currentWidth * (old_height / old_width)
+        if (this.resize_mode === "height") {
+          const delta_y = event.clientY - this.resizeStartY;
+          const adjusted_delta_y = delta_y / this.canvas_zoom;
+          const next_height = this.resizeStartHeight + adjusted_delta_y;
+          const bounded_height = Math.min(
+            this.item_max_height,
+            Math.max(this.item_min_height, next_height)
           );
+          this.currentHeight = Math.round(bounded_height);
+          this.$emit("width-update", {
+            file: this.file,
+            height: this.currentHeight,
+          });
+        } else {
+          // Mouse delta in screen pixels; convert to canvas coordinates using zoom
+          const deltaX = event.clientX - this.resizeStartX;
+          const adjustedDeltaX = deltaX / this.canvas_zoom;
+
+          // Calculate new width (in canvas coordinates)
+          let newWidth = Math.max(
+            this.item_min_width,
+            this.resizeStartWidth + adjustedDeltaX
+          );
+          newWidth = Math.min(
+            this.item_max_width,
+            this.resizeStartWidth + adjustedDeltaX
+          );
+          this.currentWidth = Math.round(newWidth);
+
+          // Emit width update (include height for canvas_shape so parent can update locally)
+          const payload = { file: this.file, width: this.currentWidth };
+          if (this.file.$type === "canvas_shape") {
+            const old_width = this.file.width || 160;
+            const old_height =
+              this.file.height ??
+              (this.file.shape_points?.length >= 2
+                ? (() => {
+                    const b = getPointsBounds(this.file.shape_points);
+                    return old_width * (b.height / b.width);
+                  })()
+                : 100);
+            payload.height = Math.round(
+              this.currentWidth * (old_height / old_width)
+            );
+          }
+          this.$emit("width-update", payload);
         }
-        this.$emit("width-update", payload);
 
         return;
       }
@@ -424,22 +498,7 @@ export default {
       // Clamp to <= canvas size (minus item width/height)
       const currentWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
-      const ratio = this.file.$infos?.ratio;
-      let currentHeight;
-      if (ratio) {
-        currentHeight = currentWidth * ratio;
-      } else if (this.file.$type === "canvas_shape") {
-        if (this.file.height != null && this.file.width) {
-          currentHeight = currentWidth * (this.file.height / this.file.width);
-        } else if (this.file.shape_points?.length >= 2) {
-          const bounds = getPointsBounds(this.file.shape_points);
-          currentHeight = currentWidth * (bounds.height / bounds.width);
-        } else {
-          currentHeight = 160;
-        }
-      } else {
-        currentHeight = 160;
-      }
+      const currentHeight = this.getItemHeightFromWidth(currentWidth);
 
       newX = Math.min(newX, this.canvas_width - currentWidth);
       newY = Math.min(newY, this.canvas_height - currentHeight);
@@ -457,22 +516,24 @@ export default {
       if (this.isResizing) {
         this.isResizing = false;
 
-        // Save final width
-        const finalWidth =
-          this.currentWidth !== null
-            ? this.currentWidth
-            : this.file.width || 160;
+        const is_height_resize = this.resize_mode === "height";
+        let final_dimensions_payload = {};
 
-        // Clear current width to use file width
-        this.currentWidth = null;
+        if (is_height_resize) {
+          const final_height =
+            this.currentHeight !== null
+              ? this.currentHeight
+              : this.default_item_height;
+          final_dimensions_payload = { height: final_height };
+          this.currentHeight = null;
+        } else {
+          // Save final width
+          const finalWidth =
+            this.currentWidth !== null
+              ? this.currentWidth
+              : this.file.width || 160;
+          final_dimensions_payload = { width: finalWidth };
 
-        // Debounce API call
-        if (this.saveTimeout) {
-          clearTimeout(this.saveTimeout);
-        }
-
-        this.saveTimeout = setTimeout(() => {
-          const payload = { width: finalWidth };
           if (this.file.$type === "canvas_shape") {
             const old_width = this.file.width || 160;
             const old_height =
@@ -483,9 +544,22 @@ export default {
                     return old_width * (b.height / b.width);
                   })()
                 : 100);
-            payload.height = Math.round(finalWidth * (old_height / old_width));
+            final_dimensions_payload.height = Math.round(
+              finalWidth * (old_height / old_width)
+            );
           }
-          this.saveWidth(payload);
+          // Clear current width to use file width
+          this.currentWidth = null;
+        }
+        this.resize_mode = "width";
+
+        // Debounce API call
+        if (this.saveTimeout) {
+          clearTimeout(this.saveTimeout);
+        }
+
+        this.saveTimeout = setTimeout(() => {
+          this.saveWidth(final_dimensions_payload);
         }, 300);
 
         return;
@@ -515,22 +589,7 @@ export default {
       // Re-clamp just in case
       const currentWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
-      const ratio = this.file.$infos?.ratio;
-      let currentHeight;
-      if (ratio) {
-        currentHeight = currentWidth * ratio;
-      } else if (this.file.$type === "canvas_shape") {
-        if (this.file.height != null && this.file.width) {
-          currentHeight = currentWidth * (this.file.height / this.file.width);
-        } else if (this.file.shape_points?.length >= 2) {
-          const bounds = getPointsBounds(this.file.shape_points);
-          currentHeight = currentWidth * (bounds.height / bounds.width);
-        } else {
-          currentHeight = 160;
-        }
-      } else {
-        currentHeight = 160;
-      }
+      const currentHeight = this.getItemHeightFromWidth(currentWidth);
 
       let finalX = this.currentX !== null ? this.currentX : this.file.x || 0;
       let finalY = this.currentY !== null ? this.currentY : this.file.y || 0;
@@ -578,9 +637,10 @@ export default {
           typeof payload === "number"
             ? { width: payload }
             : {
-                width: payload.width,
+                ...(payload.width != null && { width: payload.width }),
                 ...(payload.height != null && { height: payload.height }),
               };
+        if (!Object.keys(new_meta).length) return;
         await this.$api.updateMeta({
           path: this.file.$path,
           new_meta,
@@ -620,8 +680,12 @@ export default {
   }
 
   ._canvasItem--text {
-    font-size: 200%;
+    font-size: 150%;
+    overflow: hidden;
+    height: 100%;
     background-color: var(--author-color);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing) / 2) calc(var(--spacing) / 1);
   }
 
   ._canvasItem--open {
@@ -777,6 +841,13 @@ export default {
       &::before {
       }
     }
+    &.is--heightOnly {
+      cursor: ns-resize;
+      left: 50%;
+      right: auto;
+      top: auto;
+      transform: translateX(-50%);
+    }
 
     &:hover::before {
       background-color: var(--active-color);
@@ -810,6 +881,5 @@ export default {
       }
     }
   }
-
 }
 </style>

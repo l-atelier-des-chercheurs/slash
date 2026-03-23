@@ -7,15 +7,17 @@
     }"
   >
     <div class="_text_input_container">
-      <input
-        type="text"
+      <textarea
         v-model="new_text"
         ref="text_input"
         placeholder="Quick note..."
-        minlength="3"
-        maxlength="50"
         @keyup.enter="createText"
-      />
+        @input="autoResizeTextarea"
+        autocomplete="off"
+        rows="1"
+        resize="none"
+        maxlength="2000"
+      ></textarea>
       <button type="button" class="u-button_icon" @click="createText">
         <b-icon icon="check-lg" />
       </button>
@@ -52,10 +54,14 @@ export default {
   data() {
     return {
       new_text: "",
+      max_textarea_lines: 6,
     };
   },
   mounted() {
     this.$refs.text_input.focus();
+    this.$nextTick(() => {
+      this.autoResizeTextarea();
+    });
   },
   computed: {
     position_x() {
@@ -69,15 +75,44 @@ export default {
     },
   },
   methods: {
+    autoResizeTextarea() {
+      const textarea = this.$refs.text_input;
+      if (!textarea) return;
+
+      textarea.style.height = "auto";
+
+      const computed_style = window.getComputedStyle(textarea);
+      const line_height =
+        Number.parseFloat(computed_style.lineHeight) ||
+        Number.parseFloat(computed_style.fontSize) * 1.2;
+      const padding_top = Number.parseFloat(computed_style.paddingTop) || 0;
+      const padding_bottom =
+        Number.parseFloat(computed_style.paddingBottom) || 0;
+      const max_height =
+        line_height * this.max_textarea_lines + padding_top + padding_bottom;
+      const next_height = Math.min(textarea.scrollHeight, max_height);
+
+      textarea.style.height = `${next_height}px`;
+      textarea.style.overflowY =
+        textarea.scrollHeight > max_height ? "auto" : "hidden";
+    },
     handleClose() {
       this.$emit("close");
     },
     async createText() {
+      this.autoResizeTextarea();
+      const textarea = this.$refs.text_input;
+      const text_height = textarea
+        ? Math.ceil(textarea.getBoundingClientRect().height)
+        : null;
+
       const additional_meta = {
         $type: "canvas_text",
         text: this.new_text,
         x: this.additional_meta?.x,
         y: this.additional_meta?.y,
+        width: this.additional_meta?.width,
+        ...(text_height !== null && { height: text_height }),
         requested_slug: `text`,
       };
       if (this.connected_as?.$path)
@@ -127,7 +162,10 @@ export default {
   gap: calc(var(--spacing) / 2);
   margin-bottom: calc(var(--spacing) / 4);
 
-  button {
+  textarea {
+    font-size: 150%;
+    height: auto;
+    min-height: 2.2em;
   }
 }
 </style>
