@@ -65,6 +65,7 @@
             >
               <ItemChat
                 v-if="has_opened_chats"
+                :key="file.$path"
                 :file="file"
                 @close="setView('informations')"
               />
