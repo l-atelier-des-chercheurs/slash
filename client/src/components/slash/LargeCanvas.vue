@@ -25,6 +25,16 @@
         @mousedown.self="startLasso"
         @click.self="handleCanvasClick"
       >
+        <div
+          v-if="show_expand_preview_right"
+          class="_canvasExpandPreview _canvasExpandPreview_right"
+          :style="{ left: `${expand_preview_right}px` }"
+        ></div>
+        <div
+          v-if="show_expand_preview_bottom"
+          class="_canvasExpandPreview _canvasExpandPreview_bottom"
+          :style="{ top: `${expand_preview_bottom}px` }"
+        ></div>
         <CanvasItemInteractive
           v-for="file in files"
           :key="file.$path"
@@ -167,16 +177,26 @@ export default {
     };
   },
   computed: {
+    content_bounds() {
+      let right_edge = 0;
+      let bottom_edge = 0;
+      if (!this.files || this.files.length === 0) {
+        return { right_edge, bottom_edge };
+      }
+      this.files.forEach((file) => {
+        const { width, height } = this.getFileDimensions(file);
+        const x = file.x || 0;
+        const y = file.y || 0;
+        right_edge = Math.max(right_edge, x + width);
+        bottom_edge = Math.max(bottom_edge, y + height);
+      });
+      return { right_edge, bottom_edge };
+    },
     canvas_width() {
       if (!this.files || this.files.length === 0) {
         return this.min_canvas_width;
       }
-      let right_edge = 0;
-      this.files.forEach((file) => {
-        const { width } = this.getFileDimensions(file);
-        const x = file.x || 0;
-        right_edge = Math.max(right_edge, x + width);
-      });
+      const right_edge = this.content_bounds.right_edge;
       const cw = Math.round(right_edge + this.margin_around_content);
 
       return Math.min(
@@ -188,12 +208,7 @@ export default {
       if (!this.files || this.files.length === 0) {
         return this.min_canvas_height;
       }
-      let bottom_edge = 0;
-      this.files.forEach((file) => {
-        const { height } = this.getFileDimensions(file);
-        const y = file.y || 0;
-        bottom_edge = Math.max(bottom_edge, y + height);
-      });
+      const bottom_edge = this.content_bounds.bottom_edge;
       const ch = Math.round(bottom_edge + this.margin_around_content);
       return Math.min(
         Math.max(this.min_canvas_height, ch),
@@ -264,6 +279,22 @@ export default {
     },
     show_fps_counter() {
       return this.$root.app_infos?.debug_mode === true;
+    },
+    expand_preview_right() {
+      return Math.max(0, this.canvas_width - this.margin_around_content);
+    },
+    expand_preview_bottom() {
+      return Math.max(0, this.canvas_height - this.margin_around_content);
+    },
+    show_expand_preview_right() {
+      return (
+        this.files?.length > 0 && this.canvas_width < this.max_canvas_width
+      );
+    },
+    show_expand_preview_bottom() {
+      return (
+        this.files?.length > 0 && this.canvas_height < this.max_canvas_height
+      );
     },
     lasso_rect() {
       if (!this.lasso_active || !this.lasso_start || !this.lasso_end)
@@ -691,6 +722,25 @@ export default {
 
   transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1),
     height 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+._canvasExpandPreview {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.45;
+  z-index: 2;
+}
+
+._canvasExpandPreview_right {
+  top: 20px;
+  bottom: 20px;
+  border-left: 6px dotted var(--c-gris);
+}
+
+._canvasExpandPreview_bottom {
+  left: 20px;
+  right: 20px;
+  border-top: 6px dotted var(--c-gris);
 }
 
 ._largeCanvas[data-mode="draw"] {
