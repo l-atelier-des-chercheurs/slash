@@ -321,8 +321,17 @@ export default {
     window.removeEventListener("keydown", this.handleGlobalKeydown);
     window.removeEventListener("mousemove", this.updateLasso);
     window.removeEventListener("mouseup", this.endLasso);
+    if (this.saveStateTimeout) clearTimeout(this.saveStateTimeout);
     if (this.viewport_throttle_timer)
       clearTimeout(this.viewport_throttle_timer);
+  },
+  watch: {
+    current_mode() {
+      this.saveStateToLocalStorage();
+    },
+    draw_stroke_width() {
+      this.saveStateToLocalStorage();
+    },
   },
   methods: {
     handleGlobalKeydown(event) {
@@ -591,7 +600,10 @@ export default {
           topleft_x: this.canvas_topleft_x,
           topleft_y: this.canvas_topleft_y,
           zoom: this.zoom,
+          current_mode: this.current_mode,
+          draw_stroke_width: this.draw_stroke_width,
         };
+        console.log("Saving canvas state to localStorage:", state);
         localStorage.setItem(this.getStorageKey(), JSON.stringify(state));
       }, 500);
     },
@@ -602,6 +614,18 @@ export default {
           const state = JSON.parse(storedState);
           if (typeof state.zoom === "number" && Number.isFinite(state.zoom)) {
             this.$emit("update:zoom", state.zoom);
+          }
+          if (
+            typeof state.current_mode === "string" &&
+            ["pan-zoom", "draw", "select"].includes(state.current_mode)
+          ) {
+            this.current_mode = state.current_mode;
+          }
+          if (
+            typeof state.draw_stroke_width === "number" &&
+            Number.isFinite(state.draw_stroke_width)
+          ) {
+            this.draw_stroke_width = state.draw_stroke_width;
           }
           if (
             typeof state.topleft_x === "number" &&

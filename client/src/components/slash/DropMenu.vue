@@ -14,7 +14,7 @@
           <button
             type="button"
             class="u-button u-button_transparent u-button_icon"
-            @click="$emit('openFoldersSidebar')"
+            @click="$emit('toggleFoldersSidebar')"
           >
             <b-icon icon="three-dots" />
           </button>

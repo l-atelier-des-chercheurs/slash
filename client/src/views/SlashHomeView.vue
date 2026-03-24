@@ -19,47 +19,10 @@
         <FolderView
           :key="current_folder_path"
           :folder_path="current_folder_path"
-          :current_folder_title="current_folder_title"
-          @openFoldersSidebar="openFoldersSidebar"
-          @openCurrentFolderSettings="openCurrentFolderSettings"
-          @folderLoaded="onFolderLoaded"
+          @toggleFoldersSidebar="toggleFoldersSidebar"
         />
       </div>
     </div>
-
-    <BaseModal2
-      v-if="show_folder_settings_modal && current_folder_details"
-      :title="'Folder settings'"
-      @close="closeCurrentFolderSettings"
-    >
-      <div class="u-spacingBottom">
-        <TitleField
-          :label="$t('title')"
-          :field_name="'title'"
-          :content="current_folder_details.title"
-          :path="current_folder_details.$path"
-          :required="true"
-          :maxlength="60"
-          :can_edit="can_edit_current_folder"
-        />
-      </div>
-
-      <div class="u-spacingBottom">
-        <DLabel :str="$t('status')" />
-        <StatusTag
-          :status="current_folder_status"
-          :path="current_folder_details.$path"
-          :can_edit="can_edit_current_folder"
-          :status_options="['public', 'private']"
-          :show_label="true"
-        />
-      </div>
-
-      <AdminsAndContributorsField
-        :folder="current_folder_details"
-        :can_edit="can_edit_current_folder"
-      />
-    </BaseModal2>
   </div>
 </template>
 
@@ -80,10 +43,7 @@ export default {
       folders_path: "folders",
       folders: [],
       current_folder_path: "",
-      current_folder_title: "",
       show_folders_sidebar: false,
-      show_folder_settings_modal: false,
-      current_folder_details: null,
     };
   },
   async created() {
@@ -105,8 +65,7 @@ export default {
     async "$route.params.folder_slug"(new_folder_slug) {
       if (!new_folder_slug) {
         this.current_folder_path = "";
-        this.current_folder_title = "";
-        await this.openFoldersSidebar();
+        await this.toggleFoldersSidebar(true);
         return;
       }
       const next_folder_path = `${this.folders_path}/${new_folder_slug}`;
@@ -114,30 +73,9 @@ export default {
         this.current_folder_path = next_folder_path;
       }
       this.show_folders_sidebar = false;
-      if (Array.isArray(this.folders) && this.folders.length > 0) {
-        const matched_folder = this.folders.find(
-          (folder) => folder.$path === next_folder_path
-        );
-        if (matched_folder?.title) {
-          this.current_folder_title = matched_folder.title;
-        }
-      }
     },
   },
 
-  computed: {
-    can_edit_current_folder() {
-      if (!this.current_folder_details) return false;
-      if (typeof this.canLoggedinEditFolder !== "function") return true;
-      return this.canLoggedinEditFolder({ folder: this.current_folder_details });
-    },
-    current_folder_status() {
-      if (!this.current_folder_details?.$status) return "public";
-      return this.current_folder_details.$status === "private"
-        ? "private"
-        : "public";
-    },
-  },
   methods: {
     isRoomJoined(room) {
       return Array.isArray(this.$api.rooms_joined)
@@ -153,8 +91,7 @@ export default {
         this.current_folder_path = `${this.folders_path}/${folder_slug_from_route}`;
       } else {
         this.current_folder_path = "";
-        this.current_folder_title = "";
-        await this.openFoldersSidebar();
+        await this.toggleFoldersSidebar(true);
       }
     },
     async ensureFoldersSidebarData() {
@@ -179,12 +116,6 @@ export default {
       if (!this.isRoomJoined(this.folders_path)) {
         this.$api.join({ room: this.folders_path });
       }
-      const current_folder = this.folders.find(
-        (folder) => folder.$path === this.current_folder_path
-      );
-      if (current_folder?.title) {
-        this.current_folder_title = current_folder.title;
-      }
     },
     async createDefaultFolder() {
       return await this.$api.createFolder({
@@ -197,7 +128,15 @@ export default {
         },
       });
     },
-    async openFoldersSidebar() {
+    async toggleFoldersSidebar(force_open) {
+      const should_open =
+        typeof force_open === "boolean"
+          ? force_open
+          : !this.show_folders_sidebar;
+      if (!should_open) {
+        this.closeFoldersSidebar();
+        return;
+      }
       await this.ensureFoldersSidebarData();
       this.show_folders_sidebar = true;
     },
@@ -206,21 +145,6 @@ export default {
       if (this.isRoomJoined(this.folders_path)) {
         this.$api.leave({ room: this.folders_path });
       }
-    },
-    onFolderLoaded({ path, title } = {}) {
-      if (!path || path !== this.current_folder_path) return;
-      this.current_folder_title = title || this.current_folder_title;
-    },
-    async openCurrentFolderSettings() {
-      if (!this.current_folder_path) return;
-      this.current_folder_details = await this.$api.getFolder({
-        path: this.current_folder_path,
-      });
-      this.show_folder_settings_modal = true;
-    },
-    closeCurrentFolderSettings() {
-      this.show_folder_settings_modal = false;
-      this.current_folder_details = null;
     },
     getFolderSlug(folder_path) {
       return folder_path.split("/").pop();

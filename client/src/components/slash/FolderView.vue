@@ -10,11 +10,11 @@
     <div class="_viewArea">
       <DropMenu
         :folder_path="folder.$path"
-        :current_folder_title="current_folder_title"
+        :current_folder_title="folder_display_title"
         :canvas_zoom="canvas_zoom"
         :canvas_scroll="canvas_scroll"
-        @openFoldersSidebar="$emit('openFoldersSidebar')"
-        @openCurrentFolderSettings="$emit('openCurrentFolderSettings')"
+        @toggleFoldersSidebar="$emit('toggleFoldersSidebar')"
+        @openCurrentFolderSettings="openCurrentFolderSettings"
       />
       <ViewModeBar
         :value="view_mode"
@@ -53,6 +53,40 @@
       :file="opened_file"
       @close="closeItemModalWithTransition"
     />
+
+    <BaseModal2
+      v-if="show_folder_settings_modal && current_folder_details"
+      :title="'Folder settings'"
+      @close="closeCurrentFolderSettings"
+    >
+      <div class="u-spacingBottom">
+        <TitleField
+          :label="$t('title')"
+          :field_name="'title'"
+          :content="current_folder_details.title"
+          :path="current_folder_details.$path"
+          :required="true"
+          :maxlength="60"
+          :can_edit="can_edit_current_folder"
+        />
+      </div>
+
+      <div class="u-spacingBottom">
+        <DLabel :str="$t('status')" />
+        <StatusTag
+          :status="current_folder_status"
+          :path="current_folder_details.$path"
+          :can_edit="can_edit_current_folder"
+          :status_options="['public', 'private']"
+          :show_label="true"
+        />
+      </div>
+
+      <AdminsAndContributorsField
+        :folder="current_folder_details"
+        :can_edit="can_edit_current_folder"
+      />
+    </BaseModal2>
   </div>
 </template>
 <script>
@@ -70,10 +104,6 @@ export default {
     folder_path: {
       type: String,
       required: true,
-    },
-    current_folder_title: {
-      type: String,
-      default: "",
     },
   },
   components: {
@@ -96,6 +126,8 @@ export default {
       canvas_zoom: 1,
       canvas_scroll: null,
       zoom_range: [0.1, 1],
+      show_folder_settings_modal: false,
+      current_folder_details: null,
     };
   },
   async created() {
@@ -142,19 +174,28 @@ export default {
           this.$api.leave({ room: old_folder_path });
         }
 
-        this.folder = await this.loadFolder(new_folder_path);
-        this.$emit("folderLoaded", {
-          path: new_folder_path,
-          title: this.folder?.title || "",
-        });
-
-        if (!this.isRoomJoined(new_folder_path)) {
-          this.$api.join({ room: new_folder_path });
+        try {
+          this.folder = await this.loadFolder(new_folder_path);
+          if (!this.isRoomJoined(new_folder_path)) {
+            this.$api.join({ room: new_folder_path });
+          }
+        } catch (error) {
+          this.folder = null;
+          if (this.$route.path !== "/") {
+            this.$router.replace({
+              path: "/",
+              query: { ...this.$route.query },
+            });
+          }
+          this.$emit("toggleFoldersSidebar", true);
         }
       },
     },
   },
   computed: {
+    folder_display_title() {
+      return this.folder?.title || "";
+    },
     opened_file() {
       if (!this.$route.query.file) return null;
       const metafilename = this.$route.query.file;
@@ -195,6 +236,19 @@ export default {
     filtered_files_without_canvas_items() {
       return this.filtered_files.filter((f) => !f.$type.startsWith("canvas_"));
     },
+    can_edit_current_folder() {
+      if (!this.current_folder_details) return false;
+      if (typeof this.canLoggedinEditFolder !== "function") return true;
+      return this.canLoggedinEditFolder({
+        folder: this.current_folder_details,
+      });
+    },
+    current_folder_status() {
+      if (!this.current_folder_details?.$status) return "public";
+      return this.current_folder_details.$status === "private"
+        ? "private"
+        : "public";
+    },
   },
   methods: {
     isRoomJoined(room) {
@@ -204,6 +258,17 @@ export default {
     },
     async loadFolder(path) {
       return await this.$api.getFolder({ path });
+    },
+    async openCurrentFolderSettings() {
+      if (!this.folder_path) return;
+      this.current_folder_details = await this.$api.getFolder({
+        path: this.folder_path,
+      });
+      this.show_folder_settings_modal = true;
+    },
+    closeCurrentFolderSettings() {
+      this.show_folder_settings_modal = false;
+      this.current_folder_details = null;
     },
     initializeViewMode() {
       const valid_modes = ["canvas", "grid", "map", "timeline"];
