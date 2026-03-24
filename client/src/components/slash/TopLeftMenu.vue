@@ -12,7 +12,7 @@
           </button>
           <button
             type="button"
-            class="u-button _dropMenu--folderLabel"
+            class="u-button u-button_transparent _dropMenu--folderLabel"
             @click="$emit('openCurrentFolderSettings')"
           >
             {{ current_folder_title || "Untitled folder" }}
