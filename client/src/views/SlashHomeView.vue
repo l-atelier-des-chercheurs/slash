@@ -15,13 +15,15 @@
         />
       </transition>
 
-      <div v-if="current_folder_path" class="_folderViewPane">
-        <FolderView
-          :key="current_folder_path"
-          :folder_path="current_folder_path"
-          @toggleFoldersSidebar="toggleFoldersSidebar"
-        />
-      </div>
+      <transition name="folderViewTransition" mode="out-in">
+        <div v-if="current_folder_path" class="_folderViewPane">
+          <FolderView
+            :key="current_folder_path"
+            :folder_path="current_folder_path"
+            @toggleFoldersSidebar="toggleFoldersSidebar"
+          />
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -72,7 +74,6 @@ export default {
       if (next_folder_path !== this.current_folder_path) {
         this.current_folder_path = next_folder_path;
       }
-      this.show_folders_sidebar = false;
     },
   },
 
@@ -151,12 +152,10 @@ export default {
     },
     async selectFolder(folder_path, { replace = false } = {}) {
       if (!folder_path || folder_path === this.current_folder_path) {
-        this.show_folders_sidebar = false;
         return;
       }
 
       this.current_folder_path = folder_path;
-      this.closeFoldersSidebar();
 
       const folder_slug = this.getFolderSlug(folder_path);
       const router_method = replace ? "replace" : "push";
@@ -185,6 +184,7 @@ export default {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: var(--c-gris);
 }
 
 ._folderViewPane {
@@ -202,6 +202,16 @@ export default {
 .sidebarPush-enter,
 .sidebarPush-leave-to {
   transform: translateX(-16px);
+  opacity: 0;
+}
+
+.folderViewTransition-enter-active,
+.folderViewTransition-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.folderViewTransition-enter,
+.folderViewTransition-leave-to {
   opacity: 0;
 }
 </style>

@@ -16,7 +16,7 @@
         <template v-else>
           <div class="_mainContent">
             <transition name="pagetransition" mode="out-in">
-              <div class="_routerView" :key="$route.path">
+              <div class="_routerView" :key="route_view_key">
                 <router-view class="" v-slot="{ Component }">
                   <component :is="Component" />
                 </router-view>
@@ -78,7 +78,15 @@ export default {
     this.$eventHub.$off("socketio.disconnect", this.showDisconnectModal);
   },
   watch: {},
-  computed: {},
+  computed: {
+    route_view_key() {
+      return (
+        this.$route.name ||
+        (this.$route.matched[0] && this.$route.matched[0].path) ||
+        this.$route.path
+      );
+    },
+  },
   methods: {
     socketConnected() {
       // if (this.$root.debug_mode)
