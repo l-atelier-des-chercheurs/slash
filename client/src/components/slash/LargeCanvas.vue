@@ -174,6 +174,7 @@ export default {
       lasso_active: false,
       lasso_dragged: false,
       draw_stroke_width: 5,
+      restored_view_state: null,
     };
   },
   computed: {
@@ -315,6 +316,9 @@ export default {
   mounted() {
     this.$eventHub.$on("canvas.dragEnd", this.handleDragEnd);
     window.addEventListener("keydown", this.handleGlobalKeydown);
+    this.$nextTick(() => {
+      this.applyRestoredViewport();
+    });
   },
   beforeDestroy() {
     this.$eventHub.$off("canvas.dragEnd", this.handleDragEnd);
@@ -596,14 +600,38 @@ export default {
     saveStateToLocalStorage() {
       if (this.saveStateTimeout) clearTimeout(this.saveStateTimeout);
       this.saveStateTimeout = setTimeout(() => {
+        const viewer = this.$refs.viewer;
+        let zoom = this.zoom;
+        let topleft_x = this.canvas_topleft_x;
+        let topleft_y = this.canvas_topleft_y;
+
+        if (viewer && typeof viewer.getZoom === "function") {
+          const live_zoom = viewer.getZoom();
+          const live_scroll_left =
+            typeof viewer.getScrollLeft === "function"
+              ? viewer.getScrollLeft()
+              : null;
+          const live_scroll_top =
+            typeof viewer.getScrollTop === "function" ? viewer.getScrollTop() : null;
+
+          if (Number.isFinite(live_zoom) && live_zoom > 0) {
+            zoom = live_zoom;
+            if (Number.isFinite(live_scroll_left)) {
+              topleft_x = live_scroll_left / live_zoom;
+            }
+            if (Number.isFinite(live_scroll_top)) {
+              topleft_y = live_scroll_top / live_zoom;
+            }
+          }
+        }
+
         const state = {
-          topleft_x: this.canvas_topleft_x,
-          topleft_y: this.canvas_topleft_y,
-          zoom: this.zoom,
+          topleft_x,
+          topleft_y,
+          zoom,
           current_mode: this.current_mode,
           draw_stroke_width: this.draw_stroke_width,
         };
-        console.log("Saving canvas state to localStorage:", state);
         localStorage.setItem(this.getStorageKey(), JSON.stringify(state));
       }, 500);
     },
@@ -633,6 +661,14 @@ export default {
             typeof state.topleft_y === "number" &&
             Number.isFinite(state.topleft_y)
           ) {
+            this.restored_view_state = {
+              topleft_x: state.topleft_x,
+              topleft_y: state.topleft_y,
+              zoom:
+                typeof state.zoom === "number" && Number.isFinite(state.zoom)
+                  ? state.zoom
+                  : this.zoom,
+            };
             this.canvas_topleft_x = state.topleft_x;
             this.canvas_topleft_y = state.topleft_y;
             this.initial_topleft_x = state.topleft_x;
@@ -647,6 +683,35 @@ export default {
       this.canvas_topleft_y = 0;
       this.initial_topleft_x = 0;
       this.initial_topleft_y = 0;
+    },
+    applyRestoredViewport() {
+      if (!this.restored_view_state || !this.$refs.viewer) return;
+
+      const { topleft_x, topleft_y, zoom } = this.restored_view_state;
+      const viewer = this.$refs.viewer;
+
+      if (Number.isFinite(zoom) && typeof viewer.setZoom === "function") {
+        viewer.setZoom(zoom, { emit: false });
+        this.$emit("update:zoom", zoom);
+      }
+
+      const applied_zoom =
+        typeof viewer.getZoom === "function" ? viewer.getZoom() : zoom;
+      if (
+        Number.isFinite(applied_zoom) &&
+        applied_zoom > 0 &&
+        typeof viewer.scrollTo === "function"
+      ) {
+        viewer.scrollTo(topleft_x * applied_zoom, topleft_y * applied_zoom, {
+          duration: 0,
+        });
+      }
+
+      this.canvas_topleft_x = topleft_x;
+      this.canvas_topleft_y = topleft_y;
+      this.initial_topleft_x = topleft_x;
+      this.initial_topleft_y = topleft_y;
+      this.restored_view_state = null;
     },
 
     getCanvasCoordinatesFromEvent(event) {

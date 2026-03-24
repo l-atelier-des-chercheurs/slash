@@ -114,8 +114,9 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-right: 1px solid var(--c-gris);
+  background: var(--c-gris_clair);
+  border-right: 1px solid var(--c-gris, #ccc);
+  // box-shadow: 8px 0 16px 0 rgba(0, 0, 0, 0.2);
   padding: calc(var(--spacing) / 1);
   gap: calc(var(--spacing) / 2);
   overflow: hidden;

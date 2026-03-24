@@ -547,7 +547,6 @@ export default {
   background: var(--c-gris_clair);
   // color: white;
   border-bottom: 1px solid var(--c-gris, #ccc);
-  box-shadow: 0 -16px 16px -16px inset rgba(0, 0, 0, 0.2);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
