@@ -41,6 +41,11 @@ const routes = [
     component: () => import("@/views/ResetPasswordView.vue"),
   },
   {
+    path: "/:folder_slug",
+    name: "Folder",
+    component: () => import("@/views/SlashHomeView.vue"),
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
     component: () => import("@/views/NotFound.vue"),

@@ -89,7 +89,7 @@
       :current_mode.sync="current_mode"
       :draw_stroke_width.sync="draw_stroke_width"
     />
-    <FpsCounter />
+    <FpsCounter v-if="show_fps_counter" />
   </div>
 </template>
 <script>
@@ -261,6 +261,9 @@ export default {
       return this.selected_files && this.current_mode === "select"
         ? this.selected_files
         : [];
+    },
+    show_fps_counter() {
+      return this.$root.app_infos?.debug_mode === true;
     },
     lasso_rect() {
       if (!this.lasso_active || !this.lasso_start || !this.lasso_end)

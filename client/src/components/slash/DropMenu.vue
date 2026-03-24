@@ -1,24 +1,34 @@
 <template>
   <div class="_dropMenu">
     <div class="_dropMenu--content u-overlayPanel">
-      <button
-        v-if="connected_as"
-        type="button"
-        class="u-button u-button_transparent u-button_icon _dropMenu--userLabel"
-        @click="openLoginModal()"
-      >
-        <span
-          class="_dropMenu--userLabel__color"
-          :style="{ backgroundColor: connected_as?.color }"
-        ></span>
-        {{ connected_as.name }}
-      </button>
-
-      <DropMenuPanel
-        :folder_path="folder_path"
-        :additional_meta="additional_meta"
-        :show_labels="false"
-      />
+      <div class="_dropMenu--main">
+        <div class="_dropMenu--identity">
+          <button
+            type="button"
+            class="u-button u-button_transparent _dropMenu--folderLabel"
+            @click="$emit('openFoldersSidebar')"
+          >
+            {{ current_folder_title || "Untitled folder" }}
+          </button>
+          <button
+            v-if="connected_as"
+            type="button"
+            class="u-button u-button_transparent u-button_icon _dropMenu--userLabel"
+            @click="openLoginModal()"
+          >
+            <span
+              class="_dropMenu--userLabel__color"
+              :style="{ backgroundColor: connected_as?.color }"
+            ></span>
+            {{ connected_as.name }}
+          </button>
+        </div>
+        <DropMenuPanel
+          :folder_path="folder_path"
+          :additional_meta="additional_meta"
+          :show_labels="false"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -33,6 +43,10 @@ export default {
     folder_path: String,
     canvas_zoom: Number,
     canvas_scroll: Object,
+    current_folder_title: {
+      type: String,
+      default: "",
+    },
   },
   data() {
     return {
@@ -78,11 +92,12 @@ export default {
 }
 
 ._dropMenu--content {
+}
+
+._dropMenu--main {
   display: flex;
-  flex-direction: row nowrap;
   align-items: center;
-  overflow: hidden;
-  gap: calc(var(--spacing) / 4);
+  gap: calc(var(--spacing) / 2);
 }
 
 ._dropMenu--fileInput {
@@ -115,6 +130,23 @@ export default {
   font-weight: 600;
   background-color: transparent;
   padding: calc(var(--spacing) / 2);
+}
+
+._dropMenu--identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) / 8);
+}
+
+._dropMenu--folderLabel {
+  font-weight: 700;
+  padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 
 ._dropMenu--userLabel__color {

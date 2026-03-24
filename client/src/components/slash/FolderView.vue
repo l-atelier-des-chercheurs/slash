@@ -1,5 +1,5 @@
 <template>
-  <div v-if="default_folder" class="_folderView">
+  <div v-if="folder" class="_folderView">
     <div v-if="filter_bar_open" class="_filterBar">
       <FilterBar
         :author_filter.sync="author_filter"
@@ -9,9 +9,11 @@
 
     <div class="_viewArea">
       <DropMenu
-        :folder_path="default_folder.$path"
+        :folder_path="folder.$path"
+        :current_folder_title="current_folder_title"
         :canvas_zoom="canvas_zoom"
         :canvas_scroll="canvas_scroll"
+        @openFoldersSidebar="$emit('openFoldersSidebar')"
       />
       <ViewModeBar
         :value="view_mode"
@@ -27,7 +29,7 @@
         :files="filtered_files"
         :zoom="canvas_zoom"
         :zoom_range="zoom_range"
-        :folder_path="default_folder.$path"
+        :folder_path="folder.$path"
         @update:zoom="canvas_zoom = $event"
         @update:scroll="canvas_scroll = $event"
       />
@@ -43,6 +45,7 @@
         v-if="view_mode === 'grid'"
         :files="filtered_files_without_canvas_items"
       />
+
     </div>
 
     <ItemModal
@@ -63,7 +66,16 @@ import ViewModeBar from "@/components/slash/ViewModeBar.vue";
 import ItemModal from "@/components/slash/ItemModal.vue";
 
 export default {
-  props: {},
+  props: {
+    folder_path: {
+      type: String,
+      required: true,
+    },
+    current_folder_title: {
+      type: String,
+      default: "",
+    },
+  },
   components: {
     DropMenu,
     FilterBar,
@@ -76,7 +88,7 @@ export default {
   },
   data() {
     return {
-      default_folder: null,
+      folder: null,
       view_mode: "canvas",
       filter_bar_open: false,
       author_filter: null,
@@ -89,21 +101,6 @@ export default {
   async created() {
     // Initialize view mode from URL or localStorage fallback
     this.initializeViewMode();
-
-    try {
-      this.default_folder = await this.loadFolders();
-    } catch (err) {
-      if (err.code === "not_found") {
-        await this.createDefaultFolder();
-        this.default_folder = await this.loadFolders();
-      } else {
-        console.error(err);
-      }
-    }
-
-    if (this.default_folder) {
-      this.$api.join({ room: this.default_folder.$path });
-    }
   },
   mounted() {
     this.$eventHub.$on("canvasItem.open", this.openItemModal);
@@ -118,6 +115,9 @@ export default {
       "canvasItem.openWithTransition",
       this.switchToFileWithTransition
     );
+    if (this.folder_path && this.isRoomJoined(this.folder_path)) {
+      this.$api.leave({ room: this.folder_path });
+    }
   },
   watch: {
     // Watch for route changes to sync view mode from URL
@@ -130,6 +130,29 @@ export default {
         this.view_mode = new_view;
       }
     },
+    folder_path: {
+      immediate: true,
+      async handler(new_folder_path, old_folder_path) {
+        if (!new_folder_path) return;
+        if (
+          old_folder_path &&
+          old_folder_path !== new_folder_path &&
+          this.isRoomJoined(old_folder_path)
+        ) {
+          this.$api.leave({ room: old_folder_path });
+        }
+
+        this.folder = await this.loadFolder(new_folder_path);
+        this.$emit("folderLoaded", {
+          path: new_folder_path,
+          title: this.folder?.title || "",
+        });
+
+        if (!this.isRoomJoined(new_folder_path)) {
+          this.$api.join({ room: new_folder_path });
+        }
+      }
+    },
   },
   computed: {
     opened_file() {
@@ -140,14 +163,17 @@ export default {
       );
     },
     sorted_files() {
-      let files = this.default_folder.$files;
+      if (!this.folder || !Array.isArray(this.folder.$files)) {
+        return [];
+      }
+      let files = this.folder.$files;
       if (!files) return [];
       return files.sort((a, b) => {
         return a.$date_created - b.$date_created;
       });
     },
     filtered_files() {
-      if (!this.default_folder || !Array.isArray(this.default_folder.$files)) {
+      if (!this.folder || !Array.isArray(this.folder.$files)) {
         return [];
       }
       const media_type_filter = this.media_type_filter;
@@ -171,6 +197,14 @@ export default {
     },
   },
   methods: {
+    isRoomJoined(room) {
+      return Array.isArray(this.$api.rooms_joined)
+        ? this.$api.rooms_joined.includes(room)
+        : false;
+    },
+    async loadFolder(path) {
+      return await this.$api.getFolder({ path });
+    },
     initializeViewMode() {
       const valid_modes = ["canvas", "grid", "map", "timeline"];
 
@@ -205,26 +239,6 @@ export default {
         query: {
           ...this.$route.query,
           view: mode,
-        },
-      });
-    },
-    async loadFolders() {
-      return await this.$api
-        .getFolder({
-          path: "folders/default",
-        })
-        .catch((err) => {
-          throw err;
-        });
-    },
-    async createDefaultFolder() {
-      return await this.$api.createFolder({
-        path: "folders",
-        additional_meta: {
-          title: "Default",
-          requested_slug: "default",
-          $status: "public",
-          $contributors: "everyone",
         },
       });
     },
@@ -479,4 +493,5 @@ export default {
   position: relative;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 </style>
