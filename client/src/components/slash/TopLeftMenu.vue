@@ -5,18 +5,18 @@
         <div class="_dropMenu--folderLabelWrapper">
           <button
             type="button"
-            class="u-button u-button_transparent _dropMenu--folderLabel"
-            @click="$emit('openCurrentFolderSettings')"
-          >
-            {{ current_folder_title || "Untitled folder" }}
-            <b-icon icon="info-circle" />
-          </button>
-          <button
-            type="button"
             class="u-button u-button_transparent u-button_icon"
             @click="$emit('toggleFoldersSidebar')"
           >
-            <b-icon icon="three-dots" />
+            <b-icon icon="layout-sidebar" />
+          </button>
+          <button
+            type="button"
+            class="u-button _dropMenu--folderLabel"
+            @click="$emit('openCurrentFolderSettings')"
+          >
+            {{ current_folder_title || "Untitled folder" }}
+            &nbsp; <b-icon icon="three-dots" />
           </button>
         </div>
 
@@ -148,13 +148,15 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
-  justify-content: space-between;
+  // justify-content: space-between;
   gap: calc(var(--spacing) / 4);
 }
 
 ._dropMenu--folderLabel {
+  // max-width: 220px;
+  font-size: var(--sl-font-size-medium);
   font-weight: 700;
-  max-width: 220px;
+  margin-right: calc(var(--spacing) * 2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

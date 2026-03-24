@@ -8,7 +8,7 @@
     </div>
 
     <div class="_viewArea">
-      <DropMenu
+      <TopLeftMenu
         :folder_path="folder.$path"
         :current_folder_title="folder_display_title"
         :canvas_zoom="canvas_zoom"
@@ -54,43 +54,17 @@
       @close="closeItemModalWithTransition"
     />
 
-    <BaseModal2
-      v-if="show_folder_settings_modal && current_folder_details"
-      :title="'Folder settings'"
+    <FolderSettingsModal
+      :show_modal="show_folder_settings_modal"
+      :folder="folder"
+      :can_edit_folder="can_edit_current_folder"
+      :folder_status="current_folder_status"
       @close="closeCurrentFolderSettings"
-    >
-      <div class="u-spacingBottom">
-        <TitleField
-          :label="$t('title')"
-          :field_name="'title'"
-          :content="current_folder_details.title"
-          :path="current_folder_details.$path"
-          :required="true"
-          :maxlength="60"
-          :can_edit="can_edit_current_folder"
-        />
-      </div>
-
-      <div class="u-spacingBottom">
-        <DLabel :str="$t('status')" />
-        <StatusTag
-          :status="current_folder_status"
-          :path="current_folder_details.$path"
-          :can_edit="can_edit_current_folder"
-          :status_options="['public', 'private']"
-          :show_label="true"
-        />
-      </div>
-
-      <AdminsAndContributorsField
-        :folder="current_folder_details"
-        :can_edit="can_edit_current_folder"
-      />
-    </BaseModal2>
+    />
   </div>
 </template>
 <script>
-import DropMenu from "@/components/slash/DropMenu.vue";
+import TopLeftMenu from "@/components/slash/TopLeftMenu.vue";
 import FilterBar from "@/components/slash/FilterBar.vue";
 import GeoMapView from "@/components/slash/GeoMapView.vue";
 import LargeCanvas from "@/components/slash/LargeCanvas.vue";
@@ -98,6 +72,7 @@ import MediaGridView from "@/components/slash/MediaGridView.vue";
 import TimelineView from "@/components/slash/TimelineView.vue";
 import ViewModeBar from "@/components/slash/ViewModeBar.vue";
 import ItemModal from "@/components/slash/ItemModal.vue";
+import FolderSettingsModal from "@/components/slash/FolderSettingsModal.vue";
 
 export default {
   props: {
@@ -107,7 +82,7 @@ export default {
     },
   },
   components: {
-    DropMenu,
+    TopLeftMenu,
     FilterBar,
     GeoMapView,
     LargeCanvas,
@@ -115,6 +90,7 @@ export default {
     TimelineView,
     ViewModeBar,
     ItemModal,
+    FolderSettingsModal,
   },
   data() {
     return {
@@ -127,7 +103,6 @@ export default {
       canvas_scroll: null,
       zoom_range: [0.1, 1],
       show_folder_settings_modal: false,
-      current_folder_details: null,
     };
   },
   async created() {
@@ -237,17 +212,15 @@ export default {
       return this.filtered_files.filter((f) => !f.$type.startsWith("canvas_"));
     },
     can_edit_current_folder() {
-      if (!this.current_folder_details) return false;
+      if (!this.folder) return false;
       if (typeof this.canLoggedinEditFolder !== "function") return true;
       return this.canLoggedinEditFolder({
-        folder: this.current_folder_details,
+        folder: this.folder,
       });
     },
     current_folder_status() {
-      if (!this.current_folder_details?.$status) return "public";
-      return this.current_folder_details.$status === "private"
-        ? "private"
-        : "public";
+      if (!this.folder?.$status) return "public";
+      return this.folder.$status === "private" ? "private" : "public";
     },
   },
   methods: {
@@ -261,14 +234,13 @@ export default {
     },
     async openCurrentFolderSettings() {
       if (!this.folder_path) return;
-      this.current_folder_details = await this.$api.getFolder({
+      this.folder = await this.$api.getFolder({
         path: this.folder_path,
       });
       this.show_folder_settings_modal = true;
     },
     closeCurrentFolderSettings() {
       this.show_folder_settings_modal = false;
-      this.current_folder_details = null;
     },
     initializeViewMode() {
       const valid_modes = ["canvas", "grid", "map", "timeline"];
