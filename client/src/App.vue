@@ -251,6 +251,7 @@ export default {
 
 html,
 body {
+  height: 100%;
   // background: white;
   background-color: var(--c-bodybg);
   // background: linear-gradient(to top, var(--c-bodybg) 0, white 50vh);
@@ -279,6 +280,7 @@ html {
 }
 body {
   min-height: 100%;
+  margin: 0;
 }
 
 a {
@@ -300,7 +302,7 @@ button {
 
 #app {
   /* font-family: "Work Sans"; */
-
+  height: 100%;
   min-height: 100%;
 }
 
@@ -313,10 +315,6 @@ button {
   background-color: #e5e5e5;
   color: #666;
   padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
-}
-
-body {
-  margin: 0;
 }
 
 b,

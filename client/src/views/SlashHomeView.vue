@@ -16,9 +16,12 @@
       </transition>
 
       <transition name="folderViewTransition" mode="out-in">
-        <div v-if="current_folder_path" class="_folderViewPane">
+        <div
+          v-if="current_folder_path"
+          :key="current_folder_path"
+          class="_folderViewPane"
+        >
           <FolderView
-            :key="current_folder_path"
             :folder_path="current_folder_path"
             @toggleFoldersSidebar="toggleFoldersSidebar"
           />
@@ -175,12 +178,17 @@ export default {
 <style lang="scss" scoped>
 ._homeView {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   width: 100%;
   height: 100%;
 }
 
 ._homeLayout {
   display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;

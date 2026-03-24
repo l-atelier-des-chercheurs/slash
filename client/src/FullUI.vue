@@ -8,7 +8,7 @@
       <div class="_spinner" v-if="$root.is_loading" key="loader">
         <LoaderSpinner />
       </div>
-      <div v-else>
+      <template v-else>
         <GeneralPasswordModal
           v-if="show_general_password_modal"
           @close="show_general_password_modal = false"
@@ -24,7 +24,7 @@
             </transition>
           </div>
         </template>
-      </div>
+      </template>
     </transition>
   </div>
 </template>
@@ -124,13 +124,18 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._fullUI {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 ._mainContent {
   display: flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   // overflow: hidden;
 
   transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
@@ -142,6 +147,8 @@ export default {
 
   ._routerView {
     flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
     min-width: 0; /* Prevent flex item from overflowing */
   }
 }
