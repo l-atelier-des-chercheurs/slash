@@ -28,10 +28,20 @@
         :key="folder.$path"
         type="button"
         class="u-button _foldersSidebar--item"
-        :class="{ 'is--active': folder.$path === current_folder_path }"
-        @click="$emit('selectFolder', folder.$path)"
+        :class="{
+          'is--active': folder.$path === current_folder_path,
+          'is--disabled': !canAccessFolder(folder),
+        }"
+        :disabled="!canAccessFolder(folder)"
+        :title="!canAccessFolder(folder) ? 'Private folder' : ''"
+        @click="onSelectFolder(folder)"
       >
-        {{ folder.title || folder.$path.split("/").pop() }}
+        <span>{{ folder.title || folder.$path.split("/").pop() }}</span>
+        <b-icon
+          v-if="isPrivateFolder(folder)"
+          icon="file-lock2-fill"
+          class="_foldersSidebar--itemLock"
+        />
       </button>
     </div>
 
@@ -79,6 +89,17 @@ export default {
     },
   },
   methods: {
+    canAccessFolder(folder) {
+      if (typeof this.canLoggedinSeeFolder !== "function") return true;
+      return this.canLoggedinSeeFolder({ folder });
+    },
+    isPrivateFolder(folder) {
+      return folder?.$status === "private";
+    },
+    onSelectFolder(folder) {
+      if (!this.canAccessFolder(folder)) return;
+      this.$emit("selectFolder", folder.$path);
+    },
     onOpenNewFolder(new_folder_slug) {
       this.show_create_folder_modal = false;
       this.$emit("openNewFolder", new_folder_slug);
@@ -119,7 +140,21 @@ export default {
 }
 
 ._foldersSidebar--item {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 3);
   justify-content: flex-start;
   text-align: left;
+}
+
+._foldersSidebar--itemLock {
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+._foldersSidebar--item.is--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

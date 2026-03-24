@@ -21,10 +21,45 @@
           :folder_path="current_folder_path"
           :current_folder_title="current_folder_title"
           @openFoldersSidebar="openFoldersSidebar"
+          @openCurrentFolderSettings="openCurrentFolderSettings"
           @folderLoaded="onFolderLoaded"
         />
       </div>
     </div>
+
+    <BaseModal2
+      v-if="show_folder_settings_modal && current_folder_details"
+      :title="'Folder settings'"
+      @close="closeCurrentFolderSettings"
+    >
+      <div class="u-spacingBottom">
+        <TitleField
+          :label="$t('title')"
+          :field_name="'title'"
+          :content="current_folder_details.title"
+          :path="current_folder_details.$path"
+          :required="true"
+          :maxlength="60"
+          :can_edit="can_edit_current_folder"
+        />
+      </div>
+
+      <div class="u-spacingBottom">
+        <DLabel :str="$t('status')" />
+        <StatusTag
+          :status="current_folder_status"
+          :path="current_folder_details.$path"
+          :can_edit="can_edit_current_folder"
+          :status_options="['public', 'private']"
+          :show_label="true"
+        />
+      </div>
+
+      <AdminsAndContributorsField
+        :folder="current_folder_details"
+        :can_edit="can_edit_current_folder"
+      />
+    </BaseModal2>
   </div>
 </template>
 
@@ -47,6 +82,8 @@ export default {
       current_folder_path: "",
       current_folder_title: "",
       show_folders_sidebar: false,
+      show_folder_settings_modal: false,
+      current_folder_details: null,
     };
   },
   async created() {
@@ -88,7 +125,19 @@ export default {
     },
   },
 
-  computed: {},
+  computed: {
+    can_edit_current_folder() {
+      if (!this.current_folder_details) return false;
+      if (typeof this.canLoggedinEditFolder !== "function") return true;
+      return this.canLoggedinEditFolder({ folder: this.current_folder_details });
+    },
+    current_folder_status() {
+      if (!this.current_folder_details?.$status) return "public";
+      return this.current_folder_details.$status === "private"
+        ? "private"
+        : "public";
+    },
+  },
   methods: {
     isRoomJoined(room) {
       return Array.isArray(this.$api.rooms_joined)
@@ -161,6 +210,17 @@ export default {
     onFolderLoaded({ path, title } = {}) {
       if (!path || path !== this.current_folder_path) return;
       this.current_folder_title = title || this.current_folder_title;
+    },
+    async openCurrentFolderSettings() {
+      if (!this.current_folder_path) return;
+      this.current_folder_details = await this.$api.getFolder({
+        path: this.current_folder_path,
+      });
+      this.show_folder_settings_modal = true;
+    },
+    closeCurrentFolderSettings() {
+      this.show_folder_settings_modal = false;
+      this.current_folder_details = null;
     },
     getFolderSlug(folder_path) {
       return folder_path.split("/").pop();

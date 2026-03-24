@@ -14,6 +14,7 @@
         :canvas_zoom="canvas_zoom"
         :canvas_scroll="canvas_scroll"
         @openFoldersSidebar="$emit('openFoldersSidebar')"
+        @openCurrentFolderSettings="$emit('openCurrentFolderSettings')"
       />
       <ViewModeBar
         :value="view_mode"
@@ -45,7 +46,6 @@
         v-if="view_mode === 'grid'"
         :files="filtered_files_without_canvas_items"
       />
-
     </div>
 
     <ItemModal
@@ -151,7 +151,7 @@ export default {
         if (!this.isRoomJoined(new_folder_path)) {
           this.$api.join({ room: new_folder_path });
         }
-      }
+      },
     },
   },
   computed: {
@@ -493,5 +493,4 @@ export default {
   position: relative;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 </style>

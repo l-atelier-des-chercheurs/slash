@@ -6,9 +6,10 @@
           <button
             type="button"
             class="u-button u-button_transparent _dropMenu--folderLabel"
-            @click="$emit('openFoldersSidebar')"
+            @click="$emit('openCurrentFolderSettings')"
           >
             {{ current_folder_title || "Untitled folder" }}
+            <b-icon icon="info-circle" />
           </button>
           <button
             type="button"
