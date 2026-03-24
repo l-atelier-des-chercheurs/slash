@@ -2,7 +2,7 @@
   <div class="_dropMenu">
     <div class="_dropMenu--content u-overlayPanel">
       <div class="_dropMenu--main">
-        <div class="_dropMenu--identity">
+        <div class="_dropMenu--folderLabelWrapper">
           <button
             type="button"
             class="u-button u-button_transparent _dropMenu--folderLabel"
@@ -10,6 +10,16 @@
           >
             {{ current_folder_title || "Untitled folder" }}
           </button>
+          <button
+            type="button"
+            class="u-button u-button_transparent u-button_icon"
+            @click="$emit('openFoldersSidebar')"
+          >
+            <b-icon icon="three-dots" />
+          </button>
+        </div>
+
+        <div class="_dropMenu--identity">
           <button
             v-if="connected_as"
             type="button"
@@ -22,12 +32,12 @@
             ></span>
             {{ connected_as.name }}
           </button>
+          <DropMenuPanel
+            :folder_path="folder_path"
+            :additional_meta="additional_meta"
+            :show_labels="false"
+          />
         </div>
-        <DropMenuPanel
-          :folder_path="folder_path"
-          :additional_meta="additional_meta"
-          :show_labels="false"
-        />
       </div>
     </div>
   </div>
@@ -94,8 +104,9 @@ export default {
 ._dropMenu--content {
 }
 
-._dropMenu--main {
+._dropMenu--identity {
   display: flex;
+  flex-flow: row nowrap;
   align-items: center;
   gap: calc(var(--spacing) / 2);
 }
@@ -132,21 +143,20 @@ export default {
   padding: calc(var(--spacing) / 2);
 }
 
-._dropMenu--identity {
+._dropMenu--folderLabelWrapper {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: calc(var(--spacing) / 8);
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 4);
 }
 
 ._dropMenu--folderLabel {
   font-weight: 700;
-  padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
   max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: left;
 }
 
 ._dropMenu--userLabel__color {
