@@ -23,6 +23,7 @@
           backgroundImage: zoom > 0.25 ? undefined : 'none',
         }"
         @mousedown.self="startLasso"
+        @touchstart.self.passive="startLasso"
         @click.self="handleCanvasClick"
       >
         <div
@@ -325,6 +326,9 @@ export default {
     window.removeEventListener("keydown", this.handleGlobalKeydown);
     window.removeEventListener("mousemove", this.updateLasso);
     window.removeEventListener("mouseup", this.endLasso);
+    window.removeEventListener("touchmove", this.updateLassoTouch);
+    window.removeEventListener("touchend", this.endLassoTouch);
+    window.removeEventListener("touchcancel", this.endLassoTouch);
     if (this.saveStateTimeout) clearTimeout(this.saveStateTimeout);
     if (this.viewport_throttle_timer)
       clearTimeout(this.viewport_throttle_timer);
@@ -457,8 +461,26 @@ export default {
       this.lasso_end = coords;
       this.lasso_active = false;
       this.lasso_dragged = false;
-      window.addEventListener("mousemove", this.updateLasso);
-      window.addEventListener("mouseup", this.endLasso);
+      if (event.type === "touchstart") {
+        window.addEventListener("touchmove", this.updateLassoTouch, {
+          passive: false,
+        });
+        window.addEventListener("touchend", this.endLassoTouch);
+        window.addEventListener("touchcancel", this.endLassoTouch);
+      } else {
+        window.addEventListener("mousemove", this.updateLasso);
+        window.addEventListener("mouseup", this.endLasso);
+      }
+    },
+    updateLassoTouch(event) {
+      if (this.lasso_start && event.cancelable) {
+        event.preventDefault();
+      }
+      this.updateLasso(event);
+    },
+    endLassoTouch(event) {
+      this.updateLasso(event);
+      this.endLasso();
     },
     updateLasso(event) {
       if (!this.lasso_start) return;
@@ -499,6 +521,9 @@ export default {
     endLasso() {
       window.removeEventListener("mousemove", this.updateLasso);
       window.removeEventListener("mouseup", this.endLasso);
+      window.removeEventListener("touchmove", this.updateLassoTouch);
+      window.removeEventListener("touchend", this.endLassoTouch);
+      window.removeEventListener("touchcancel", this.endLassoTouch);
       this.lasso_active = false;
       this.lasso_start = null;
       this.lasso_end = null;

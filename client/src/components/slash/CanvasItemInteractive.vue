@@ -17,6 +17,7 @@
         v-html="display_shape_svg"
         class="_canvasItem--shape"
         @mousedown="handleMouseDown"
+        @touchstart.stop.prevent="handleItemTouchStart"
       />
     </template>
     <template v-else-if="file.$type === 'canvas_text'">
@@ -37,6 +38,7 @@
       :class="{ 'is--shape': file.$type === 'canvas_shape' }"
       v-if="mode === 'select'"
       @mousedown="handleMouseDown"
+      @touchstart.stop.prevent="handleItemTouchStart"
     ></div>
     <div
       v-if="!['canvas_shape'].includes(file.$type) && is_selected"
@@ -44,12 +46,14 @@
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
       @mousedown.stop="handleResizeStart($event, 'width')"
+      @touchstart.stop.prevent="handleResizeTouchStart($event, 'width')"
     />
     <div
       v-if="file.$type === 'canvas_text' && is_selected"
       class="_canvasItem--resizeHandle is--heightOnly"
       :style="'--scale-factor: ' + canvas_zoom"
       @mousedown.stop="handleResizeStart($event, 'height')"
+      @touchstart.stop.prevent="handleResizeTouchStart($event, 'height')"
     />
 
     <div
@@ -166,6 +170,9 @@ export default {
   beforeDestroy() {
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
+    window.removeEventListener("touchmove", this.handleItemTouchMove);
+    window.removeEventListener("touchend", this.handleItemTouchEnd);
+    window.removeEventListener("touchcancel", this.handleItemTouchEnd);
     document.removeEventListener("keydown", this.handleKeyDown);
     document.removeEventListener("keyup", this.handleKeyUp);
     this.$eventHub.$off("canvas.dragMove", this.onOtherItemDragMove);
@@ -343,6 +350,67 @@ export default {
         return 52;
       }
       return 160;
+    },
+    handleItemTouchStart(event) {
+      if (this.mode === "pan-zoom") return;
+      if (!event.touches || event.touches.length !== 1) return;
+      const t = event.touches[0];
+      this.handleMouseDown(this._touchToPointerLike(event, t));
+      this.attachItemTouchGestureListeners();
+    },
+    handleResizeTouchStart(event, resize_mode = "width") {
+      if (!event.touches || event.touches.length !== 1) return;
+      const t = event.touches[0];
+      this.handleResizeStart(this._touchToPointerLike(event, t), resize_mode);
+      this.attachItemTouchGestureListeners();
+    },
+    _touchToPointerLike(root_event, touch) {
+      return {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        metaKey: false,
+        shiftKey: false,
+        preventDefault: () => root_event.preventDefault(),
+        stopPropagation: () => root_event.stopPropagation(),
+      };
+    },
+    attachItemTouchGestureListeners() {
+      window.removeEventListener("touchmove", this.handleItemTouchMove);
+      window.removeEventListener("touchend", this.handleItemTouchEnd);
+      window.removeEventListener("touchcancel", this.handleItemTouchEnd);
+      window.addEventListener("touchmove", this.handleItemTouchMove, {
+        passive: false,
+      });
+      window.addEventListener("touchend", this.handleItemTouchEnd);
+      window.addEventListener("touchcancel", this.handleItemTouchEnd);
+    },
+    handleItemTouchMove(event) {
+      if (!event.touches || event.touches.length !== 1) {
+        this.handleItemTouchEnd(event);
+        return;
+      }
+      const t = event.touches[0];
+      if (
+        event.cancelable &&
+        (this.isResizing || (this.isDragging && this.has_dragged))
+      ) {
+        event.preventDefault();
+      }
+      this.handleMouseMove(this._touchToPointerLike(event, t));
+    },
+    handleItemTouchEnd(event) {
+      window.removeEventListener("touchmove", this.handleItemTouchMove);
+      window.removeEventListener("touchend", this.handleItemTouchEnd);
+      window.removeEventListener("touchcancel", this.handleItemTouchEnd);
+      const t =
+        event.changedTouches && event.changedTouches.length
+          ? event.changedTouches[0]
+          : null;
+      if (t) {
+        this.handleMouseUp(this._touchToPointerLike(event, t));
+      } else {
+        this.handleMouseUp(event);
+      }
     },
     handleResizeStart(event, resize_mode = "width") {
       event.preventDefault();

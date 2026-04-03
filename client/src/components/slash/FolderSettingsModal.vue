@@ -72,6 +72,7 @@ export default {
       default: "public",
     },
   },
+  data() {
     return {
       show_remove_menu: false,
     };

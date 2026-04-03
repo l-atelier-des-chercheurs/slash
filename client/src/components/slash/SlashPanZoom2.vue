@@ -10,10 +10,10 @@
     draggable="false"
     @mousedown="onMouseDown"
     @wheel.prevent="onWheel"
-    @touchstart.prevent.stop="onTouchStart"
-    @touchmove.prevent.stop="onTouchMove"
-    @touchend.prevent.stop="onTouchEnd"
-    @touchcancel.prevent.stop="onTouchEnd"
+    @touchstart="onTouchStart"
+    @touchmove="onTouchMove"
+    @touchend="onTouchEnd"
+    @touchcancel="onTouchEnd"
   >
     <div
       class="_pzViewport"
@@ -395,10 +395,15 @@ export default {
         const dy = touches[0].clientY - touches[1].clientY;
         this.pinch_start_distance = Math.hypot(dx, dy) || 1;
         this.pinch_start_zoom = this.current_zoom || 1;
+        if (event.cancelable) {
+          event.preventDefault();
+        }
         return;
       }
 
-      // One-finger drag should pan when hand mode is active
+      // One-finger drag should pan when hand mode is active.
+      // In select/draw mode, do not preventDefault so children get real touches
+      // and the browser can emit compatibility mouse events where needed.
       if (touches.length !== 1 || this.touch_mode !== "pan-zoom") return;
 
       const touch = touches[0];
@@ -414,6 +419,9 @@ export default {
       this.drag_start_client_y = touch.clientY;
       this.drag_start_scroll_left = this.scroll_left;
       this.drag_start_scroll_top = this.scroll_top;
+      if (event.cancelable) {
+        event.preventDefault();
+      }
     },
     onTouchMove(event) {
       const touches = event.touches;
@@ -446,6 +454,9 @@ export default {
         this.clampScroll();
 
         this.handleInteractionEnd();
+        if (event.cancelable) {
+          event.preventDefault();
+        }
         return;
       }
 
@@ -458,6 +469,9 @@ export default {
       this.scroll_left = this.drag_start_scroll_left - dx;
       this.scroll_top = this.drag_start_scroll_top - dy;
       this.clampScroll();
+      if (event.cancelable) {
+        event.preventDefault();
+      }
     },
     onTouchEnd(event) {
       if (event.touches.length < 2) {
