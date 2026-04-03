@@ -62,7 +62,7 @@
           :draw_stroke_width="draw_stroke_width"
         />
         <transition name="fade">
-          <DropMenuPanelContainer
+          <QuickAddToCanvas
             v-if="show_drop_menu"
             :additional_meta="additional_meta"
             :zoom="zoom"
@@ -109,7 +109,7 @@ import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue"
 import { getPointsBounds } from "@/utils/shapeUtils.js";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
-import DropMenuPanelContainer from "@/components/slash/DropMenuPanelContainer.vue";
+import QuickAddToCanvas from "@/components/slash/QuickAddToCanvas.vue";
 import MiniMap from "@/components/slash/MiniMap.vue";
 import FpsCounter from "@/components/slash/FpsCounter.vue";
 
@@ -131,7 +131,7 @@ export default {
     CanvasItemInteractive,
     CanvasDrawOverlay,
     LeftToolbar,
-    DropMenuPanelContainer,
+    QuickAddToCanvas,
     MiniMap,
     FpsCounter,
   },

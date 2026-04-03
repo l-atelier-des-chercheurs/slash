@@ -1,6 +1,6 @@
 <template>
   <div
-    class="u-overlayPanel _dropMenuPanelContainer"
+    class="u-overlayPanel _quickAddToCanvas"
     :style="{
       left: position_x + 'px',
       top: position_y + 'px',
@@ -33,7 +33,7 @@
 import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
 
 export default {
-  name: "DropMenuPanelContainer",
+  name: "QuickAddToCanvas",
   components: {
     DropMenuPanel,
   },
@@ -129,7 +129,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-._dropMenuPanelContainer {
+._quickAddToCanvas {
   position: absolute;
   z-index: 2;
 
