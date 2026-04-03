@@ -42,10 +42,6 @@ export default {
       type: Object,
       default: () => null,
     },
-    zoom: {
-      type: Number,
-      default: 1,
-    },
     folder_path: {
       type: String,
       default: "",
@@ -69,9 +65,6 @@ export default {
     },
     position_y() {
       return this.additional_meta?.y ?? 0;
-    },
-    scale() {
-      return this.zoom ? 1 / this.zoom : 1;
     },
   },
   methods: {
@@ -132,7 +125,6 @@ export default {
 ._quickAddToCanvas {
   position: absolute;
   z-index: 2;
-
   top: 0;
   left: 0;
   border-top-left-radius: 0;

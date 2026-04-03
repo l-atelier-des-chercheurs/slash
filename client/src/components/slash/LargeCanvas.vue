@@ -63,9 +63,9 @@
         />
         <transition name="fade">
           <QuickAddToCanvas
+            ref="quickAdd"
             v-if="show_drop_menu"
             :additional_meta="additional_meta"
-            :zoom="zoom"
             :folder_path="folder_path"
             @close="show_drop_menu = false"
           />
@@ -428,21 +428,38 @@ export default {
       this.canvas_clicked_y = coords.y;
       this.show_drop_menu = true;
 
-      // Zoom to scale 1 while keeping the clicked point under the mouse.
-      const click_client_x = event.clientX;
-      const click_client_y = event.clientY;
+      // Panel stays at click coords; pan/zoom so its center sits in the viewer viewport.
       this.$nextTick(() => {
-        if (this.$refs.viewer && this.$refs.viewer.zoomAndPanToClientPoint) {
-          this.$refs.viewer.zoomAndPanToClientPoint(
-            click_client_x,
-            click_client_y,
-            1
-          );
-        }
+        this.$nextTick(() => {
+          requestAnimationFrame(() => {
+            this.centerQuickAddInViewport();
+          });
+        });
       });
 
       return;
       // }
+    },
+    centerQuickAddInViewport() {
+      if (!this.show_drop_menu) return;
+      const viewer = this.$refs.viewer;
+      const quick = this.$refs.quickAdd;
+      if (!viewer || typeof viewer.zoomAndCenterTo !== "function") return;
+
+      const x = this.canvas_clicked_x;
+      const y = this.canvas_clicked_y;
+      if (x == null || y == null) return;
+
+      let w = 320;
+      let h = 140;
+      if (quick && quick.$el) {
+        w = quick.$el.offsetWidth || w;
+        h = quick.$el.offsetHeight || h;
+      }
+
+      const center_x = x + w / 2;
+      const center_y = y + h / 2;
+      viewer.zoomAndCenterTo(center_x, center_y, 1);
     },
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;
