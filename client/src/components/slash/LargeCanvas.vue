@@ -637,7 +637,9 @@ export default {
               ? viewer.getScrollLeft()
               : null;
           const live_scroll_top =
-            typeof viewer.getScrollTop === "function" ? viewer.getScrollTop() : null;
+            typeof viewer.getScrollTop === "function"
+              ? viewer.getScrollTop()
+              : null;
 
           if (Number.isFinite(live_zoom) && live_zoom > 0) {
             zoom = live_zoom;
