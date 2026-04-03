@@ -59,7 +59,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 22.22.1
       - name: Package Electron app
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,4 +72,15 @@ jobs:
           npm install
           cd electron
           npm install
-          npm run dist
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            npm run dist -- --mac dmg
+          else
+            npm run dist
+          fi
+      - name: check macOS image
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "🔍 verify signature"
+          codesign -dv electron/dist/mac-arm64/do•doc.app
+          echo "🔍 verify notarisation"
+          spctl -a -vvv -t open -vvv --context context:primary-signature electron/dist/mac-arm64/do•doc.app

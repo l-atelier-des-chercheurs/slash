@@ -304,6 +304,7 @@ export default {
         0,
         this.file.$path.lastIndexOf("/")
       );
+
       return this.makeRelativeURLFromThumbs({
         $thumbs: this.file.$thumbs,
         $type: this.file.$type,
