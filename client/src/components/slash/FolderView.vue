@@ -60,6 +60,7 @@
       :can_edit_folder="can_edit_current_folder"
       :folder_status="current_folder_status"
       @close="closeCurrentFolderSettings"
+      @folderRemoved="$emit('folderRemoved')"
     />
   </div>
 </template>
@@ -526,7 +527,7 @@ export default {
   position: relative;
   flex: 1;
   min-height: 0;
-  position: relative;
+  overflow: hidden;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 </style>

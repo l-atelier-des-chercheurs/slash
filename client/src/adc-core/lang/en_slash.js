@@ -16,4 +16,9 @@ export default {
   week_later: "{n} week later | {n} weeks later",
   month_later: "{n} month later | {n} months later",
   year_later: "{n} year later | {n} years later",
+
+  remove_folder: "Delete folder {name}",
+  remove_folder_expl:
+    "This permanently deletes the folder and all media inside it. This cannot be undone.",
+  folder_was_removed: "The folder has been deleted.",
 };

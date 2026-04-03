@@ -24,6 +24,7 @@
           <FolderView
             :folder_path="current_folder_path"
             @toggleFoldersSidebar="toggleFoldersSidebar"
+            @folderRemoved="onCurrentFolderRemoved"
           />
         </div>
       </transition>
@@ -166,11 +167,23 @@ export default {
         path: `/${folder_slug}`,
         query: { ...this.$route.query },
       });
+
+      this.closeFoldersSidebar();
     },
     async openNewFolder(new_folder_slug) {
       await this.$api.updateStore(this.folders_path);
       this.folders = await this.$api.getFolders({ path: this.folders_path });
       await this.selectFolder(`${this.folders_path}/${new_folder_slug}`);
+    },
+    async onCurrentFolderRemoved() {
+      this.current_folder_path = "";
+      await this.$router.replace({
+        path: "/",
+        query: { ...this.$route.query },
+      });
+      await this.$api.updateStore(this.folders_path);
+      await this.ensureFoldersSidebarData();
+      await this.toggleFoldersSidebar(true);
     },
   },
 };

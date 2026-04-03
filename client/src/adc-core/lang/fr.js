@@ -1009,6 +1009,10 @@ export default {
   remove: "Supprimer",
   disable: "Désactiver",
   remove_project: "Supprimer le projet {name}",
+  remove_folder: "Supprimer le dossier {name}",
+  remove_folder_expl:
+    "Cela supprime définitivement le dossier et tous les médias qu’il contient. Cette action est irréversible.",
+  folder_was_removed: "Le dossier a été supprimé.",
   remove_media: "Supprimer le média",
   remove_space: "Supprimer cet espace et tous ses contenus",
 

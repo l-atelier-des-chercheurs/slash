@@ -27,10 +27,28 @@
       />
     </div>
 
-    <AdminsAndContributorsField
-      :folder="folder"
-      :can_edit="can_edit_folder"
-    />
+    <AdminsAndContributorsField :folder="folder" :can_edit="can_edit_folder" />
+
+    <div v-if="can_edit_folder" class="u-spacingBottom">
+      <button
+        type="button"
+        class="u-button u-button_red u-button_small"
+        @click="show_remove_menu = true"
+      >
+        <b-icon icon="trash" />
+        {{ $t("remove") }}
+      </button>
+
+      <RemoveMenu2
+        v-if="show_remove_menu"
+        :path="folder.$path"
+        :modal_title="$t('remove_folder', { name: folder.title || folder.$path })"
+        :modal_expl="$t('remove_folder_expl')"
+        :success_notification="$t('folder_was_removed')"
+        @close="show_remove_menu = false"
+        @removedSuccessfully="onFolderRemovedSuccessfully"
+      />
+    </div>
   </BaseModal2>
 </template>
 
@@ -52,6 +70,17 @@ export default {
     folder_status: {
       type: String,
       default: "public",
+    },
+  },
+    return {
+      show_remove_menu: false,
+    };
+  },
+  methods: {
+    onFolderRemovedSuccessfully() {
+      this.show_remove_menu = false;
+      this.$emit("close");
+      this.$emit("folderRemoved");
     },
   },
 };

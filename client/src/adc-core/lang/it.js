@@ -959,6 +959,10 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
   remove: "Elimina",
   disable: "Disattiva",
   remove_project: "Elimina il progetto {name}",
+  remove_folder: "Elimina la cartella {name}",
+  remove_folder_expl:
+    "Questo elimina definitivamente la cartella e tutti i media al suo interno. L’operazione non è reversibile.",
+  folder_was_removed: "La cartella è stata eliminata.",
   remove_media: "Elimina il media",
   remove_space: "Elimina questo spazio e tutti i suoi contenuti",
 
