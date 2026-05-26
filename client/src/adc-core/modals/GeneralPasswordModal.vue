@@ -4,7 +4,7 @@
     :is_closable="false"
     @close="$emit('close')"
   >
-    <p class="u-spacingBottom">
+    <p class="u-instructions u-spacingBottom">
       {{ $t("general_password_modal_text") }}
       <template v-if="$root.app_infos.instance_meta.contactmail">
         <br />
@@ -23,6 +23,7 @@
         :content.sync="password_to_submit"
         :required="true"
         :input_type="'password'"
+        :autofocus="true"
         @toggleValidity="($event) => (allow_send = $event)"
         @onEnter="submitGeneralPassword"
       />
@@ -36,18 +37,24 @@
         }"
       /> -->
 
-      <button
-        type="submit"
-        v-if="!password_submit_error"
-        :disabled="!allow_send"
-        class="u-button u-button_bleuvert"
-      >
-        {{ $t("access") }}
-      </button>
-      <div v-else>
+      <p v-if="password_submit_error" class="u-errorMsg u-spacingBottom">
         {{ password_submit_error }}
-      </div>
+      </p>
     </form>
+
+    <template #footer>
+      <div class="_footerActions">
+        <button
+          type="button"
+          class="u-button u-button_bleuvert"
+          :disabled="!allow_send"
+          @click="submitGeneralPassword"
+        >
+          <!-- <b-icon icon="box-arrow-in-right" /> -->
+          {{ $t("access") }}
+        </button>
+      </div>
+    </template>
   </BaseModal2>
 </template>
 <script>
@@ -69,6 +76,8 @@ export default {
   computed: {},
   methods: {
     async submitGeneralPassword() {
+      if (!this.allow_send) return;
+
       try {
         await this.$api.submitGeneralPassword({
           password: this.password_to_submit,
@@ -92,4 +101,12 @@ export default {
   },
 };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+._footerActions {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+}
+</style>

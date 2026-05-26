@@ -647,7 +647,7 @@ export default {
       const [min_zoom, max_zoom] = this.zoom_range || [0.01, 1];
       const clamped = Math.min(Math.max(zoom, min_zoom), max_zoom);
 
-      const duration = 0.5;
+      const duration = 0.8;
       this.$refs.viewport.style.transition = `all ${duration}s cubic-bezier(0.19, 1, 0.22, 1)`;
       this.zoom_center_transition_timeout = setTimeout(() => {
         this.zoom_center_transition_timeout = null;
@@ -656,9 +656,12 @@ export default {
         }
       }, duration * 1000);
 
+      const anchor_x = options.viewport_anchor_x ?? this.wrapper_ow / 2;
+      const anchor_y = options.viewport_anchor_y ?? this.wrapper_oh / 2;
+
       this.current_zoom = clamped;
-      this.scroll_left = (content_x || 0) * clamped - this.wrapper_ow / 2;
-      this.scroll_top = (content_y || 0) * clamped - this.wrapper_oh / 2;
+      this.scroll_left = (content_x || 0) * clamped - anchor_x;
+      this.scroll_top = (content_y || 0) * clamped - anchor_y;
       this.clampScroll();
 
       if (options.emit !== false) {

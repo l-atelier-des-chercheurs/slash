@@ -460,7 +460,17 @@ export default {
 
       const center_x = x + w / 2;
       const center_y = y + h / 2;
-      viewer.zoomAndCenterTo(center_x, center_y, 1);
+
+      const is_mobile = this.$root.is_mobile_view;
+      const zoom = is_mobile ? 0.8 : 1;
+      const zoom_options = {};
+
+      if (is_mobile && viewer.wrapper_oh > 0) {
+        // Place the field higher so the on-screen keyboard does not cover it.
+        zoom_options.viewport_anchor_y = viewer.wrapper_oh * 0.28;
+      }
+
+      viewer.zoomAndCenterTo(center_x, center_y, zoom, zoom_options);
     },
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;

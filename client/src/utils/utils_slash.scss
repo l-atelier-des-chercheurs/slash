@@ -259,6 +259,72 @@ input[type="file"] {
   }
 }
 
+.u-button_white {
+  background-color: white;
+  color: var(--c-noir);
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--g-200);
+      color: var(--c-noir);
+    }
+  }
+}
+
+.u-button_red {
+  background-color: var(--c-rouge);
+  color: white;
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--c-rouge_fonce);
+    }
+  }
+}
+
+.u-button_bleuvert {
+  background-color: var(--c-bleuvert);
+  color: white;
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--c-bleuvert_fonce);
+    }
+  }
+}
+
+.u-button_bleuvert_fonce {
+  background-color: var(--c-bleuvert_fonce);
+  color: white;
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--c-bleuvert);
+    }
+  }
+}
+
+.u-button_bleumarine {
+  background-color: var(--c-bleumarine);
+  color: white;
+
+  &:hover,
+  &:focus-visible,
+  &.is--active {
+    &:not([disabled]) {
+      background-color: var(--c-bleumarine_fonce);
+    }
+  }
+}
+
 .u-button_icon {
   padding: calc(var(--spacing) / 2);
   background: transparent;
