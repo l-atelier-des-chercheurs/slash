@@ -77,6 +77,10 @@ import {
   normalizeQuickNoteText,
   measureQuickNoteWidth,
 } from "@/utils/quickNoteUtils.js";
+import {
+  TEXT_CANVAS_DEFAULT_WIDTH,
+  measureTextCanvasHeight,
+} from "@/utils/textCanvasUtils.js";
 
 export default {
   props: {
@@ -182,7 +186,7 @@ export default {
   },
   computed: {
     isWidthOnly() {
-      return !this.file.$infos?.ratio;
+      return this.file.$type === "text" || !this.file.$infos?.ratio;
     },
     default_item_height() {
       if (this.file.$type === "canvas_text") {
@@ -222,8 +226,12 @@ export default {
     itemDimensions() {
       let x = this.currentX !== null ? this.currentX : this.file.x || 0;
       let y = this.currentY !== null ? this.currentY : this.file.y || 0;
+      const default_width =
+        this.file.$type === "text" ? TEXT_CANVAS_DEFAULT_WIDTH : 160;
       let width =
-        this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
+        this.currentWidth !== null
+          ? this.currentWidth
+          : this.file.width || default_width;
 
       if (
         this.file.$type !== "canvas_shape" &&
@@ -246,7 +254,9 @@ export default {
       }
 
       let height = this.default_item_height;
-      if (ratio) {
+      if (this.file.$type === "text") {
+        height = measureTextCanvasHeight(this.file.$content, width);
+      } else if (ratio) {
         height = width * ratio;
       } else if (this.file.$type === "canvas_shape") {
         if (this.file.height != null) {
@@ -353,6 +363,9 @@ export default {
       }
       if (this.file.$type === "canvas_text") {
         return this.default_item_height;
+      }
+      if (this.file.$type === "text") {
+        return measureTextCanvasHeight(this.file.$content, width);
       }
       return 160;
     },

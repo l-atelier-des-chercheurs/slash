@@ -55,6 +55,8 @@
   </div>
 </template>
 <script>
+import { TEXT_CANVAS_DEFAULT_WIDTH } from "@/utils/textCanvasUtils.js";
+
 export default {
   name: "DropMenuPanel",
   props: {
@@ -128,7 +130,7 @@ export default {
         const additional_meta = {
           x: this.additional_meta?.x,
           y: this.additional_meta?.y,
-          width: this.additional_meta?.width,
+          width: this.additional_meta?.width ?? TEXT_CANVAS_DEFAULT_WIDTH,
         };
         if (this.connected_as?.$path) {
           additional_meta.$authors = [this.connected_as.$path];

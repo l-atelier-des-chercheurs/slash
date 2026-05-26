@@ -154,6 +154,17 @@ export default {
   .is--canvas & {
     &[data-filetype="text"] {
       background: transparent;
+
+      ::v-deep ._mediaContent {
+        overflow: hidden;
+        height: 100%;
+      }
+
+      ::v-deep ._mediaContent--rawText,
+      ::v-deep ._mediaContent--collabEditor {
+        height: 100%;
+        overflow: hidden;
+      }
     }
   }
 

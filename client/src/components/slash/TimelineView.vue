@@ -132,7 +132,10 @@ function getTimelineItemHeight(file) {
   return TIMELINE_ITEM_WIDTH;
 }
 
-function chunkItemsIntoColumns(items, max_per_column = TIMELINE_ITEMS_PER_COLUMN) {
+function chunkItemsIntoColumns(
+  items,
+  max_per_column = TIMELINE_ITEMS_PER_COLUMN
+) {
   const columns = [];
   for (let i = 0; i < items.length; i += max_per_column) {
     columns.push(items.slice(i, i + max_per_column));
@@ -337,8 +340,6 @@ export default {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: linear-gradient(#e4e4e4 1px, transparent 1px);
-  background-size: 100% 28px;
 }
 
 ._timelineView--track {
