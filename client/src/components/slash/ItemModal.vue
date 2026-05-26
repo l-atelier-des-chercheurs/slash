@@ -1,5 +1,5 @@
 <template>
-  <div class="_itemModal">
+  <div class="_itemModal" :class="{ 'is--mobileView': $root.is_mobile_view }">
     <div class="_itemModal--overlay" @click="closeModal" />
     <button
       type="button"
@@ -326,5 +326,37 @@ export default {
   flex-flow: column nowrap;
   justify-content: center;
   align-items: center;
+}
+
+._itemModal.is--mobileView {
+  padding: var(--spacing);
+
+  ._closeBtn {
+    margin: calc(var(--spacing) / 2);
+  }
+
+  ._itemModal--contentWrapper {
+    flex-direction: column;
+    overflow-y: auto;
+    gap: var(--spacing);
+  }
+
+  ._file {
+    flex: 1 1 auto;
+    order: -1;
+    width: 100%;
+    min-height: 55vh;
+  }
+
+  ._meta {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+  }
+
+  ._meta--content {
+    min-height: 200px;
+    max-height: 40vh;
+  }
 }
 </style>

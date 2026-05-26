@@ -29,6 +29,7 @@
       <LargeCanvas
         v-if="view_mode === 'canvas'"
         :files="filtered_files"
+        :all_files="sorted_files"
         :zoom="canvas_zoom"
         :zoom_range="zoom_range"
         :folder_path="folder.$path"

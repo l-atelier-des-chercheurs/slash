@@ -318,6 +318,7 @@ export default {
   align-items: center;
   min-width: max-content;
   height: 100%;
+  padding: 0 calc(var(--spacing) * 4);
 }
 
 ._timelineView--day {

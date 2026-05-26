@@ -221,8 +221,8 @@ export default {
 .is--timeline {
   margin-top: 0;
   overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  background: white;
+  // box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  // background: white;
   transition: transform 0.2s;
 
   &:hover {

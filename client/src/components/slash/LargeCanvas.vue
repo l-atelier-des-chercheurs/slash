@@ -124,6 +124,10 @@ export default {
       type: Array,
       required: true,
     },
+    all_files: {
+      type: Array,
+      default: null,
+    },
     zoom: {
       type: Number,
       default: 1,
@@ -184,13 +188,16 @@ export default {
     };
   },
   computed: {
+    bounds_files() {
+      return this.all_files || this.files;
+    },
     content_bounds() {
       let right_edge = 0;
       let bottom_edge = 0;
-      if (!this.files || this.files.length === 0) {
+      if (!this.bounds_files || this.bounds_files.length === 0) {
         return { right_edge, bottom_edge };
       }
-      this.files.forEach((file) => {
+      this.bounds_files.forEach((file) => {
         const { width, height } = this.getFileDimensions(file);
         const x = file.x || 0;
         const y = file.y || 0;
@@ -200,7 +207,7 @@ export default {
       return { right_edge, bottom_edge };
     },
     canvas_width() {
-      if (!this.files || this.files.length === 0) {
+      if (!this.bounds_files || this.bounds_files.length === 0) {
         return this.min_canvas_width;
       }
       const right_edge = this.content_bounds.right_edge;
@@ -212,7 +219,7 @@ export default {
       );
     },
     canvas_height() {
-      if (!this.files || this.files.length === 0) {
+      if (!this.bounds_files || this.bounds_files.length === 0) {
         return this.min_canvas_height;
       }
       const bottom_edge = this.content_bounds.bottom_edge;
@@ -295,12 +302,14 @@ export default {
     },
     show_expand_preview_right() {
       return (
-        this.files?.length > 0 && this.canvas_width < this.max_canvas_width
+        this.bounds_files?.length > 0 &&
+        this.canvas_width < this.max_canvas_width
       );
     },
     show_expand_preview_bottom() {
       return (
-        this.files?.length > 0 && this.canvas_height < this.max_canvas_height
+        this.bounds_files?.length > 0 &&
+        this.canvas_height < this.max_canvas_height
       );
     },
     lasso_rect() {
