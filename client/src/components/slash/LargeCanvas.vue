@@ -90,6 +90,7 @@
       ></div> -->
     </SlashPanZoom2>
     <MiniMap
+      v-if="!$root.is_mobile_view"
       :files="files"
       :canvas_width="canvas_width"
       :canvas_height="canvas_height"
