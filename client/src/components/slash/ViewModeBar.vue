@@ -99,9 +99,11 @@ export default {
   gap: 6px;
 
   @media (max-width: 767px) {
-    left: auto;
-    right: var(--fixed-ui-margins);
-    transform: none;
+    top: auto;
+    bottom: var(--fixed-ui-margins);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
   }
 }
 
