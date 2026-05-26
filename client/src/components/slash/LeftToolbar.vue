@@ -84,10 +84,10 @@ export default {
   computed: {
     draw_size_options() {
       return [
-        { key: "S", width: 3 },
+        { key: "S", width: 2 },
         { key: "M", width: 5 },
-        { key: "L", width: 7 },
-        { key: "XL", width: 10 },
+        { key: "L", width: 10 },
+        { key: "XL", width: 18 },
       ];
     },
   },

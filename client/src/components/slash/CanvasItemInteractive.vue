@@ -22,7 +22,7 @@
     </template>
     <template v-else-if="file.$type === 'canvas_text'">
       <div class="_canvasItem--text">
-        <div v-html="file.text" />
+        <div class="_canvasItem--textLine">{{ quick_note_text }}</div>
       </div>
     </template>
     <CanvasItem
@@ -41,19 +41,14 @@
       @touchstart.stop.prevent="handleItemTouchStart"
     ></div>
     <div
-      v-if="!['canvas_shape'].includes(file.$type) && is_selected"
+      v-if="
+        !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected
+      "
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
       @mousedown.stop="handleResizeStart($event, 'width')"
       @touchstart.stop.prevent="handleResizeTouchStart($event, 'width')"
-    />
-    <div
-      v-if="file.$type === 'canvas_text' && is_selected"
-      class="_canvasItem--resizeHandle is--heightOnly"
-      :style="'--scale-factor: ' + canvas_zoom"
-      @mousedown.stop="handleResizeStart($event, 'height')"
-      @touchstart.stop.prevent="handleResizeTouchStart($event, 'height')"
     />
 
     <div
@@ -77,6 +72,11 @@
 <script>
 import CanvasItem from "./CanvasItem.vue";
 import { shapePointsToSvg, getPointsBounds } from "@/utils/shapeUtils.js";
+import {
+  QUICK_NOTE_HEIGHT,
+  normalizeQuickNoteText,
+  measureQuickNoteWidth,
+} from "@/utils/quickNoteUtils.js";
 
 export default {
   props: {
@@ -186,9 +186,17 @@ export default {
     },
     default_item_height() {
       if (this.file.$type === "canvas_text") {
-        return this.file.height || 52;
+        return QUICK_NOTE_HEIGHT;
       }
       return 52;
+    },
+    quick_note_text() {
+      if (this.file.$type !== "canvas_text") return "";
+      return normalizeQuickNoteText(this.file.text);
+    },
+    quick_note_width() {
+      if (this.file.$type !== "canvas_text") return 160;
+      return measureQuickNoteWidth(this.quick_note_text);
     },
     display_shape_svg() {
       if (this.file.$type !== "canvas_shape") return "";
@@ -217,9 +225,16 @@ export default {
       let width =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
-      if (this.file.$type !== "canvas_shape") {
+      if (
+        this.file.$type !== "canvas_shape" &&
+        this.file.$type !== "canvas_text"
+      ) {
         width = Math.min(this.item_max_width, width);
         width = Math.max(this.item_min_width, width);
+      }
+
+      if (this.file.$type === "canvas_text") {
+        width = this.quick_note_width;
       }
 
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
@@ -241,14 +256,7 @@ export default {
           height = width * (bounds.height / bounds.width);
         }
       } else if (this.file.$type === "canvas_text") {
-        const target_height =
-          this.currentHeight !== null ? this.currentHeight : this.file.height;
-        if (target_height != null) {
-          height = Math.min(
-            this.item_max_height,
-            Math.max(this.item_min_height, target_height)
-          );
-        }
+        height = this.default_item_height;
       }
 
       x = Math.min(x, this.canvas_width - width);
@@ -344,10 +352,7 @@ export default {
         return 160;
       }
       if (this.file.$type === "canvas_text") {
-        const target_height =
-          this.currentHeight !== null ? this.currentHeight : this.file.height;
-        if (target_height != null) return target_height;
-        return 52;
+        return this.default_item_height;
       }
       return 160;
     },
@@ -748,12 +753,23 @@ export default {
   }
 
   ._canvasItem--text {
+    display: flex;
+    align-items: center;
     font-size: 150%;
     overflow: hidden;
     height: 100%;
     background-color: var(--author-color);
     border-radius: var(--border-radius);
-    padding: calc(var(--spacing) / 2) calc(var(--spacing) / 1);
+    padding: 0 calc(var(--spacing) / 1);
+  }
+
+  ._canvasItem--textLine {
+    min-width: 0;
+    width: 100%;
+    white-space: nowrap;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    line-height: 1.2;
   }
 
   ._canvasItem--open {

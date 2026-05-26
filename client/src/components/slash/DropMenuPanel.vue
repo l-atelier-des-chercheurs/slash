@@ -12,7 +12,7 @@
         <label
           :for="inputId(row)"
           class="u-button u-button_icon _dropMenu--btn"
-          :title="row.label"
+          :title="row.title || row.label"
         >
           <b-icon :icon="row.icon" class="_dropMenu--icon" />
           <span v-if="show_labels" class="_dropMenu--label">{{
@@ -32,7 +32,7 @@
         v-else
         type="button"
         class="u-button u-button_icon _dropMenu--btn"
-        :title="row.label"
+        :title="row.title || row.label"
         @click.prevent="handleLabelClick(row)"
       >
         <b-icon :icon="row.icon" class="_dropMenu--icon" />
@@ -91,8 +91,9 @@ export default {
         },
         {
           id: "text",
-          label: this.$t("write"),
+          label: this.$t("text"),
           icon: "text-paragraph",
+          title: "For longer text content",
         },
         // {
         //   id: "video",

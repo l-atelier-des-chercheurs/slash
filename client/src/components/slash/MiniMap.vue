@@ -20,6 +20,7 @@
 
 <script>
 import { pointsToSvgPath, getPointsBounds } from "@/utils/shapeUtils.js";
+import { measureQuickNoteWidth, QUICK_NOTE_HEIGHT } from "@/utils/quickNoteUtils.js";
 
 export default {
   props: {
@@ -342,9 +343,15 @@ export default {
       ctx.globalAlpha = 1;
     },
     getItemWidth(file) {
+      if (file.$type === "canvas_text") {
+        return measureQuickNoteWidth(file.text);
+      }
       return file.width || 160;
     },
     getItemHeight(file) {
+      if (file.$type === "canvas_text") {
+        return QUICK_NOTE_HEIGHT;
+      }
       const width = this.getItemWidth(file);
       const ratio = file.$infos && file.$infos.ratio;
       if (ratio !== undefined) return width * ratio;

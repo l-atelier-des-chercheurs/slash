@@ -7,22 +7,36 @@
     }"
   >
     <div class="_text_input_container">
-      <textarea
+      <input
         v-model="new_text"
         ref="text_input"
-        placeholder="Quick note..."
+        type="text"
+        class="_quick_note_input"
+        :class="{ 'is--error': is_over_limit }"
+        placeholder="Quick note (99 chars max)"
         @keyup.enter="createText"
-        @input="autoResizeTextarea"
         autocomplete="off"
-        rows="1"
-        resize="none"
-        maxlength="2000"
-      ></textarea>
-      <button type="button" class="u-button_icon" @click="createText">
+      />
+      <button
+        type="button"
+        class="u-button_icon"
+        :disabled="!can_submit"
+        @click="createText"
+      >
         <b-icon icon="check-lg" />
       </button>
     </div>
+    <p class="_quick_note_meta" :class="{ 'is--error': is_over_limit }">
+      <span v-if="is_over_limit" class="_quick_note_error">
+        Max 99 characters — use Text for longer content
+      </span>
+      <span class="_quick_note_count">{{ character_count }} / 99</span>
+    </p>
+    <p v-if="!has_text_entered" class="_quick_note_hint">
+      For longer content, use Text below.
+    </p>
     <DropMenuPanel
+      v-if="!has_text_entered"
       :folder_path="folder_path"
       :additional_meta="additional_meta"
       @close="handleClose"
@@ -31,6 +45,12 @@
 </template>
 <script>
 import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
+import {
+  QUICK_NOTE_MAX_LENGTH,
+  QUICK_NOTE_HEIGHT,
+  normalizeQuickNoteText,
+  measureQuickNoteWidth,
+} from "@/utils/quickNoteUtils.js";
 
 export default {
   name: "QuickAddToCanvas",
@@ -50,14 +70,10 @@ export default {
   data() {
     return {
       new_text: "",
-      max_textarea_lines: 6,
     };
   },
   mounted() {
     this.$refs.text_input.focus();
-    this.$nextTick(() => {
-      this.autoResizeTextarea();
-    });
   },
   computed: {
     position_x() {
@@ -66,46 +82,35 @@ export default {
     position_y() {
       return this.additional_meta?.y ?? 0;
     },
+    character_count() {
+      return this.new_text.length;
+    },
+    is_over_limit() {
+      return this.character_count > QUICK_NOTE_MAX_LENGTH;
+    },
+    has_text_entered() {
+      return this.new_text.length > 0;
+    },
+    can_submit() {
+      return this.new_text.trim().length > 0 && !this.is_over_limit;
+    },
   },
   methods: {
-    autoResizeTextarea() {
-      const textarea = this.$refs.text_input;
-      if (!textarea) return;
-
-      textarea.style.height = "auto";
-
-      const computed_style = window.getComputedStyle(textarea);
-      const line_height =
-        Number.parseFloat(computed_style.lineHeight) ||
-        Number.parseFloat(computed_style.fontSize) * 1.2;
-      const padding_top = Number.parseFloat(computed_style.paddingTop) || 0;
-      const padding_bottom =
-        Number.parseFloat(computed_style.paddingBottom) || 0;
-      const max_height =
-        line_height * this.max_textarea_lines + padding_top + padding_bottom;
-      const next_height = Math.min(textarea.scrollHeight, max_height);
-
-      textarea.style.height = `${next_height}px`;
-      textarea.style.overflowY =
-        textarea.scrollHeight > max_height ? "auto" : "hidden";
-    },
     handleClose() {
       this.$emit("close");
     },
     async createText() {
-      this.autoResizeTextarea();
-      const textarea = this.$refs.text_input;
-      const text_height = textarea
-        ? Math.ceil(textarea.getBoundingClientRect().height)
-        : null;
+      if (!this.can_submit) return;
+
+      const text = normalizeQuickNoteText(this.new_text);
 
       const additional_meta = {
         $type: "canvas_text",
-        text: this.new_text,
+        text,
         x: this.additional_meta?.x,
         y: this.additional_meta?.y,
-        width: this.additional_meta?.width,
-        ...(text_height !== null && { height: text_height }),
+        width: measureQuickNoteWidth(text),
+        height: QUICK_NOTE_HEIGHT,
         requested_slug: `text`,
       };
       if (this.connected_as?.$path)
@@ -152,12 +157,50 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: calc(var(--spacing) / 2);
-  margin-bottom: calc(var(--spacing) / 4);
+  margin-bottom: calc(var(--spacing) / 8);
 
-  textarea {
+  ._quick_note_input {
+    flex: 1;
+    min-width: 0;
     font-size: 150%;
     height: auto;
     min-height: 2.2em;
+
+    &.is--error {
+      border-color: var(--c-rouge, #fc4b60);
+    }
   }
+}
+
+._quick_note_meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 4);
+  margin: 0 0 calc(var(--spacing) / 4);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  opacity: 0.65;
+
+  &.is--error {
+    opacity: 1;
+    color: var(--c-rouge, #fc4b60);
+  }
+}
+
+._quick_note_error {
+  flex: 1 1 100%;
+}
+
+._quick_note_count {
+  margin-left: auto;
+}
+
+._quick_note_hint {
+  margin: 0 0 calc(var(--spacing) / 4);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  opacity: 0.65;
 }
 </style>

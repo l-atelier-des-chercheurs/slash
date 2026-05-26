@@ -151,6 +151,12 @@ export default {
     }
   }
 
+  .is--canvas & {
+    &[data-filetype="text"] {
+      background: transparent;
+    }
+  }
+
   ::v-deep .plyr__controls {
     border-radius: var(--border-radius, 4px);
     padding-right: calc(var(--spacing) * 3);

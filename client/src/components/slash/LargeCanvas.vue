@@ -108,6 +108,10 @@
 import SlashPanZoom2 from "@/components/slash/SlashPanZoom2.vue";
 import CanvasItemInteractive from "@/components/slash/CanvasItemInteractive.vue";
 import { getPointsBounds } from "@/utils/shapeUtils.js";
+import {
+  QUICK_NOTE_HEIGHT,
+  measureQuickNoteWidth,
+} from "@/utils/quickNoteUtils.js";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import QuickAddToCanvas from "@/components/slash/QuickAddToCanvas.vue";
@@ -623,13 +627,14 @@ export default {
       }
     },
     getFileDimensions(file) {
-      const width = file.width || 160;
+      let width = file.width || 160;
       const ratio = file.$infos && file.$infos.ratio;
       let height;
-      if (ratio !== undefined) {
+      if (file.$type === "canvas_text") {
+        width = measureQuickNoteWidth(file.text);
+        height = QUICK_NOTE_HEIGHT;
+      } else if (ratio !== undefined) {
         height = width * ratio;
-      } else if (file.$type === "canvas_text") {
-        height = file.height || 52;
       } else if (file.$type === "canvas_shape") {
         if (file.height != null && file.width) {
           height = file.height;
