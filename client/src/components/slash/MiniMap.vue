@@ -378,22 +378,17 @@ export default {
       }
     },
     handleMouseDown(event) {
-      const container = this.$refs.container;
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const scale = Math.min(
-        rect.width / this.effective_canvas_width,
-        rect.height / this.effective_canvas_height
-      );
-      const content_w = this.effective_canvas_width * scale;
-      const content_h = this.effective_canvas_height * scale;
-      const offset_x = (rect.width - content_w) / 2;
-      const offset_y = (rect.height - content_h) / 2;
+      event.preventDefault();
+      event.stopPropagation();
 
+      const wrapper = this.$refs.wrapper;
+      if (!wrapper || this.scale_x <= 0 || this.scale_y <= 0) return;
+
+      const rect = wrapper.getBoundingClientRect();
       const client_x = event.clientX - rect.left;
       const client_y = event.clientY - rect.top;
-      const x = (client_x - offset_x) / scale;
-      const y = (client_y - offset_y) / scale;
+      const x = client_x / this.scale_x;
+      const y = client_y / this.scale_y;
 
       const viewport_w =
         ((this.viewport_props.width_pct || 0) / 100) *

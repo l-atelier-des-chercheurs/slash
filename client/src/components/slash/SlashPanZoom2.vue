@@ -526,18 +526,12 @@ export default {
       }, 200);
     },
     panTo({ x, y }) {
-      this.scrollToCorner({ x, y, animate: true });
-    },
-    scrollToCorner({ x, y, animate }) {
       const zoom = this.current_zoom || this.zoom || 1;
-      const margin = this.margin_around_content || 80;
-
-      const offset = margin / zoom;
-      const target_left = (x || 0) - offset;
-      const target_top = (y || 0) - offset;
+      const target_left = (x || 0) * zoom;
+      const target_top = (y || 0) * zoom;
 
       this.scrollTo(target_left, target_top, {
-        duration: animate ? 200 : 0,
+        duration: 200,
         absolute: true,
       });
     },
