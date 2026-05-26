@@ -221,9 +221,10 @@ export default {
 .is--timeline {
   margin-top: 0;
   overflow: hidden;
-  // box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  // background: white;
-  transition: transform 0.2s;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
     z-index: 100;

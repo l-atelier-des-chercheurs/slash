@@ -31,16 +31,23 @@
               v-show="!isDayCollapsed(element.key)"
               class="_timelineView--dayItems"
             >
-              <CanvasItem
-                v-for="item in element.mediaItems"
-                :key="item.key"
-                :file="item.file"
-                :mode="'timeline'"
-                :timeline-height="item.height"
-                :event-phase="item.eventPhase"
-                class="_timelineView--item _canvasItem"
-                :data-file-path="item.file.$path"
-              />
+              <div
+                v-for="(column, column_index) in element.columns"
+                :key="`${element.key}-col-${column_index}`"
+                class="_timelineView--column"
+                :class="{ 'is--staggered': column_index % 2 === 1 }"
+              >
+                <CanvasItem
+                  v-for="item in column"
+                  :key="item.key"
+                  :file="item.file"
+                  :mode="'timeline'"
+                  :timeline-height="item.height"
+                  :event-phase="item.eventPhase"
+                  class="_timelineView--item _canvasItem"
+                  :data-file-path="item.file.$path"
+                />
+              </div>
             </div>
           </div>
 
@@ -106,6 +113,31 @@ function formatDayLabel(d) {
 }
 function diffDays(a, b) {
   return Math.round((a.getTime() - b.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+const TIMELINE_ITEM_WIDTH = 224;
+const TIMELINE_ITEMS_PER_COLUMN = 2;
+
+function getTimelineItemHeight(file) {
+  const ratio = file.$infos?.ratio;
+  if (file.$type === "text") {
+    return Math.min(320, Math.max(140, Math.round(TIMELINE_ITEM_WIDTH * 0.75)));
+  }
+  if (ratio) {
+    return Math.round(TIMELINE_ITEM_WIDTH * ratio);
+  }
+  if (file.$type === "pdf") {
+    return Math.round(TIMELINE_ITEM_WIDTH * (9 / 16));
+  }
+  return TIMELINE_ITEM_WIDTH;
+}
+
+function chunkItemsIntoColumns(items, max_per_column = TIMELINE_ITEMS_PER_COLUMN) {
+  const columns = [];
+  for (let i = 0; i < items.length; i += max_per_column) {
+    columns.push(items.slice(i, i + max_per_column));
+  }
+  return columns;
 }
 
 export default {
@@ -239,11 +271,10 @@ export default {
           const fileEvent = this.getEventForDate(fileDate);
           const phaseLabel = fileEvent ? fileEvent.label : null;
 
-          let height = 224;
           mediaItems.push({
             key: file.$path,
             file,
-            height,
+            height: getTimelineItemHeight(file),
             eventPhase: phaseLabel,
           });
         });
@@ -253,6 +284,7 @@ export default {
           key: `day-${formatYYYYMMDD(day.date)}`,
           label: formatDayLabel(day.date),
           mediaItems,
+          columns: chunkItemsIntoColumns(mediaItems),
         });
       });
 
@@ -296,15 +328,23 @@ export default {
   inset: 0;
   width: 100%;
   height: 100%;
-  background-color: white;
+  background-color: #fafafa;
+  --timeline-item-width: 224px;
+  --timeline-stagger-offset: calc(var(--timeline-item-width) * 0.55);
+}
 
-  // background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
-  // background-size: 100% 28px; /* Matches baseLineHeight */
-  // background-position: 0 40px; /* Offset for header */
+._timelineView--background {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(#e4e4e4 1px, transparent 1px);
+  background-size: 100% 28px;
 }
 
 ._timelineView--track {
   position: relative;
+  display: flex;
+  align-items: center;
   overflow-x: scroll;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -316,9 +356,12 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
+  gap: calc(var(--spacing) * 2);
   min-width: max-content;
-  height: 100%;
-  padding: 0 calc(var(--spacing) * 4);
+  min-height: 100%;
+  height: auto;
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  box-sizing: border-box;
 }
 
 ._timelineView--day {
@@ -327,13 +370,12 @@ export default {
   flex-flow: row nowrap;
   align-items: center;
   flex-shrink: 0;
-  height: 100%;
+  align-self: center;
 }
 
 ._timelineView--dayLabel {
-  // width: 4rem;
   position: relative;
-  height: 100vh;
+  align-self: stretch;
   width: 4rem;
   display: flex;
   align-items: center;
@@ -376,25 +418,39 @@ export default {
 }
 
 ._timelineView--dayItems {
-  columns: 2 auto;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 1.25);
   flex-shrink: 0;
-  gap: 0;
   margin-left: 12px;
 }
 
+._timelineView--column {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: calc(var(--spacing) * 1.25);
+  flex-shrink: 0;
+
+  &.is--staggered {
+    margin-top: var(--timeline-stagger-offset);
+  }
+}
+
+._timelineView--item {
+  flex-shrink: 0;
+}
+
 ._timelineView--event {
-  position: relative;
+  position: sticky;
+  left: 0;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   flex-shrink: 0;
-  height: 100%;
+  align-self: center;
   padding-right: 16px;
   pointer-events: none;
-
-  min-height: 50vh;
-  position: sticky;
-  left: 0;
 }
 
 ._timelineView--eventBar {
@@ -420,7 +476,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  align-self: center;
   padding: 0 var(--spacing);
   pointer-events: none;
 }
@@ -453,9 +509,5 @@ export default {
   white-space: nowrap;
   box-shadow: none;
   z-index: 5;
-}
-
-._timelineView--item {
-  flex-shrink: 0;
 }
 </style>
