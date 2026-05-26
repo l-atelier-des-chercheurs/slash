@@ -5,6 +5,7 @@
       left: position_x + 'px',
       top: position_y + 'px',
     }"
+    @mousedown="handlePanelMouseDown"
   >
     <div class="_text_input_container">
       <input
@@ -26,7 +27,11 @@
         <b-icon icon="check-lg" />
       </button>
     </div>
-    <p class="_quick_note_meta" :class="{ 'is--error': is_over_limit }">
+    <p
+      v-if="has_text_entered"
+      class="_quick_note_meta"
+      :class="{ 'is--error': is_over_limit }"
+    >
       <span v-if="is_over_limit" class="_quick_note_error">
         Max 99 characters — use Text for longer content
       </span>
@@ -73,7 +78,14 @@ export default {
     };
   },
   mounted() {
-    this.$refs.text_input.focus();
+    this.focusInputField();
+  },
+  watch: {
+    additional_meta: {
+      handler() {
+        this.$nextTick(() => this.focusInputField());
+      },
+    },
   },
   computed: {
     position_x() {
@@ -96,6 +108,14 @@ export default {
     },
   },
   methods: {
+    focusInputField() {
+      const input = this.$refs.text_input;
+      if (input) input.focus();
+    },
+    handlePanelMouseDown(event) {
+      if (event.target.closest("button, label, input[type='file']")) return;
+      this.focusInputField();
+    },
     handleClose() {
       this.$emit("close");
     },

@@ -339,7 +339,10 @@ export default {
       clearTimeout(this.viewport_throttle_timer);
   },
   watch: {
-    current_mode() {
+    current_mode(new_mode) {
+      if (new_mode !== "select") {
+        this.show_drop_menu = false;
+      }
       this.saveStateToLocalStorage();
     },
     draw_stroke_width() {
@@ -475,6 +478,12 @@ export default {
       }
 
       viewer.zoomAndCenterTo(center_x, center_y, zoom, zoom_options);
+
+      this.$nextTick(() => {
+        if (quick && typeof quick.focusInputField === "function") {
+          quick.focusInputField();
+        }
+      });
     },
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;
