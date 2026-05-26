@@ -13,6 +13,7 @@ const folder = require("./folder"),
   users = require("./users"),
   sessionStore = require("./sessionStore"),
   journal = require("./journal"),
+  history = require("./history"),
   recoverPassword = require("./recover-password"),
   dev = require("./dev-log");
 
@@ -29,6 +30,7 @@ module.exports = (function () {
     app.get("/_perf", loadPerf);
 
     app.use("/_api2/{*index}", [cors(_corsCheck)]);
+    app.use("/_api2", _api2ResponseLog);
 
     app.get(
       "/_api2/_networkInfos",
@@ -44,6 +46,17 @@ module.exports = (function () {
 
     app.get("/_api2/_logs", _getLogs);
     app.get("/_api2/_logs/:filename", _onlyAdmins, _downloadLog);
+
+    app.get(
+      [
+        "/_api2/:folder_type/:folder_slug/_history",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/_history",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/:subsub_folder_slug/_history",
+      ],
+      _generalPasswordCheck,
+      _restrictToLocalAdmins,
+      _getFolderHistory
+    );
 
     app.get("/_api2/_users", _generalPasswordCheck, _getAllUsers);
     app.patch("/_api2/_users/:id", _generalPasswordCheck, _updateUser);
@@ -266,6 +279,16 @@ module.exports = (function () {
     );
     app.get(
       [
+        "/_api2/:folder_type.zip",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type.zip",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type.zip",
+      ],
+      _generalPasswordCheck,
+      _restrictToLocalAdminsForFolderTypeZip,
+      _downloadFolderType
+    );
+    app.get(
+      [
         "/_api2/:folder_type/:folder_slug.zip",
         "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug.zip",
         "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/:subsub_folder_slug.zip",
@@ -312,6 +335,25 @@ module.exports = (function () {
       _generalPasswordCheck,
       _restrictToContributors,
       _removeFiles
+    );
+    app.post(
+      [
+        "/_api2/:folder_type/_removefolders",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/_removefolders",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/_removefolders",
+      ],
+      _generalPasswordCheck,
+      _restrictToLocalAdmins,
+      _removeFolders
+    );
+    app.post(
+      [
+        "/_api2/:folder_type/_getfolders",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/_getfolders",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/_getfolders",
+      ],
+      _generalPasswordCheck,
+      _getFoldersBySlugs
     );
     app.get(
       [
@@ -369,6 +411,28 @@ module.exports = (function () {
       const path_to_type = utils.getContainingFolder(path_to_folder);
       _updateParentFoldersCountAndBroadcast(path_to_folder, path_to_type);
     });
+  }
+
+  /** Logs each _api2 request/response timing and payload size when Content-Length is set */
+  function _api2ResponseLog(req, res, next) {
+    const started_ms = Date.now();
+    const route_label = `${req.method} ${req.originalUrl || req.url}`;
+
+    dev.logapi(`Requested ${route_label}`);
+
+    res.on("finish", () => {
+      const elapsed_ms = Date.now() - started_ms;
+      const content_length = res.getHeader("Content-Length");
+      const size_part =
+        content_length != null && content_length !== ""
+          ? `, payload ${content_length} bytes`
+          : "";
+      dev.logapi(
+        `Finished ${route_label}, status ${res.statusCode}, took ${elapsed_ms} ms${size_part}`
+      );
+    });
+
+    next();
   }
 
   function _corsCheck(req, callback) {
@@ -441,6 +505,13 @@ module.exports = (function () {
 
     if (path_to_type && auth.canFolderBeCreatedByAll({ path_to_type }))
       return "Folder contribution allowed to all according to schema";
+
+    if (path_to_type && auth.canFolderBeCreatedByLoggedIn({ path_to_type })) {
+      const token_path = auth.extractAndCheckToken({ req });
+      if (token_path)
+        return "Folder contribution allowed to logged-in users according to schema";
+      return false;
+    }
 
     if (
       (await auth.isFolderOpenedToAll({
@@ -565,6 +636,26 @@ module.exports = (function () {
       if (res) return res.status(403).send({ code: "not_allowed" });
     }
   }
+
+  async function _restrictToLocalAdminsForFolderTypeZip(req, res, next) {
+    const { path_to_folder } = utils.makePathFromReq(req);
+    const acl_path = path_to_folder || ".";
+    dev.logapi({ path_to_folder: acl_path });
+
+    const allowed = await _canAdminFolder({
+      path_to_folder: acl_path,
+      req,
+    });
+
+    if (allowed) {
+      dev.log(allowed);
+      return next();
+    } else {
+      dev.error(`not allowed to admin folder for type zip ${acl_path}`);
+      if (res) return res.status(403).send({ code: "not_allowed" });
+    }
+  }
+
   async function _restrictIfPrivate(req, res, next) {
     const { path_to_type, path_to_folder } = utils.makePathFromReq(req);
     dev.logapi({ path_to_folder });
@@ -617,6 +708,7 @@ module.exports = (function () {
   async function loadIndex(req, res) {
     dev.logapi();
     let d = {};
+
     d.schema = global.settings.schema;
     d.debug_mode = dev.isDebug();
     d.is_livereload = dev.isLivereload();
@@ -740,13 +832,10 @@ module.exports = (function () {
     const { path_to_type } = utils.makePathFromReq(req);
     const { token_path } = JSON.parse(req.headers.authorization || "{}");
 
-    dev.logapi({ path_to_type });
-
     try {
       let d = await folder.getFolders({ path_to_type });
 
       // todo : filter depending on $status, only authors see folders
-      dev.logpackets(`Successfully got folders ${path_to_type}`);
       journal.log({
         from: "api2",
         event: "get_folders",
@@ -787,6 +876,17 @@ module.exports = (function () {
       dev.logpackets(`Successfully created folder ${path_to_folder}`);
 
       res.status(200).json({ new_folder_slug });
+
+      // Record the initial field state so history is complete from creation.
+      history
+        .appendCreated({
+          path_to_folder: utils.convertToSlashPath(path_to_folder),
+          meta: new_folder_meta,
+          author_path: token_path,
+        })
+        .catch((err) =>
+          dev.error("Failed to write creation history: " + err.message)
+        );
 
       journal.log({
         from: "api2",
@@ -1026,8 +1126,25 @@ module.exports = (function () {
         },
       });
 
-      // 5. Send response
-      res.status(200).json({ status: "ok" });
+      // 4. Append per-field history (fire-and-forget)
+      if (data && Object.keys(data).length > 0) {
+        history
+          .appendUpdated({
+            path_to_folder: utils.convertToSlashPath(path_to_folder),
+            data,
+            author_path: token_path,
+          })
+          .catch((err) =>
+            dev.error("Failed to append update history: " + err.message)
+          );
+      }
+
+      // 5. Send response with changed fields for optimistic client updates
+      res.status(200).json({
+        status: "ok",
+        changed_data,
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
+      });
 
       // 6. Notify subscribers (after response)
       _notifyFolderUpdated(path_to_type, path_to_folder, changed_data);
@@ -1201,6 +1318,110 @@ module.exports = (function () {
     } catch (err) {
       _handleRemoveFolderError(err, res, { path_to_folder, token_path });
     }
+  }
+
+  async function _removeFolders(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization);
+    const { folder_slugs } = req.body;
+
+    dev.logapi({ path_to_type, folder_slugs });
+
+    if (!Array.isArray(folder_slugs) || folder_slugs.length === 0)
+      return res.status(400).json({ code: "invalid_folder_slugs" });
+    if (folder_slugs.length > 100)
+      return res.status(400).json({ code: "batch_too_large" });
+
+    const { success, failed } = await folder.removeFolders({
+      path_to_type,
+      folder_slugs,
+    });
+
+    for (const folder_slug of success) {
+      const path_to_folder = path.join(path_to_type, folder_slug);
+      await auth.removeAllTokensForFolder({ token_path: path_to_folder });
+    }
+
+    const outcome =
+      failed.length === 0
+        ? "success"
+        : success.length === 0
+        ? "error"
+        : "partial";
+
+    journal.log({
+      from: "api2",
+      event: "remove_folders",
+      details: {
+        outcome,
+        path_to_type,
+        success,
+        failed,
+        author_path: token_path,
+      },
+    });
+
+    res.status(200).json({ success, failed });
+
+    if (success.length > 0) {
+      for (const folder_slug of success) {
+        const path_to_folder = path.join(path_to_type, folder_slug);
+        _notifyFolderRemoved(path_to_type, path_to_folder);
+      }
+    }
+  }
+
+  async function _getFoldersBySlugs(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization || "{}");
+    const { folder_slugs, no_files = false, detailed = false } = req.body;
+
+    dev.logapi({ path_to_type, folder_slugs, no_files, detailed });
+
+    if (!Array.isArray(folder_slugs) || folder_slugs.length === 0)
+      return res.status(400).json({ code: "invalid_folder_slugs" });
+    if (folder_slugs.length > 500)
+      return res.status(400).json({ code: "batch_too_large" });
+
+    const { folders, failed } = await folder.getFoldersBySlugs({
+      path_to_type,
+      folder_slugs,
+      no_files,
+      detailed,
+      can_read_folder: async ({ path_to_folder }) => {
+        const folder_is_private = await auth.isFolderPrivate({
+          path_to_folder,
+        });
+        if (!folder_is_private) return true;
+        return _canContributeToFolder({
+          path_to_type,
+          path_to_folder,
+          req,
+        });
+      },
+    });
+
+    const outcome =
+      failed.length === 0
+        ? "success"
+        : folders.length === 0
+        ? "error"
+        : "partial";
+
+    journal.log({
+      from: "api2",
+      event: "get_folders_by_slugs",
+      details: {
+        outcome,
+        path_to_type,
+        folders_count: folders.length,
+        failed,
+        author_path: token_path,
+      },
+    });
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.status(200).json({ folders, failed });
   }
 
   async function _uploadFile(req, res, next) {
@@ -1432,6 +1653,24 @@ module.exports = (function () {
 
     await downloads.downloadFolder({
       path_to_folder,
+      path_to_type,
+      res,
+      token_path,
+    });
+  }
+
+  async function _downloadFolderType(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization || "{}");
+
+    try {
+      utils.parseAndCheckSchema({ relative_path: path_to_type });
+    } catch (err) {
+      dev.error(`download folder type schema: ${err.message}`);
+      return res.status(404).send({ code: "not_found" });
+    }
+
+    await downloads.downloadFolderType({
       path_to_type,
       res,
       token_path,
@@ -2051,8 +2290,12 @@ module.exports = (function () {
         },
       });
 
-      // 4. Send response
-      res.status(200).json({ status: "ok" });
+      // 4. Send response with a minimal but useful payload
+      res.status(200).json({
+        status: "ok",
+        changed_data,
+        path_to_meta: utils.convertToSlashPath(path_to_meta),
+      });
 
       // 5. Notify subscribers (after response)
       _notifyFileUpdated(path_to_folder, path_to_meta, changed_data);
@@ -2391,7 +2634,7 @@ module.exports = (function () {
 
     const session = sessionStore.findSession(sessionID);
     if (!session) return res.status(401).json({ code: "session_not_found" });
-    if (session.userID !== id)
+    if (!sessionStore.isUserInSession(sessionID, id))
       return res.status(403).json({ code: "not_allowed" });
 
     const { path } = req.body;
@@ -2666,6 +2909,20 @@ module.exports = (function () {
     const code = err?.code ?? "upload_failed";
     const err_infos = err?.err_infos ?? undefined;
 
+    if (code === "upload_aborted") {
+      dev.logverbose(
+        `Upload interrupted by client for ${context.path_to_folder}`
+      );
+      try {
+        if (!res.headersSent) {
+          res.status(499).send({ code, err_infos });
+        }
+      } catch (e) {
+        // Response may have already been sent or connection closed
+      }
+      return;
+    }
+
     const error_msg = `Failed to upload file to ${context.path_to_folder}: ${message}`;
 
     dev.error(error_msg);
@@ -2830,6 +3087,19 @@ module.exports = (function () {
     });
 
     res.status(500).send({ code, err_infos });
+  }
+
+  async function _getFolderHistory(req, res) {
+    const { path_to_folder } = utils.makePathFromReq(req);
+    try {
+      const entries = await history.getEntries({
+        path_to_folder: utils.convertToSlashPath(path_to_folder),
+      });
+      res.json({ entries });
+    } catch (err) {
+      dev.error("Failed to get folder history: " + err.message);
+      res.json({ entries: [] });
+    }
   }
 
   return API;

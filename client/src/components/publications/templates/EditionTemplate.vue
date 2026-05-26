@@ -70,7 +70,9 @@
             :view_mode="view_mode"
             :opened_style_file_meta="opened_style_file_meta"
             :show_source_html.sync="show_source_html"
-            :show_source_html_toggle="can_edit && view_mode === 'book'"
+            :show_source_html_toggle="
+              can_edit && view_mode === 'book' && show_graphic_styles
+            "
             :can_edit="can_edit"
             @openChapter="
               $emit('updatePane', { key: 'chapter', value: $event })
@@ -206,7 +208,7 @@ export default {
       return this.pane_infos?.edit_graphics === true;
     },
     opened_style_file_meta() {
-      return this.pane_infos?.style || "first";
+      return this.pane_infos?.style || "default";
     },
     meta_filenames_already_present() {
       let current = [],
@@ -315,8 +317,10 @@ export default {
           path: chapter._main_text.$path,
         });
       }
-      await this.$api.deleteItem({
-        path: chapter.$path,
+      await this.removeSection2({
+        publication: this.publication,
+        group: "sections_list",
+        section: chapter,
       });
     },
     getChapterPosition(chapter_path) {

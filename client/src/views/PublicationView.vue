@@ -72,10 +72,11 @@
 <script>
 import PublicationTopbar from "@/components/publications/PublicationTopbar.vue";
 import DynamicTitle from "@/mixins/DynamicTitle.js";
+import PublicationReady from "@/mixins/PublicationReady.js";
 
 export default {
   props: {},
-  mixins: [DynamicTitle],
+  mixins: [DynamicTitle, PublicationReady],
   components: {
     PublicationTopbar,
     PageExport: () =>
@@ -159,7 +160,9 @@ export default {
       let margins = 15;
       if (
         this.publication &&
-        ["page_by_page", "edition"].includes(this.publication.template)
+        ["page_by_page", "edition", "cartography"].includes(
+          this.publication.template
+        )
       )
         margins = 0;
       return `

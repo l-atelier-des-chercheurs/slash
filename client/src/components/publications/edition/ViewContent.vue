@@ -1,5 +1,6 @@
 <template>
   <div class="_viewContent">
+    <!-- <pre>{{ css_styles }}</pre> -->
     <div class="_viewMode">
       <div class="_viewMode--buttons">
         <div
@@ -16,7 +17,6 @@
           </button>
         </div>
       </div>
-
       <select
         size="small"
         v-if="style_files?.length > 0"
@@ -33,14 +33,33 @@
         <option value="default">{{ $t("default_styles") }}</option>
       </select>
     </div>
+    <div
+      class="_previewToggle u-displayAsPublic"
+      v-if="can_edit && view_mode === 'book'"
+    >
+      <ToggleInput
+        :content="is_preview_mode"
+        :label="$t('preview')"
+        @update:content="is_preview_mode = $event"
+      />
+    </div>
 
-    <div v-if="show_source_html_toggle" class="_toggleHTML">
+    <ErrorBar
+      v-if="can_edit"
+      :all_chapters="all_chapters"
+      :publication="publication"
+      :content_html="content_html"
+      :view_mode="view_mode"
+      @openChapter="$emit('openChapter', $event)"
+    />
+
+    <!-- <div v-if="show_source_html_toggle" class="_toggleHTML">
       <ToggleInput
         :content="show_source_html"
         :label="$t('show_source_html')"
         @update:content="$emit('update:show_source_html', $event)"
       />
-    </div>
+    </div> -->
 
     <div class="_viewContent--content">
       <PagedViewer
@@ -51,6 +70,7 @@
         :content_html="content_html"
         :opened_chapter_meta_filename="opened_chapter_meta_filename"
         :can_edit="can_edit"
+        :is_preview_mode="is_preview_mode"
         @openChapter="$emit('openChapter', $event)"
         @updateChaptersPositions="$emit('updateChaptersPositions', $event)"
         @updateNumberOfBookPages="updateNumberOfBookPages"
@@ -86,6 +106,7 @@ import { renderMedia as renderMediaFunction } from "@/components/publications/ed
 
 import PagedViewer from "@/components/publications/edition/PagedViewer.vue";
 import DocViewer from "@/components/publications/edition/DocViewer.vue";
+import ErrorBar from "@/components/publications/edition/ErrorBar.vue";
 
 import pagedengine from "@/components/publications/edition/pagedengine.css?raw";
 import default_styles from "@/components/publications/edition/default_styles.css?raw";
@@ -107,12 +128,14 @@ export default {
   components: {
     PagedViewer,
     DocViewer,
+    ErrorBar,
     ShowSourceHTML: () =>
       import("@/components/publications/edition/ShowSourceHTML.vue"),
   },
   data() {
     return {
       is_loading: false,
+      is_preview_mode: false,
       available_view_modes: [
         {
           label: this.$t("webpage"),
@@ -164,7 +187,10 @@ export default {
         this.style_files?.length === 0
       ) {
         return default_styles;
-      } else if (!this.opened_style_file_meta) {
+      } else if (
+        !this.opened_style_file_meta ||
+        this.opened_style_file_meta === "first"
+      ) {
         return this.style_files[0];
       } else {
         return (
@@ -241,24 +267,27 @@ export default {
         });
     },
     css_styles() {
-      const engine_block =
+      let css_styles = [];
+
+      css_styles.push(
         `/****************** paged.js engine styles (added by do•doc) ******************/\n` +
-        pagedengine;
+          pagedengine
+      );
 
-      const injected_block =
-        `\n\n/****************** page size ${this.format_mode} ******************/\n` +
-        `@page {
+      css_styles.push(
+        `/****************** page size ${this.format_mode} ******************/\n` +
+          `@page {
           size: ${this.format_mode};
-        }`;
+        }`
+      );
 
-      const user_block =
-        `\n\n/****************** custom styles ${
+      css_styles.push(
+        `/****************** custom styles ${
           this.opened_style_file_meta || "default"
-        } ******************/\n` + (this.custom_styles_unnested || "");
+        } ******************/\n` + (this.custom_styles_unnested || "")
+      );
 
-      const full = engine_block + injected_block + user_block;
-
-      return full;
+      return css_styles.join("\n\n");
     },
     content_html() {
       const nodes = this.content_nodes;
@@ -301,7 +330,9 @@ export default {
           html += `<h1 class="chapterTitle">${chapter.title}</h1>`;
         if (chapter.content)
           html += `
-        <div class="chapterContent"
+        <div class="chapterContent${
+          chapter.section_type === "grid" ? " grid" : ""
+        }"
           style="--column-count: ${chapter.column_count};"
         >${chapter.content}</div>`;
         html += `</section>`;
@@ -497,6 +528,12 @@ export default {
       let html = `<div class="gallery"><div class="gallery-content" data-number-of-medias="${medias.length}" >`;
 
       medias.forEach((media) => {
+        if (media?.$status === "missing") {
+          html += `<figure class="media gallery--item media-missing"><i>${this.$t(
+            "source_media_missing"
+          )}</i></figure>`;
+          return;
+        }
         html += `<figure class="media gallery--item">
           <img src="${this.makeMediaFileURL({
             $path: media.$path,
@@ -569,6 +606,7 @@ export default {
       const row_count = chapter.row_count || 6;
 
       let html = document.createElement("div");
+      html.className = "grid";
       let grid_content = document.createElement("div");
       grid_content.className = "grid-content";
       grid_content.style.setProperty("--col-count", col_count);
@@ -614,13 +652,16 @@ export default {
         }
 
         // check if the cell is part of a chain
-        const is_part_of_chain =
-          grid_areas.filter((a) => {
-            const m = a.id.match(/^([A-Z]+)(\d*)$/);
-            return m && m[1] === cell_id;
-          }).length > 1;
+        const chain_cell_indexes = new Set(
+          grid_areas
+            .map((a) => a.id.match(/^([A-Z]+)(\d*)$/))
+            .filter((m) => m && m[1] === cell_id)
+            .map((m) => (m[2] ? parseInt(m[2], 10) : 0))
+        );
+        const is_part_of_chain = chain_cell_indexes.size > 1;
+        const is_text_cell = media?.$type === "text";
 
-        if (is_part_of_chain) {
+        if (is_part_of_chain || is_text_cell) {
           cell.setAttribute("data-grid-area-is-chain-index", chain_index);
         }
         cell.style.gridColumnStart = area.column_start;
@@ -635,6 +676,10 @@ export default {
             media.source_medias
           );
           cell.innerHTML = text;
+        } else if (source_media && (!media || media?.$status === "missing")) {
+          cell.innerHTML = `<div class="u-instructions media-missing">${this.$t(
+            "source_media_missing"
+          )}</div>`;
         } else if (media?.$type === "image") {
           const img = document.createElement("img");
           img.src = this.makeMediaFileURL({
@@ -725,6 +770,7 @@ export default {
           makeMediaFileURL: this.makeMediaFileURL.bind(this),
           makeQREmbedForQR: this.makeQREmbedForQR.bind(this),
           makeQREmbedForExternalURL: this.makeQREmbedForExternalURL.bind(this),
+          getMissingMediaNoticeText: () => this.$t("source_media_missing"),
         },
       });
     },
@@ -827,6 +873,7 @@ export default {
     position: relative;
     width: 100%;
     height: 100%;
+    overflow: auto;
   }
 }
 
@@ -865,7 +912,7 @@ export default {
   ::v-deep {
     ._toggleHTML {
       ._label {
-        color: white;
+        // color: white;
       }
     }
   }
@@ -875,24 +922,35 @@ export default {
   }
 }
 
+._previewToggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+  margin: calc(var(--spacing) / 2);
+  pointer-events: none;
+
+  ::v-deep > * {
+    pointer-events: auto;
+  }
+}
+
 ._toggleHTML {
   position: absolute;
   bottom: 0;
   left: 0;
   z-index: 10;
-  background-color: var(--c-gris_clair);
   margin: calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
+  background-color: white;
 
   ::v-deep {
     > * {
       padding: calc(var(--spacing) / 2);
-      background-color: var(--c-gris_fonce);
-      border: 2px solid white;
       border-radius: var(--border-radius);
     }
     ._label {
-      color: white;
+      // color: white;
     }
   }
 }

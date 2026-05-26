@@ -14,17 +14,25 @@
         </template>
       </h3>
 
-      <button
-        type="button"
-        class="u-button u-button_verysmall"
-        @click="removeAreaText"
+      <RemoveMenu
+        :show_button_text="false"
+        :modal_title="$t('remove_area')"
+        :modal_expl="$t('remove_area_confirm')"
+        @remove="removeArea"
       >
-        <b-icon icon="trash" style="font-size: var(--icon-size)" />
-        {{ $t("remove") }}
-      </button>
+        <template #trigger>
+          <button type="button" class="u-button u-button_verysmall">
+            <b-icon icon="trash" style="font-size: var(--icon-size)" />
+            {{ $t("remove") }}
+          </button>
+        </template>
+      </RemoveMenu>
     </div>
     <div class="_gridItem--content">
-      <div v-if="!area_current_file" class="_gridItem--actions">
+      <div
+        v-if="!area_current_file && !area_has_source_media"
+        class="_gridItem--actions"
+      >
         <button
           type="button"
           class="u-button u-button_bleuvert"
@@ -55,14 +63,19 @@
       <div
         v-else
         class="_gridItem--media"
+        :class="{ '_gridItem--media_missing': area_media_is_missing }"
         :style="{
           '--object-fit': area_objectFit,
           '--object-position': area_objectPosition,
         }"
       >
-        <MediaContent :file="area_current_file" :resolution="1600" />
+        <p v-if="area_media_is_missing" class="u-warning">
+          {{ $t("source_media_missing") }}
+        </p>
+        <MediaContent v-else :file="area_current_file" :resolution="1600" />
         <div class="_gridItem--mediaActions">
           <button
+            v-if="!area_media_is_missing"
             type="button"
             class="u-button u-button_bleuvert u-button_small"
             :title="
@@ -88,14 +101,6 @@
           >
             <b-icon icon="image" style="font-size: var(--icon-size)" />
             {{ $t("change") }}
-          </button>
-          <button
-            type="button"
-            class="u-button u-button_red u-button_small"
-            @click="removeAreaMedia"
-          >
-            <b-icon icon="trash" style="font-size: var(--icon-size)" />
-            {{ $t("remove") }}
           </button>
         </div>
       </div>
@@ -149,6 +154,9 @@ export default {
     area_source_media() {
       return this.area?.source_medias?.[0];
     },
+    area_has_source_media() {
+      return Boolean(this.area_source_media);
+    },
     area_file_from_source_medias() {
       if (!this.area_source_media) return;
       return this.getSourceMedia({
@@ -158,6 +166,9 @@ export default {
     },
     area_current_file() {
       return this.area_file_from_source_medias;
+    },
+    area_media_is_missing() {
+      return this.area_has_source_media && !this.area_current_file;
     },
     area_is_text() {
       return (
@@ -173,6 +184,19 @@ export default {
     },
   },
   methods: {
+    updateChapterFromGridAreas(new_grid_areas) {
+      const source_medias = this.getGridEmbeddedSourceMedias({
+        grid_areas: new_grid_areas,
+      });
+
+      return this.$api.updateMeta({
+        path: this.chapter.$path,
+        new_meta: {
+          grid_areas: new_grid_areas,
+          source_medias,
+        },
+      });
+    },
     async createText() {
       const areaId = this.area.id;
       const chapter_name = this.chapter.$path.split("/").pop();
@@ -199,12 +223,7 @@ export default {
         return area;
       });
 
-      await this.$api.updateMeta({
-        path: this.chapter.$path,
-        new_meta: {
-          grid_areas: new_grid_areas,
-        },
-      });
+      await this.updateChapterFromGridAreas(new_grid_areas);
 
       const path = this.publication.$path + "/" + meta_filename;
       // call media.enableEditor to enable editing of the new text
@@ -238,70 +257,17 @@ export default {
         return area;
       });
 
-      const existing_source_medias = this.chapter.source_medias || [];
-      const source_medias = [...existing_source_medias, new_entry];
-
-      this.$api.updateMeta({
-        path: this.chapter.$path,
-        new_meta: {
-          grid_areas: new_grid_areas,
-          source_medias,
-        },
-      });
+      this.updateChapterFromGridAreas(new_grid_areas);
     },
 
-    async removeAreaText() {
-      const areaId = this.area.id;
-      const file_to_delete = this.area_current_file;
+    async removeArea() {
+      const area_id = this.area.id;
+      this.$eventHub.$emit("gridArea.delete", area_id);
 
-      const new_grid_areas = this.chapter.grid_areas.map((area) => {
-        if (area.id === areaId) {
-          return {
-            ...area,
-            source_medias: [],
-          };
-        }
-        return area;
-      });
-
-      await this.$api.updateMeta({
-        path: this.chapter.$path,
-        new_meta: {
-          grid_areas: new_grid_areas,
-        },
-      });
-
-      // Only delete the actual text file when it's local to the publication
-      if (
-        file_to_delete?.$path &&
-        file_to_delete.$type === "text" &&
-        file_to_delete.$path.startsWith(this.publication.$path + "/")
-      ) {
-        await this.$api.deleteItem({
-          path: file_to_delete.$path,
-        });
-      }
-    },
-
-    removeAreaMedia() {
-      const areaId = this.area.id;
-
-      const new_grid_areas = this.chapter.grid_areas.map((area) => {
-        if (area.id === areaId) {
-          return {
-            ...area,
-            source_medias: [],
-          };
-        }
-        return area;
-      });
-
-      this.$api.updateMeta({
-        path: this.chapter.$path,
-        new_meta: {
-          grid_areas: new_grid_areas,
-        },
-      });
+      const new_grid_areas = this.chapter.grid_areas.filter(
+        (area) => area.id !== area_id
+      );
+      await this.updateChapterFromGridAreas(new_grid_areas);
     },
 
     toggleObjectFit() {
@@ -421,5 +387,10 @@ export default {
   flex-flow: row wrap;
   gap: calc(var(--spacing) / 2);
   margin: calc(var(--spacing) / 2);
+}
+
+._gridItem--media_missing {
+  min-height: 120px;
+  padding: calc(var(--spacing) / 2);
 }
 </style>

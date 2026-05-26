@@ -219,7 +219,9 @@ class Exporter {
 
       if (output_format !== "gif") {
         render_cmd = render_cmd
-          .complexFilter("anullsrc=channel_layout=stereo:sample_rate=44100[silence]")
+          .complexFilter(
+            "anullsrc=channel_layout=stereo:sample_rate=44100[silence]"
+          )
           .addOptions(["-map 0:v", "-map [silence]", "-shortest"]);
       }
 
@@ -341,6 +343,9 @@ class Exporter {
       if (this.instructions.page) query.page = this.instructions.page;
       if (this.instructions.view_mode)
         query.view_mode = this.instructions.view_mode;
+      if (this.instructions.style) query.style = this.instructions.style;
+      if (this.instructions.display) query.display = this.instructions.display;
+      if (this.instructions.view) query.view = this.instructions.view;
       if (this.instructions.make_preview === true) query.make_preview = true;
 
       const superadmintoken = auth.getSuperadminToken();
@@ -917,7 +922,7 @@ class Exporter {
         task: "convertImage",
       },
       {
-        exts: [".flv", ".mov", ".avi", ".webm", ".mp4", ".mkv", ".wmv"],
+        exts: [".flv", ".mov", ".avi", ".webm", ".mp4", ".mkv", ".wmv", ".qt"],
         task: "convertVideo",
       },
       {

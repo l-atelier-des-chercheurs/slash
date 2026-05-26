@@ -85,20 +85,6 @@
 
     <div class="_leftTopMenu">
       <div class="_buttonRow" v-if="has_current_position_button">
-        <div
-          class="_buttonRow"
-          v-if="!['image', 'color'].includes(map_baselayer)"
-        >
-          <button
-            type="button"
-            class="u-button _searchButton"
-            @click="toggleSearch"
-            :title="$t('search')"
-          >
-            <b-icon class="inlineSVG" icon="search" />
-          </button>
-        </div>
-
         <!-- hidden if electron, need to find alternative strategy -->
         <button
           type="button"
@@ -130,6 +116,20 @@
         </button>
         <button type="button" class="u-button" @click="zoomOut">
           <b-icon class="inlineSVG" icon="dash" />
+        </button>
+      </div>
+
+      <div
+        class="_buttonRow"
+        v-if="!['image', 'color'].includes(map_baselayer)"
+      >
+        <button
+          type="button"
+          class="u-button _searchButton"
+          @click="toggleSearch"
+          :title="$t('search')"
+        >
+          <b-icon class="inlineSVG" icon="search" />
         </button>
       </div>
 
@@ -544,6 +544,10 @@ export default {
       hidden_geometries: [],
 
       start_map_print: false,
+      preloaded_base_image: null,
+      start_map_run_id: 0,
+      map_ready_emit_timeout: null,
+      map_ready_fallback_timeout: null,
 
       // Circle drawing state
       circle_center: null,
@@ -564,6 +568,10 @@ export default {
     // }, 500);
   },
   beforeDestroy() {
+    this.revokePreloadedBaseImage();
+    if (this.map_ready_emit_timeout) clearTimeout(this.map_ready_emit_timeout);
+    if (this.map_ready_fallback_timeout)
+      clearTimeout(this.map_ready_fallback_timeout);
     this.$eventHub.$off("publication.map.navigateTo", this.navigateTo);
     this.$eventHub.$off("publication.map.openPin", this.openPin);
     this.$eventHub.$off("publication.map.disableTools", this.disableTools);
@@ -574,6 +582,12 @@ export default {
     pins: {
       handler() {
         this.loadPins();
+        if (this.isPixelBasedBaselayer() && this.map) {
+          this.$nextTick(() => {
+            this.map.updateSize();
+            this.fitMapViewToContent();
+          });
+        }
       },
       deep: true,
     },
@@ -743,6 +757,69 @@ export default {
       ];
     },
     startMap({ keep_loc_and_zoom = false } = {}) {
+      this.startMapAsync({ keep_loc_and_zoom });
+    },
+    revokePreloadedBaseImage() {
+      if (this.preloaded_base_image?.revoke) this.preloaded_base_image.revoke();
+      this.preloaded_base_image = null;
+    },
+    async preloadBaseImage() {
+      if (!this.map_base_media) throw new Error("missing base image");
+
+      const img_src = this.makeMediaFileURL({
+        $path: this.map_base_media.$path,
+        $media_filename: this.map_base_media.$media_filename,
+      });
+
+      const response = await fetch(img_src, { credentials: "include" });
+      if (!response.ok)
+        throw new Error(`failed_to_load_base_image_${response.status}`);
+
+      const blob = await response.blob();
+      const blob_url = URL.createObjectURL(blob);
+
+      try {
+        const element = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("failed_to_decode_base_image"));
+          img.src = blob_url;
+        });
+
+        return {
+          url: blob_url,
+          width:
+            element.naturalWidth || this.map_base_media.$infos?.width || 1000,
+          height:
+            element.naturalHeight || this.map_base_media.$infos?.height || 1000,
+          element,
+          revoke: () => URL.revokeObjectURL(blob_url),
+        };
+      } catch (err) {
+        URL.revokeObjectURL(blob_url);
+        throw err;
+      }
+    },
+    async startMapAsync({ keep_loc_and_zoom = false } = {}) {
+      const run_id = ++this.start_map_run_id;
+
+      if (this.map_baselayer === "image") {
+        if (!this.map_base_media) return;
+
+        this.revokePreloadedBaseImage();
+        try {
+          this.preloaded_base_image = await this.preloadBaseImage();
+        } catch (err) {
+          console.error(err);
+          this.scheduleMapReadyNotification();
+          return;
+        }
+
+        if (run_id !== this.start_map_run_id) return;
+      } else {
+        this.revokePreloadedBaseImage();
+      }
+
       let zoom = 6;
       let center;
 
@@ -755,6 +832,8 @@ export default {
         this.map.setTarget(null);
         this.map = null;
       }
+
+      if (run_id !== this.start_map_run_id) return;
 
       // Image/color baselayers use pixel projections, which cannot be
       // transformed from EPSG:4326 user projection.
@@ -993,43 +1072,102 @@ export default {
 
       ////////////////////////////////////////////////////////////////////////// SET VIEW
 
-      if (!keep_loc_and_zoom) {
-        let extent;
+      if (!keep_loc_and_zoom) this.fitMapViewToContent();
 
-        if (this.map_baselayer !== "image") {
-          let extents = [];
-          if (this.pins_vector_source.getFeatures().length > 0)
-            extents.push(this.pins_vector_source.getExtent());
+      this.scheduleMapReadyNotification();
+    },
+    fitMapViewToContent() {
+      if (!this.map) return;
 
-          if (this.draw_vector_source.getFeatures().length > 0)
-            extents.push(this.draw_vector_source.getExtent());
+      let extent;
 
-          if (extents.length > 0) {
-            if (extents.length === 1) extent = extents[0];
-            else if (extents.length === 2)
-              extent = extend(extents[0], extents[1]);
-          }
-        } else {
-          extent = this.map.getView().getProjection().getExtent();
+      if (this.isPixelBasedBaselayer()) {
+        extent = this.map.getView().getProjection().getExtent();
+      } else {
+        let extents = [];
+        if (this.pins_vector_source?.getFeatures().length > 0)
+          extents.push(this.pins_vector_source.getExtent());
+
+        if (this.draw_vector_source?.getFeatures().length > 0)
+          extents.push(this.draw_vector_source.getExtent());
+
+        if (extents.length > 0) {
+          if (extents.length === 1) extent = extents[0];
+          else if (extents.length === 2) extent = extend(extents[0], extents[1]);
         }
-
-        if (extent) {
-          let padding =
-            this.map_baselayer === "image" ? [0, 0, 0, 0] : [50, 50, 50, 50];
-          this.map.getView().fit(extent, {
-            padding,
-          });
-        }
-
-        if (this.start_zoom) {
-          this.map.getView().setZoom(this.start_zoom);
-        } else if (
-          // prevent zoom from being too high (even though it may be correct for the extent)
-          this.map_baselayer !== "image" &&
-          this.map.getView().getZoom() > 15
-        )
-          this.map.getView().setZoom(15);
       }
+
+      if (!extent) return;
+
+      const padding = this.isPixelBasedBaselayer()
+        ? [0, 0, 0, 0]
+        : [50, 50, 50, 50];
+      this.map.getView().fit(extent, {
+        padding,
+        size: this.map.getSize(),
+      });
+
+      if (this.start_zoom) {
+        this.map.getView().setZoom(this.start_zoom);
+      } else if (
+        !this.isPixelBasedBaselayer() &&
+        this.map.getView().getZoom() > 15
+      ) {
+        this.map.getView().setZoom(15);
+      }
+    },
+    scheduleMapReadyNotification() {
+      if (this.map_ready_emit_timeout) clearTimeout(this.map_ready_emit_timeout);
+      if (this.map_ready_fallback_timeout)
+        clearTimeout(this.map_ready_fallback_timeout);
+
+      this.$nextTick(() => {
+        if (!this.map) {
+          this.$emit("mapReady");
+          return;
+        }
+
+        requestAnimationFrame(() => {
+          if (!this.map) return;
+
+          requestAnimationFrame(() => {
+            if (!this.map) return;
+
+            this.map.updateSize();
+            this.fitMapViewToContent();
+
+            const emitReady = () => {
+              if (this.map_ready_emit_timeout)
+                clearTimeout(this.map_ready_emit_timeout);
+              if (this.map_ready_fallback_timeout) {
+                clearTimeout(this.map_ready_fallback_timeout);
+                this.map_ready_fallback_timeout = null;
+              }
+              this.map_ready_emit_timeout = setTimeout(() => {
+                this.$emit("mapReady");
+              }, 500);
+            };
+
+            let render_passes = 0;
+            const onRenderComplete = () => {
+              render_passes++;
+              if (render_passes < 2) {
+                this.map.once("rendercomplete", onRenderComplete);
+                this.map.renderSync();
+                return;
+              }
+              emitReady();
+            };
+
+            this.map.once("rendercomplete", onRenderComplete);
+            this.map.renderSync();
+
+            this.map_ready_fallback_timeout = setTimeout(() => {
+              emitReady();
+            }, 5_000);
+          });
+        });
+      });
     },
     zoomIn() {
       var view = this.map.getView();
@@ -1133,13 +1271,22 @@ export default {
           throw new Error(`missing base image`);
         }
 
-        const img_width = this.map_base_media.$infos?.width;
-        const img_height = this.map_base_media.$infos?.height;
-        const img_src = this.makeMediaFileURL({
-          $path: this.map_base_media.$path,
-          $media_filename: this.map_base_media.$media_filename,
-        });
+        const img_width =
+          this.preloaded_base_image?.width ||
+          this.map_base_media.$infos?.width ||
+          1000;
+        const img_height =
+          this.preloaded_base_image?.height ||
+          this.map_base_media.$infos?.height ||
+          1000;
+        const img_src =
+          this.preloaded_base_image?.url ||
+          this.makeMediaFileURL({
+            $path: this.map_base_media.$path,
+            $media_filename: this.map_base_media.$media_filename,
+          });
         const attributions = this.map_base_media.caption;
+        const preloaded_element = this.preloaded_base_image?.element;
 
         const extent = [0, 0, img_width, img_height];
         const projection = new olProjection({
@@ -1164,6 +1311,14 @@ export default {
             url: img_src,
             projection,
             imageExtent: extent,
+            imageLoadFunction: (image, src) => {
+              const target = image.getImage();
+              if (preloaded_element?.complete) {
+                target.src = preloaded_element.src;
+                return;
+              }
+              target.src = src;
+            },
           }),
           className: "ol-layer ol-basemap",
         });
@@ -2709,6 +2864,20 @@ export default {
 ._searchButton {
   svg {
     pointer-events: none;
+  }
+}
+
+@media print {
+  ._leftTopMenu,
+  ._bottomMenu,
+  ._popup {
+    display: none !important;
+  }
+
+  ::v-deep .ol-geocoder,
+  ::v-deep .ol-scale-line,
+  ::v-deep .ol-full-screen {
+    display: none !important;
   }
 }
 </style>

@@ -191,6 +191,7 @@ export default {
   no_projects: "No project to show",
   no_publications: "No publications to show",
   no_files: "No file",
+  no_files_found: "No files found",
   not_specified: "Not specified",
   not_specified_f: "Not specified",
   none_f: "None",
@@ -346,6 +347,18 @@ export default {
   source_project: "Source project",
   source_files: "Source medias",
   source_media_missing: "Source media is missing",
+  edition_no_errors: "No errors",
+  edition_error_on_chapter: "Error on chapter {chapter_number}: {error_detail}",
+  edition_error_media_not_found: "media not found ({reference})",
+  edition_error_media_not_found_on_cell:
+    "media not found on cell {cell_id} ({reference})",
+  edition_error_text_overflow_on_cell: "text overflows on cell {cell_id}",
+  unknown_media_reference: "unknown media",
+  edition_errors_count: "No error | {count} error | {count} errors",
+  missing_medias_count:
+    "No missing media | {count} missing media | {count} missing medias",
+  text_overflows_count:
+    "No text overflow | {count} text overflow | {count} text overflows",
   media_pickers_instr: "Select medias to import.",
   already_present: "Already present",
   sent: "Sent",
@@ -373,7 +386,7 @@ export default {
   panes_visible_in_project_instr:
     "Choose which panes are available in this project. Only these will appear in the bar above.",
   panes_hidden_in_project_instr:
-    "Shown panes are checked. Uncheck a pane to hide it from the project bar.",
+    "Shown panes are checked. Uncheck a pane to hide it from the project bar. This setting applies to all contributors.",
   capture: "Capture",
   collect: "Collect",
   make: "Make",
@@ -942,7 +955,7 @@ export default {
   add_medias: "Add medias",
   add_media: "Add media",
   add_grid_area: "Add grid area",
-  areas_used: "{count} areas used",
+  areas_used: "No area defined | {count} area defined | {count} areas defined",
   click_empty_cell_to_add_area: "Click on an empty cell to add an area",
   max_grid_area_reached:
     "Maximum number of grid areas reached (A to Z). Delete an area to add a new one.",
@@ -967,8 +980,7 @@ export default {
   add_to_instance_admin: "Add as instance administrator",
   instance_admin_instructions:
     "Can access, modify and delete all content (spaces, projects, accounts, discussion topics). They also have access to these settings and can modify them.",
-  instance_contrib_instructions:
-    "Can only create spaces and discussion topics and manage them.",
+  instance_contrib_instructions: "Can only create spaces and manage them.",
   space_admin_instructions:
     "The referrers of a space can modify or delete it, as well as all its contents (including those which are private). They can also modify the list of referrers and contributors.",
   space_contrib_instructions:
@@ -1349,7 +1361,7 @@ export default {
   restore: "Restore",
   remove_for_good: "Remove for good",
   bin_is_empty: "The trash is empty",
-  date_removed: "Date removed",
+  date_removed: "Removed on",
   current_resolution: "Current resolution",
   gallery: "Gallery",
   removed_successfully: "Removed successfully",
@@ -1368,7 +1380,7 @@ export default {
   chats: "Discussions",
   enable_chats: "Enable the discussion feature",
   enable_chats_instructions:
-    "The discussion feature allows you to create topics where selected users can exchange messages. Once enabled, click on the bubble in the top right of the screen to access it.",
+    "The discussion feature allows logged-in users to create topics, then exchange messages based on each topic’s permissions. Visitors who are not logged in cannot create a topic. Once enabled, click the bubble in the top right of the screen to access it.",
   list_of_topics: "List of topics",
   create_a_topic: "Create a topic",
   not_allowed_to_post_messages:

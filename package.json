@@ -21,11 +21,13 @@
     "debug-lr": "node . --inspect=5858 -- --debug --verbose --livereload",
     "postinstall": "npm install --include=optional sharp && node scripts/cleanup-ffprobe.js",
     "preversion": "npm run build --prefix client && git add client/dist",
+    "sync:electron-version": "ROOT_VERSION=$(node -p \"require('./package.json').version\") && npm version --no-git-tag-version \"$ROOT_VERSION\" --prefix electron",
+    "version": "npm run sync:electron-version && git add electron/package.json electron/package-lock.json",
     "postversion": "git push --follow-tags",
     "setup-https": "node scripts/setup-https-certs.js"
   },
   "engines": {
-    "node": "22.22.1",
+    "node": "24.14.0",
     "npm": "*"
   },
   "dependencies": {
@@ -49,7 +51,7 @@
     "fs-extra": "^11.3.4",
     "heic-decode": "^2.1.0",
     "helmet": "^8.1.0",
-    "lru-cache": "^11.2.7",
+    "lru-cache": "^11.3.5",
     "md5-file": "^5.0.0",
     "node-fetch": "^2.7.0",
     "nodemailer": "^7.0.13",
@@ -57,7 +59,7 @@
     "platform-folders": "^0.6.1",
     "portscanner": "^2.2.0",
     "pug": "^3.0.4",
-    "puppeteer": "^24.39.1",
+    "puppeteer": "^24.40.0",
     "rich-text": "^4.1.0",
     "sharedb": "^5.2.2",
     "sharedb-logger": "^0.1.4",
@@ -68,7 +70,7 @@
     "uuid": "^13.0.0",
     "websocket-json-stream": "0.0.3",
     "write-file-atomic": "^7.0.1",
-    "ws": "^8.19.0"
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "node-gyp": "^12.2.0"

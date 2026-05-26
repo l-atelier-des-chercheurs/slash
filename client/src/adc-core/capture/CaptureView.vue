@@ -91,7 +91,8 @@
             v-if="selected_mode === 'audio' && !media_to_validate"
             ref="equalizerElement"
             :stream="stream"
-            :is_recording="is_recording"
+            :is_recording="is_recording && !video_recording_is_paused"
+            :type="'Full'"
           />
 
           <transition-group
@@ -420,10 +421,7 @@
                   type="button"
                   class="u-button u-button_orange u-button_inline _captureButton"
                   :key="selected_mode + '_pause'"
-                  v-if="
-                    (selected_mode === 'video' || selected_mode === 'audio') &&
-                    is_recording
-                  "
+                  v-if="show_pause_recording_button"
                   @mousedown.stop.prevent="pauseOrResumeCapture()"
                   @touchstart.stop.prevent="pauseOrResumeCapture()"
                 >
@@ -692,7 +690,7 @@
                   >
                     <AudioEqualizer
                       :stream="stream"
-                      :is_recording="is_recording"
+                      :is_recording="is_recording && !video_recording_is_paused"
                       :type="'Tiny'"
                     />
                   </div>
@@ -1215,6 +1213,16 @@ export default {
     },
   },
   computed: {
+    show_pause_recording_button() {
+      if (!["video", "audio"].includes(this.selected_mode)) return false;
+      if (!this.is_recording) return false;
+
+      // In live dubbing from Make, pausing recording desyncs with reference video playback.
+      if (this.origin === "make" && this.selected_mode === "audio")
+        return false;
+
+      return true;
+    },
     show_mode_selector() {
       return (
         !this.media_to_validate &&
@@ -1249,6 +1257,7 @@ export default {
   methods: {
     async stopStream() {
       console.log("CaptureView: METHODS • stopStream");
+      this.video_recording_is_paused = false;
 
       // Stop all tracks in the current stream
       if (this.stream) {
@@ -1687,6 +1696,7 @@ export default {
     },
     stopRecording() {
       if (!this.is_recording) return;
+      this.video_recording_is_paused = false;
       const duration = this.getAccurateRecordingDurationInSeconds();
       const duration_in_ms = Math.max(1, Math.round(duration * 1000));
       console.log("METHODS • CaptureView: stopRecording", duration_in_ms);
@@ -1800,6 +1810,7 @@ export default {
       this.recording_started_at_ms = undefined;
       this.recording_paused_at_ms = undefined;
       this.recording_paused_total_ms = 0;
+      this.video_recording_is_paused = false;
     },
 
     getImageDataFromFeed({ width, height } = {}) {
@@ -1860,6 +1871,7 @@ export default {
 
     startRecordFeed(options) {
       return new Promise(() => {
+        this.video_recording_is_paused = false;
         const finalStream = new MediaStream();
 
         if (options.type === "video") {
@@ -2262,8 +2274,8 @@ export default {
 
   .m_audioEqualizer {
     position: relative;
-    width: 64px;
-    height: 36px;
+    width: 68px;
+    height: 34px;
     background-color: transparent !important;
     border-radius: 4px;
     overflow: hidden;

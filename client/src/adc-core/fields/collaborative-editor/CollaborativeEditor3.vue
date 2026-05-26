@@ -137,29 +137,39 @@ import ReconnectingWebSocket from "reconnectingwebsocket";
 import {
   fonts as default_fonts,
   formats as default_formats,
-  fontSizeArr,
   lineHeightArr,
 } from "./imports/defaults.js";
 
-// var Parchment = Quill.import("parchment");
-// var lineHeightConfig = {
-//   scope: Parchment.Scope.BLOCK,
-//   whitelist: lineHeightArr,
-// };
-// var lineHeightClass = new Parchment.Attributor.Class(
-//   "lineheight",
-//   "ql-line-height",
-//   lineHeightConfig
-// );
-// var lineHeightStyle = new Parchment.Attributor.Style(
-//   "lineheight",
-//   "line-height",
-//   lineHeightConfig
-// );
-// Parchment.register(lineHeightClass);
-// Parchment.register(lineHeightStyle);
+const toolbar_font_size_arr = [
+  "10px",
+  "12px",
+  false,
+  "16px",
+  "20px",
+  "28px",
+  "36px",
+  "48px",
+  "__custom__",
+];
+
+const Parchment = Quill.import("parchment");
+const line_height_config = {
+  scope: Parchment.Scope.BLOCK,
+  whitelist: lineHeightArr.filter(Boolean),
+};
+const LineHeightStyleAttributor = Parchment.StyleAttributor;
+if (LineHeightStyleAttributor) {
+  const line_height_style = new LineHeightStyleAttributor(
+    "lineheight",
+    "line-height",
+    line_height_config
+  );
+  Quill.register(line_height_style, true);
+}
 var Size = Quill.import("attributors/style/size");
-Size.whitelist = fontSizeArr;
+if (Object.prototype.hasOwnProperty.call(Size, "whitelist")) {
+  delete Size.whitelist;
+}
 Quill.register(Size, true);
 
 const FontAttributor = Quill.import("attributors/style/font");
@@ -381,6 +391,44 @@ export default {
                   if (this.$listeners.onEnter) {
                     return this.$listeners.onEnter(range, context);
                   }
+
+                  // Keep logical active text formats for the next line.
+                  const format_keys_to_keep = [
+                    "font",
+                    "size",
+                    "color",
+                    "background",
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strike",
+                    "script",
+                    "code",
+                    "lineheight",
+                  ];
+                  const formats_to_keep = {};
+                  format_keys_to_keep.forEach((format_key) => {
+                    if (
+                      typeof current_format[format_key] !== "undefined" &&
+                      current_format[format_key] !== false
+                    ) {
+                      formats_to_keep[format_key] = current_format[format_key];
+                    }
+                  });
+
+                  if (Object.keys(formats_to_keep).length > 0) {
+                    requestAnimationFrame(() => {
+                      Object.entries(formats_to_keep).forEach(
+                        ([format_key, format_value]) => {
+                          this.editor.format(
+                            format_key,
+                            format_value,
+                            Quill.sources.SILENT
+                          );
+                        }
+                      );
+                    });
+                  }
                   return true;
                 },
               },
@@ -403,6 +451,7 @@ export default {
         this.editor.history.clear();
       }
 
+      this.setCustomSizeOptionLabel();
       this.setStatusButton();
     },
 
@@ -419,9 +468,9 @@ export default {
       if (reference_formats.includes("header"))
         container.push([{ header: [false, 1, 2, 3] }]);
       if (reference_formats.includes("size"))
-        container.push([{ size: fontSizeArr }]);
-      // if (reference_formats.includes("lineheight"))
-      //   container.push([{ lineheight: lineHeightArr }]);
+        container.push([{ size: toolbar_font_size_arr }]);
+      if (reference_formats.includes("lineheight"))
+        container.push([{ lineheight: lineHeightArr }]);
 
       let formatting_opt = [];
       const basic_formatting = [
@@ -522,18 +571,23 @@ export default {
             );
           }
         },
-        line_height_select: function (new_line_height) {
-          new_line_height;
-          // var range = this.quill.getSelection();
-          // if (range) {
-          //   this.quill.format(
-          //     range.index,
-          //     range.length,
-          //     "line-height",
-          //     +new_line_height,
-          //     "user"
-          //   );
-          // }
+        size: (new_size) => {
+          if (new_size === "__custom__") {
+            this.applyCustomTextSize();
+            return;
+          }
+          if (!new_size) {
+            this.editor.format("size", false, Quill.sources.USER);
+            return;
+          }
+          this.editor.format("size", new_size, Quill.sources.USER);
+        },
+        lineheight: function (new_line_height) {
+          if (!new_line_height) {
+            this.quill.format("lineheight", false, Quill.sources.USER);
+            return;
+          }
+          this.quill.format("lineheight", new_line_height, Quill.sources.USER);
         },
       };
 
@@ -541,6 +595,63 @@ export default {
         container,
         handlers,
       };
+    },
+    applyCustomTextSize() {
+      if (!this.editor) return;
+
+      const current_size = this.editor.getFormat()?.size;
+      const suggested_size =
+        this.parseCustomTextSize(current_size)?.replace("px", "") || "16";
+      const custom_size_raw = window.prompt(
+        `${this.$t("text_size")} (px)`,
+        suggested_size
+      );
+      if (custom_size_raw === null) return;
+
+      const custom_size = this.parseCustomTextSize(custom_size_raw);
+      if (!custom_size) return;
+
+      this.editor.format("size", custom_size, Quill.sources.USER);
+    },
+    setCustomSizeOptionLabel() {
+      const custom_label = this.$t("custom");
+      this.$el
+        .querySelectorAll(".ql-size .ql-picker-label")
+        .forEach((el) => el.setAttribute("data-label", custom_label));
+
+      this.$el
+        .querySelectorAll(
+          '.ql-size .ql-picker-label[data-value="__custom__"], .ql-size .ql-picker-item[data-value="__custom__"]'
+        )
+        .forEach((el) => {
+          el.setAttribute("data-value", "__custom__");
+          el.setAttribute("data-label", custom_label);
+        });
+
+      this.$el
+        .querySelectorAll('select.ql-size option[value="__custom__"]')
+        .forEach((option_el) => {
+          option_el.textContent = custom_label;
+        });
+    },
+    parseCustomTextSize(raw_value) {
+      if (raw_value === undefined || raw_value === null) return null;
+      const cleaned_value = String(raw_value)
+        .trim()
+        .replace(",", ".")
+        .replace(/px$/i, "")
+        .trim();
+      if (!cleaned_value) return null;
+
+      const parsed_value = Number(cleaned_value);
+      if (!Number.isFinite(parsed_value)) return null;
+
+      const clamped_value = Math.min(200, Math.max(6, parsed_value));
+      const normalized_value = Number.isInteger(clamped_value)
+        ? clamped_value.toString()
+        : clamped_value.toFixed(2).replace(/\.?0+$/, "");
+
+      return `${normalized_value}px`;
     },
     getEditorContent() {
       if (!this.editor.getText() || this.editor.getText() === "\n") return "";
@@ -838,6 +949,8 @@ export default {
       overflow: visible;
       color: inherit;
       border: none;
+      --block_line_height: 1.42;
+      --script_font_line_height_multiplier: 1.7;
 
       background-color: transparent;
 
@@ -888,6 +1001,23 @@ export default {
       > * {
         position: relative;
         // padding: 0;
+      }
+      > *[style*="line-height:1.25"],
+      > *[style*="line-height: 1.25"] {
+        --block_line_height: 1.25;
+      }
+      > *[style*="line-height:1.65"],
+      > *[style*="line-height: 1.65"] {
+        --block_line_height: 1.65;
+      }
+
+      /* Script fonts use a multiplier on the block line-height from the picker. */
+      [style*="font-family"][style*="Marelle"],
+      [style*="font-family"][style*="Belle Allure"] {
+        line-height: calc(
+          var(--block_line_height, 1.42) *
+            var(--script_font_line_height_multiplier, 1.12)
+        );
       }
     }
 
@@ -1188,13 +1318,19 @@ export default {
         .ql-picker-label,
         .ql-picker-item {
           &::before {
-            content: "Normal (1.42)" !important;
+            content: "Normal" !important;
           }
           &[data-value],
           &[data-value] {
             &::before {
               content: attr(data-value) !important;
             }
+          }
+          &[data-value="1.25"]::before {
+            content: "Tight" !important;
+          }
+          &[data-value="1.65"]::before {
+            content: "Spacious" !important;
           }
         }
       }
@@ -1273,6 +1409,28 @@ export default {
     }
   }
 
+  html[lang="fr"] .ql-picker.ql-lineheight {
+    .ql-picker-label,
+    .ql-picker-item {
+      &::before {
+        content: "Normal" !important;
+      }
+      &[data-value="1.25"]::before {
+        content: "Serré" !important;
+      }
+      &[data-value="1.65"]::before {
+        content: "Aéré" !important;
+      }
+    }
+  }
+
+  .ql-picker.ql-size {
+    .ql-picker-label[data-value="__custom__"]::before,
+    .ql-picker-item[data-value="__custom__"]::before {
+      content: attr(data-label) !important;
+    }
+  }
+
   // .ql-picker.ql-size .ql-picker-label[data-value="75%"]::before,
   // .ql-picker.ql-size .ql-picker-item[data-value="75%"]::before {
   //   content: "Small";
@@ -1315,6 +1473,13 @@ export default {
   }
   .ql-picker-label[data-value="Belle Allure CE"] {
     line-height: 2.2;
+  }
+
+  /* Marelle LIGNES includes built-in guideline glyphs:
+     tighten its preview so it doesn't overflow picker rows. */
+  .ql-picker.ql-font .ql-picker-label {
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
 

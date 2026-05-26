@@ -4,6 +4,7 @@
     :class="{
       'is--infiniteViewer': viewer_type === 'infinite-viewer',
       'is--editable': can_edit,
+      'is--previewMode': is_preview_mode,
     }"
   >
     <component :is="'style'" v-html="highlight_opened_pages" />
@@ -37,8 +38,10 @@
 import { Handler, Previewer } from "pagedjs";
 import { PagedjsFlowHandler } from "./PagedjsFlowHandler.js";
 import PanZoom3 from "@/components/publications/page_by_page/PanZoom3.vue";
+import PublicationReady from "@/mixins/PublicationReady.js";
 
 export default {
+  mixins: [PublicationReady],
   props: {
     content_nodes: {
       type: Object,
@@ -58,6 +61,10 @@ export default {
     },
     can_edit: Boolean,
     opened_chapter_meta_filename: String,
+    is_preview_mode: {
+      type: Boolean,
+      default: false,
+    },
   },
   components: {
     PanZoom3,
@@ -142,6 +149,8 @@ export default {
       await new Promise((resolve) => {
         console.log("generateBook");
 
+        this.setPublicationReadyState(false);
+
         this.is_generating_book = true;
 
         this.removeExistingStyles();
@@ -149,6 +158,8 @@ export default {
         const bookpreview = this.$refs.bookpreview;
         if (!bookpreview) {
           console.log("no bookpreview div");
+          this.setPublicationReadyState(true);
+          resolve();
           return;
         }
 
@@ -168,27 +179,37 @@ export default {
         // Register the Flow Handler
         paged.registerHandlers(PagedjsFlowHandler);
 
-        paged.preview(pagedjs_html, theme_styles, bookrender).then((flow) => {
-          bookpreview.innerHTML = "";
-          bookpreview.appendChild(flow.pagesArea);
-          bookrender.innerHTML = "";
+        paged
+          .preview(pagedjs_html, theme_styles, bookrender)
+          .then((flow) => {
+            bookpreview.innerHTML = "";
+            bookpreview.appendChild(flow.pagesArea);
+            bookrender.innerHTML = "";
 
-          const number_of_book_pages = flow.total;
-          this.updateNumberOfBookPages(number_of_book_pages);
+            const number_of_book_pages = flow.total;
+            this.updateNumberOfBookPages(number_of_book_pages);
 
-          this.$nextTick(() => {
-            this.showOnlyPages();
-            if (this.can_edit) {
-              this.addChapterShortcuts();
-              this.reportChapterPositions();
-            }
-            setTimeout(() => {
-              this.is_loading = false;
-              this.is_generating_book = false;
-              resolve();
-            }, 100);
+            this.$nextTick(() => {
+              this.showOnlyPages();
+              if (this.can_edit) {
+                this.addChapterShortcuts();
+                this.reportChapterPositions();
+              }
+              setTimeout(() => {
+                this.is_loading = false;
+                this.is_generating_book = false;
+                this.setPublicationReadyState(true);
+                resolve();
+              }, 100);
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+            this.is_loading = false;
+            this.is_generating_book = false;
+            this.setPublicationReadyState(true);
+            resolve();
           });
-        });
       });
     },
     updateNumberOfBookPages(number_of_book_pages) {
@@ -409,7 +430,7 @@ export default {
 
     /* Show grid structure in edit mode */
     @media screen {
-      &.is--editable {
+      &.is--editable:not(.is--previewMode) {
         /* Show grid lines on the grid container */
         /* Add visible border to each grid cell */
 
@@ -583,6 +604,37 @@ export default {
       .pagedjs_margin-left-middle,
       .pagedjs_margin-left-bottom {
         box-shadow: 0 0 0 1px inset var(--color-marginBox);
+      }
+
+      &.is--previewMode {
+        .editChapterBtn {
+          display: none !important;
+        }
+
+        .pagedjs_pagebox,
+        .pagedjs_margin-top-left-corner-holder,
+        .pagedjs_margin-top,
+        .pagedjs_margin-top-left,
+        .pagedjs_margin-top-center,
+        .pagedjs_margin-top-right,
+        .pagedjs_margin-top-right-corner-holder,
+        .pagedjs_margin-bottom-left-corner-holder,
+        .pagedjs_margin-bottom,
+        .pagedjs_margin-bottom-left,
+        .pagedjs_margin-bottom-center,
+        .pagedjs_margin-bottom-right,
+        .pagedjs_margin-bottom-right-corner-holder,
+        .pagedjs_margin-right,
+        .pagedjs_margin-right-top,
+        .pagedjs_margin-right-middle,
+        .pagedjs_margin-right-bottom,
+        .pagedjs_margin-left,
+        .pagedjs_margin-left-top,
+        .pagedjs_margin-left-middle,
+        .pagedjs_margin-left-bottom {
+          box-shadow: none !important;
+          outline: none !important;
+        }
       }
     }
 

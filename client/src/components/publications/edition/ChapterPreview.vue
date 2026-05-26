@@ -88,7 +88,11 @@
             class="u-instructions"
             v-if="section.grid_areas && section.grid_areas.length > 0"
           >
-            {{ $t("areas_used", { count: section.grid_areas.length }) }}
+            {{
+              $tc("areas_used", section.grid_areas.length, {
+                count: section.grid_areas.length,
+              })
+            }}
           </span>
           <span v-else class="u-instructions">
             {{ $t("no_areas_defined") }}
@@ -145,7 +149,10 @@ export default {
     previewContent(section) {
       const sub_content = section._main_text?.$content;
       if (sub_content) {
-        return sub_content.substring(0, 300) + " […]";
+        if (sub_content.length > 300)
+          return sub_content.substring(0, 300) + " […]";
+
+        return sub_content;
       }
       return false;
     },

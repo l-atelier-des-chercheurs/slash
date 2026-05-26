@@ -100,10 +100,8 @@
 
 <script>
 import GridArea from "./GridArea.vue";
-import Medias from "../../../mixins/Medias.js";
 
 export default {
-  mixins: [Medias],
   props: {
     chapter: {
       type: Object,
@@ -233,7 +231,8 @@ export default {
       const grid_areas = this.chapter.grid_areas.filter(
         (area) => area.id !== areaId
       );
-      this.updateChapter({ grid_areas });
+      const source_medias = this.getGridEmbeddedSourceMedias({ grid_areas });
+      this.updateChapter({ grid_areas, source_medias });
     },
     selectArea(areaId) {
       this.selected_area_id = areaId;

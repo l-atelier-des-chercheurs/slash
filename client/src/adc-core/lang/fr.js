@@ -349,6 +349,7 @@ export default {
   list_of_projects: "Liste des projets",
   no_projects: "Aucun projet à afficher",
   no_files: "Aucun fichier",
+  no_files_found: "Aucun fichier trouvé",
   no_publications: "Aucune publication à afficher",
 
   none_f: "Aucune",
@@ -886,7 +887,8 @@ export default {
   add_medias: "Ajouter des médias",
   add_media: "Ajouter un média",
   add_grid_area: "Ajouter une zone de grille",
-  areas_used: "{count} zones utilisées",
+  areas_used:
+    "Aucune zone définie | {count} zone définie | {count} zones définies",
   click_empty_cell_to_add_area:
     "Cliquez sur une cellule vide pour ajouter une zone",
   max_grid_area_reached:
@@ -916,7 +918,7 @@ export default {
   instance_admin_instructions:
     "Peuvent accéder à tous les contenus, les modifier et les supprimer (espaces, projets, comptes, sujets de discussion, etc.). Ils ont accès à ces réglages et peuvent les modifier.",
   instance_contrib_instructions:
-    "Peuvent uniquement créer des espaces et des sujets de discussion et les administrer.",
+    "Peuvent uniquement créer des espaces et les administrer.",
 
   space_admin_instructions:
     "Les référents d’un espace peuvent le modifier ou le supprimer, ainsi que tous ses contenus (y compris ceux qui sont privés). Ils peuvent aussi modifier la liste des référents et des contributeurs.",
@@ -1023,6 +1025,20 @@ export default {
   source_project: "Projet source",
   source_files: "Fichiers sources",
   source_media_missing: "Le média source est manquant",
+  edition_no_errors: "Aucune erreur",
+  edition_error_on_chapter:
+    "Erreur au chapitre {chapter_number} : {error_detail}",
+  edition_error_media_not_found: "média introuvable ({reference})",
+  edition_error_media_not_found_on_cell:
+    "média introuvable dans la cellule {cell_id} ({reference})",
+  edition_error_text_overflow_on_cell:
+    "le texte déborde dans la cellule {cell_id}",
+  unknown_media_reference: "média inconnu",
+  edition_errors_count: "Aucune erreur | {count} erreur | {count} erreurs",
+  missing_medias_count:
+    "Aucun média manquant | {count} média manquant | {count} médias manquants",
+  text_overflows_count:
+    "Aucun débordement de texte | {count} débordement de texte | {count} débordements de texte",
   media_pickers_instr:
     "Choisissez le nom du projet qui contient les médias que vous souhaitez utiliser. Si les médias appartiennent à un autre projet, ils seront d’abord importés dans le projet actuel.",
   already_present: "Déjà présent",
@@ -1050,7 +1066,7 @@ export default {
   panes_visible_in_project_instr:
     "Choisissez les panneaux disponibles dans ce projet. Seuls ceux-ci apparaîtront dans la barre ci‑dessus.",
   panes_hidden_in_project_instr:
-    "Les panneaux affichés sont cochés. Décochez un panneau pour le masquer de la barre du projet.",
+    "Les panneaux affichés sont cochés. Décochez un panneau pour le masquer de la barre du projet. Ce réglage s’applique à tous les contributeurs.",
   capture: "Capter",
   collect: "Collecter",
   make: "Fabriquer",
@@ -1449,7 +1465,7 @@ export default {
   chats: "Discussions",
   enable_chats: "Activer la fonctionnalité de discussion",
   enable_chats_instructions:
-    "La fonctionnalité de discussion permet de créer des sujets où les utilisateurs sélectionnés peuvent échanger des messages. Une fois actif, cliquez sur la bulle en haut à droite de l’écran pour y accéder.",
+    "La fonctionnalité de discussion permet aux utilisateurs connectés de créer des sujets, puis d’y échanger des messages selon les droits du sujet. Les visiteurs non connectés ne peuvent pas créer de sujet. Une fois activée, cliquez sur la bulle en haut à droite de l’écran pour y accéder.",
   list_of_topics: "Liste des sujets",
   create_a_topic: "Créer un sujet",
   not_allowed_to_post_messages:

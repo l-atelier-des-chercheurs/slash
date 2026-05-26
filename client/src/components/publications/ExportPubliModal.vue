@@ -255,8 +255,19 @@ export default {
       )
         instructions.page = this.page_to_export_as_image;
 
-      if (this.publication.template === "edition")
+      if (this.publication.template === "edition") {
         instructions.view_mode = "book";
+
+        // check if there is a style filename selected, add it
+        if (this.pane_infos?.style) {
+          instructions.style = this.pane_infos.style;
+        }
+      }
+
+      if (this.publication.template === "cartography") {
+        instructions.display = "all";
+        if (this.pane_infos?.view) instructions.view = this.pane_infos.view;
+      }
 
       if (this.export_mode === "pdf") {
         if (this.pdf_pages_to_export_mode === "current")
