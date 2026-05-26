@@ -21,18 +21,21 @@
         </div>
 
         <div class="_dropMenu--identity">
-          <button
-            v-if="connected_as"
-            type="button"
-            class="u-button u-button_transparent u-button_icon _dropMenu--userLabel"
-            @click="openLoginModal()"
-          >
-            <span
-              class="_dropMenu--userLabel__color"
-              :style="{ backgroundColor: connected_as?.color }"
-            ></span>
-            {{ connected_as.name }}
-          </button>
+          <div class="_dropMenu--identityUser">
+            <button
+              v-if="connected_as"
+              type="button"
+              class="u-button u-button_transparent u-button_icon _dropMenu--userLabel"
+              @click="openLoginModal()"
+            >
+              <span
+                class="_dropMenu--userLabel__color"
+                :style="{ backgroundColor: connected_as?.color }"
+              ></span>
+              {{ connected_as.name }}
+            </button>
+            <FolderContributorsList v-if="folder" :folder="folder" />
+          </div>
           <DropMenuPanel
             :folder_path="folder_path"
             :additional_meta="additional_meta"
@@ -45,12 +48,15 @@
 </template>
 <script>
 import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
+import FolderContributorsList from "@/components/slash/FolderContributorsList.vue";
 
 export default {
   components: {
     DropMenuPanel,
+    FolderContributorsList,
   },
   props: {
+    folder: Object,
     folder_path: String,
     canvas_zoom: Number,
     canvas_scroll: Object,
@@ -108,8 +114,15 @@ export default {
 ._dropMenu--identity {
   display: flex;
   flex-flow: row nowrap;
-  align-items: center;
+  align-items: flex-start;
   gap: calc(var(--spacing) / 2);
+}
+
+._dropMenu--identityUser {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) / 6);
 }
 
 ._dropMenu--fileInput {

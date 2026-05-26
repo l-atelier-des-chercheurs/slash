@@ -9,6 +9,7 @@
 
     <div class="_viewArea">
       <TopLeftMenu
+        :folder="folder"
         :folder_path="folder.$path"
         :current_folder_title="folder_display_title"
         :canvas_zoom="canvas_zoom"
