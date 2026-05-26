@@ -90,6 +90,59 @@ export function getPointsBounds(points) {
   return cached;
 }
 
+export const SHAPE_HIT_STROKE_WIDTH = 20;
+
+export function getShapeStrokePadding(
+  stroke_width,
+  hit_stroke_width = SHAPE_HIT_STROKE_WIDTH
+) {
+  return Math.max(stroke_width / 2, hit_stroke_width / 2);
+}
+
+/**
+ * Build canvas_shape metadata from raw canvas points.
+ * Expands bounds by half the visible stroke so saved geometry matches the preview.
+ */
+export function buildShapeMetadata(points, stroke_width) {
+  if (!points || points.length === 0) {
+    return null;
+  }
+
+  let min_x = Infinity;
+  let max_x = -Infinity;
+  let min_y = Infinity;
+  let max_y = -Infinity;
+
+  for (const point of points) {
+    const x = px(point);
+    const y = py(point);
+    min_x = Math.min(min_x, x);
+    max_x = Math.max(max_x, x);
+    min_y = Math.min(min_y, y);
+    max_y = Math.max(max_y, y);
+  }
+
+  if (!isFinite(min_x) || !isFinite(min_y)) {
+    return null;
+  }
+
+  const pad = stroke_width / 2;
+  const origin_x = min_x - pad;
+  const origin_y = min_y - pad;
+  const width = Math.max(max_x - min_x + pad * 2, 1);
+  const height = Math.max(max_y - min_y + pad * 2, 1);
+
+  return {
+    x: Math.round(origin_x),
+    y: Math.round(origin_y),
+    width: Math.round(width),
+    height: Math.round(height),
+    shape_points: roundShapePoints(
+      points.map((point) => [px(point) - origin_x, py(point) - origin_y])
+    ),
+  };
+}
+
 /**
  * Build full SVG string for a canvas shape from shape_points.
  * Height is derived from the path's bounding box aspect ratio when not provided.
@@ -101,9 +154,8 @@ export function shapePointsToSvg(
   height
 ) {
   if (!shape_points || shape_points.length < 2) return "";
-  const bounds = getPointsBounds(shape_points);
-  const h = height != null ? height : width * (bounds.height / bounds.width);
+  const h = height != null ? height : width;
   const path_d = pointsToSvgPath(shape_points);
-  const hit_stroke_width = 20;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="${bounds.min_x} ${bounds.min_y} ${bounds.width} ${bounds.height}"><path d="${path_d}" fill="none" stroke="black" stroke-width="${stroke_width}" stroke-linecap="round" stroke-linejoin="round" /><path class="path-hitbox" d="${path_d}" fill="none" stroke="transparent" stroke-width="${hit_stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+  const hit_stroke_width = SHAPE_HIT_STROKE_WIDTH;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${h}" viewBox="0 0 ${width} ${h}" preserveAspectRatio="xMinYMin meet"><path d="${path_d}" fill="none" stroke="black" stroke-width="${stroke_width}" stroke-linecap="round" stroke-linejoin="round" /><path class="path-hitbox" d="${path_d}" fill="none" stroke="transparent" stroke-width="${hit_stroke_width}" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
 }

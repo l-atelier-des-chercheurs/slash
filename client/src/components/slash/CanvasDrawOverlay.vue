@@ -27,7 +27,7 @@
   </div>
 </template>
 <script>
-import { pointsToSvgPath, roundShapePoints } from "@/utils/shapeUtils.js";
+import { pointsToSvgPath, buildShapeMetadata } from "@/utils/shapeUtils.js";
 
 export default {
   name: "CanvasDrawOverlay",
@@ -175,32 +175,14 @@ export default {
         return;
       }
 
-      let min_x = Infinity;
-      let max_x = -Infinity;
-      let min_y = Infinity;
-      let max_y = -Infinity;
-
-      this.draw_points.forEach((point) => {
-        min_x = Math.min(min_x, point.x);
-        max_x = Math.max(max_x, point.x);
-        min_y = Math.min(min_y, point.y);
-        max_y = Math.max(max_y, point.y);
-      });
-
-      if (!isFinite(min_x) || !isFinite(min_y)) {
+      const shape_meta = buildShapeMetadata(
+        this.draw_points,
+        this.draw_stroke_width
+      );
+      if (!shape_meta) {
         this.draw_points = [];
         return;
       }
-
-      const width = Math.max(max_x - min_x, 1);
-      const height = Math.max(max_y - min_y, 1);
-
-      const normalized_points = roundShapePoints(
-        this.draw_points.map((point) => [point.x - min_x, point.y - min_y])
-      );
-
-      const rounded_width = Math.round(width);
-      const rounded_height = Math.round(height);
 
       const random_suffix = (
         Math.random().toString(36) + "00000000000000000"
@@ -210,20 +192,20 @@ export default {
 
       const additional_meta = {
         $type: "canvas_shape",
-        shape_points: normalized_points,
+        shape_points: shape_meta.shape_points,
         shape_stroke_width: this.draw_stroke_width,
-        x: Math.round(min_x),
-        y: Math.round(min_y),
-        width: rounded_width,
-        height: rounded_height,
+        x: shape_meta.x,
+        y: shape_meta.y,
+        width: shape_meta.width,
+        height: shape_meta.height,
         requested_slug,
         $authors: [this.connected_as.$path],
       };
 
       try {
         this.logDrawDebug("finishDrawingShape: uploading", {
-          width: rounded_width,
-          height: rounded_height,
+          width: shape_meta.width,
+          height: shape_meta.height,
           points: this.draw_points.length,
           folder_path: this.folder_path,
         });
