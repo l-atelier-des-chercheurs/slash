@@ -244,14 +244,18 @@ export default {
 
       ctx.restore();
     },
+    getAuthorColor(file) {
+      return this.$getFirstAuthorColor(file.$authors) || "#737373";
+    },
     drawItemRect(ctx, file, selected) {
       const x = file.x || 0;
       const y = file.y || 0;
       const w = this.getItemWidth(file);
       const h = this.getItemHeight(file);
+      const author_color = this.getAuthorColor(file);
 
-      ctx.fillStyle = selected ? "#4a9eff" : "#999";
-      ctx.strokeStyle = selected ? "#0066cc" : "#666";
+      ctx.fillStyle = selected ? "#4a9eff" : author_color;
+      ctx.strokeStyle = selected ? "#0066cc" : author_color;
       ctx.globalAlpha = selected ? 0.8 : 0.5;
       ctx.lineWidth = 0.5 / Math.min(this.scale_x, this.scale_y);
       ctx.fillRect(x, y, w, h);
@@ -270,7 +274,7 @@ export default {
         try {
           const path = new Path2D(path_d);
           ctx.fillStyle = "transparent";
-          ctx.strokeStyle = selected ? "#0066cc" : "#333";
+          ctx.strokeStyle = selected ? "#0066cc" : this.getAuthorColor(file);
           ctx.lineWidth =
             (selected ? 1 : 1) / Math.min(this.scale_x * 2, this.scale_y * 2);
           ctx.globalAlpha = selected ? 0.9 : 0.7;
@@ -290,8 +294,9 @@ export default {
     drawShapeFallback(ctx, file, selected) {
       const w = this.getItemWidth(file);
       const h = this.getItemHeight(file);
-      ctx.fillStyle = selected ? "#4a9eff" : "#999";
-      ctx.strokeStyle = selected ? "#0066cc" : "#666";
+      const author_color = this.getAuthorColor(file);
+      ctx.fillStyle = selected ? "#4a9eff" : author_color;
+      ctx.strokeStyle = selected ? "#0066cc" : author_color;
       ctx.globalAlpha = selected ? 0.8 : 0.5;
       ctx.lineWidth = 0.5 / Math.min(this.scale_x, this.scale_y);
       ctx.fillRect(0, 0, w, h);
