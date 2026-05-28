@@ -359,6 +359,47 @@ new Vue({
           },
         ],
       },
+      {
+        category: "Students",
+        authors: [
+          {
+            name: "Antoine",
+            path: "authors/antoine",
+            email: "a.perret@lecolededesign.com",
+            group: ["Student"],
+          },
+          {
+            name: "Victoire",
+            path: "authors/victoire",
+            email: "v.bauchet@lecolededesign.com",
+            group: ["Student"],
+          },
+          {
+            name: "Julie",
+            path: "authors/julie",
+            email: "j.miramond@lecolededesign.com",
+            group: ["Student"],
+          },
+          {
+            name: "Nathan",
+            path: "authors/nathan",
+            email: "n.tison@lecolededesign.com",
+            group: ["Student"],
+          },
+          {
+            name: "Camille",
+            path: "authors/camille",
+            email: "c.barriere@lecolededesign.com",
+            group: ["Student"],
+          },
+          {
+            name: "Ferdinand",
+            path: "authors/ferdinand",
+            email: "f.chavasse@lecolededesign.com",
+            group: ["Student"],
+          },
+        ],
+      },
     ],
 
     default_new_module_width: 200,

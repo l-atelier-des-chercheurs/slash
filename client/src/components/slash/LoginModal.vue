@@ -51,23 +51,31 @@
           />
         </template>
 
-        <!-- Login with existing account: list of all created accounts from path authors -->
+        <!-- Login with existing account -->
         <div v-else class="u-spacingBottom">
           <label class="u-label">Choose an existing account</label>
           <select v-model="selected_author" class="u-input">
-            <option disabled value="">Identify yourself here</option>
-            <option
-              v-for="author in authors_from_api"
-              :key="author.path"
-              :value="author"
-            >
-              {{ author.name
-              }}{{
-                (author.group || []).length
-                  ? " (" + (author.group || []).join(", ") + ")"
-                  : ""
-              }}
+            <option disabled value="">
+              {{ $t("identify_yourself_here") }}
             </option>
+            <optgroup
+              v-for="group in author_select_groups"
+              :key="group.category"
+              :label="group.category"
+            >
+              <option
+                v-for="author in group.authors"
+                :key="author.path"
+                :value="author"
+              >
+                {{ author.name
+                }}{{
+                  (author.group || []).length
+                    ? " (" + (author.group || []).join(", ") + ")"
+                    : ""
+                }}
+              </option>
+            </optgroup>
           </select>
         </div>
       </div>
@@ -170,7 +178,7 @@ export default {
       new_author_name: "",
       new_author_color: "",
 
-      authors_from_api: [],
+      authors_by_path: {},
       structure_role_options: ["Artist"],
       show_color_input: false,
     };
@@ -207,22 +215,105 @@ export default {
         count: 25,
       });
     },
+    author_select_groups() {
+      const groups = this.$root.slash_contributors_list || [];
+      return groups
+        .map((group) => ({
+          category: group.category,
+          authors: (group.authors || [])
+            .map((author) => this.authors_by_path[author.path])
+            .filter(Boolean)
+            .sort((author_a, author_b) =>
+              author_a.name.localeCompare(author_b.name)
+            ),
+        }))
+        .filter((group) => group.authors.length > 0);
+    },
   },
   methods: {
+    _preset_authors_from_contributors_list() {
+      const groups = this.$root.slash_contributors_list || [];
+      return groups.flatMap((group) =>
+        (group.authors || []).map((author) => ({
+          name: author.name,
+          path: author.path,
+          group: author.group || [group.category],
+          email: author.email,
+        }))
+      );
+    },
+    _merge_authors_by_path({ from_api = [], from_presets = [] }) {
+      const by_path = {};
+
+      for (const author of from_presets) {
+        by_path[author.path] = { ...author };
+      }
+
+      for (const author of from_api) {
+        by_path[author.path] = {
+          ...by_path[author.path],
+          ...author,
+          group: author.group?.length
+            ? author.group
+            : by_path[author.path]?.group || [],
+        };
+      }
+
+      return by_path;
+    },
     async fetchAuthors() {
+      let from_api = [];
+
       try {
         const folders = await this.$api.getFolders({ path: "authors" });
-        this.authors_from_api = folders.map((f) => ({
+        from_api = folders.map((f) => ({
           name: f.name,
           path: f.$path,
           group: f.group || [],
+          email: f.email,
         }));
       } catch (e) {
         console.error("Failed to fetch authors", e);
       }
+
+      this.authors_by_path = this._merge_authors_by_path({
+        from_api,
+        from_presets: this._preset_authors_from_contributors_list(),
+      });
     },
     _group_from_role() {
       return this.selected_structure_role ? [this.selected_structure_role] : [];
+    },
+    async ensureAuthorFolder(author) {
+      try {
+        await this.$api.getFolder({ path: author.path });
+        return;
+      } catch (e) {
+        if (e?.code !== "not_found") throw e;
+      }
+
+      const requested_slug = author.path.replace(/^authors\//, "");
+      const color =
+        author.color ||
+        randomcolor({
+          luminosity: "light",
+        });
+
+      const default_password = "slash";
+
+      await this.$api.createFolder({
+        path: "authors",
+        additional_meta: {
+          name: author.name,
+          email: author.email,
+          requested_slug,
+          $password: default_password,
+          group: author.group || [],
+          color,
+        },
+      });
+
+      await this.fetchAuthors();
     },
     async login() {
       if (!this.selected_author) return;
@@ -230,6 +321,7 @@ export default {
       const default_password = "slash";
 
       try {
+        await this.ensureAuthorFolder(this.selected_author);
         await this.$api.loginToFolder({
           path: this.selected_author.path,
           password: default_password,
