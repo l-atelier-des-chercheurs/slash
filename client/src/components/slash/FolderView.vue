@@ -72,6 +72,7 @@
         <MediaListSidebar
           v-show="show_media_list_sidebar"
           ref="mediaListSidebar"
+          :folder_path="folder_path"
           :files="sorted_files"
           :media_list_paths="media_list_paths"
           @update:media_list_paths="onMediaListPathsUpdate"

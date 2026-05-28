@@ -118,19 +118,55 @@
     <p class="_mediaListSidebar--instructions">
       Drag medias using the hand icon to this list
     </p>
+
+    <div class="_mediaListSidebar--footer">
+      <button
+        type="button"
+        class="u-button _mediaListSidebar--modeBtn"
+        :disabled="!can_open_editors"
+        @click="openEditor('print')"
+      >
+        <b-icon icon="printer" />
+        <span>PRINT</span>
+      </button>
+      <button
+        type="button"
+        class="u-button _mediaListSidebar--modeBtn"
+        :disabled="!can_open_editors"
+        @click="openEditor('web')"
+      >
+        <b-icon icon="globe" />
+        <span>WEB</span>
+      </button>
+    </div>
+
+    <MediaListEditorModal
+      v-if="active_editor"
+      :mode="active_editor"
+      :folder_path="folder_path"
+      :resolved_items="resolved_items"
+      :media_list_paths="media_list_paths"
+      @close="active_editor = null"
+    />
   </aside>
 </template>
 
 <script>
 import MediaContent from "@/adc-core/fields/MediaContent.vue";
+import MediaListEditorModal from "@/components/slash/MediaListEditorModal.vue";
 import {
   isMediaListFile,
   MEDIA_LIST_DRAG_MIME,
 } from "@/utils/mediaListUtils.js";
+import {
+  ensureWebPublication,
+  ensurePrintPublication,
+} from "@/utils/mediaListProjectUtils.js";
 
 export default {
   components: {
     MediaContent,
+    MediaListEditorModal,
   },
   props: {
     files: {
@@ -141,6 +177,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    folder_path: {
+      type: String,
+      default: "",
+    },
   },
   data() {
     return {
@@ -148,6 +188,8 @@ export default {
       drag_over_index: null,
       dragging_index: null,
       pointer_drag_active: false,
+      active_editor: null,
+      is_opening_editor: false,
     };
   },
   computed: {
@@ -172,6 +214,13 @@ export default {
     },
     is_drag_session_active() {
       return this.dragging_index !== null || this.pointer_drag_active;
+    },
+    can_open_editors() {
+      return (
+        !!this.folder_path &&
+        this.media_list_paths.length > 0 &&
+        !this.is_opening_editor
+      );
     },
   },
   mounted() {
@@ -387,6 +436,38 @@ export default {
         if (event.clientY < midpoint) return i;
       }
       return items.length;
+    },
+    async openEditor(mode) {
+      if (!this.can_open_editors || this.active_editor) return;
+      this.is_opening_editor = true;
+      try {
+        if (mode === "web") {
+          await ensureWebPublication(
+            this.$api,
+            this.folder_path,
+            this.media_list_paths
+          );
+        } else if (mode === "print") {
+          await ensurePrintPublication(this.$api, this.folder_path);
+        }
+        this.active_editor = mode;
+      } catch (err) {
+        console.error("Failed to open media list editor:", err);
+        const code = err?.code || err?.message;
+        if (code === "login_required") {
+          this.$alertify
+            ?.delay(4000)
+            ?.error("Log in to create and edit publications.");
+        } else if (code === "folder_private" || code === "not_allowed") {
+          this.$alertify
+            ?.delay(4000)
+            ?.error(
+              "Cannot open publication folders. Check folder access permissions."
+            );
+        }
+      } finally {
+        this.is_opening_editor = false;
+      }
     },
   },
 };
@@ -612,6 +693,38 @@ export default {
   color: var(--c-gris_fonce, #666);
   text-align: center;
   line-height: 1.4;
+}
+
+._mediaListSidebar--footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  gap: calc(var(--spacing) / 3);
+  padding-top: calc(var(--spacing) / 2);
+  border-top: 1px solid var(--c-gris, #ccc);
+}
+
+._mediaListSidebar--modeBtn {
+  flex: 1;
+  min-height: 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) / 4);
+  font-weight: 700;
+  font-size: var(--sl-font-size-small);
+  letter-spacing: 0.04em;
+
+  ::v-deep .b-icon.bi {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .mediaListReorder-move {

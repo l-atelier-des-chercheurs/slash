@@ -166,6 +166,36 @@
           }
         }
       },
+      "publications": {
+        "$can_be_created_by": "logged-in",
+        "fields": {
+          "title": {
+            "type": "string"
+          },
+          "publication_type": {
+            "type": "string"
+          },
+          "slash_folder_path": {
+            "type": "string"
+          },
+          "source_medias": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "fields": {
+            "title": {
+              "type": "string"
+            },
+            "layout_id": {
+              "type": "string"
+            },
+            "source_medias": {
+              "type": "array"
+            }
+          }
+        }
+      },
       "authors": {
         "$can_be_created_by": "everyone",
         "$cover": {
