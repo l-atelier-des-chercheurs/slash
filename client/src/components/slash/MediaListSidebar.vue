@@ -394,25 +394,20 @@ export default {
 
 <style lang="scss" scoped>
 ._mediaListSidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 950;
-  flex: 0 0 min(320px, 85vw);
-  width: min(320px, 85vw);
+  flex: 0 0 min(320px, 40vw);
+  width: min(320px, 40vw);
+  min-width: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--c-gris_clair);
   border-left: 1px solid var(--c-gris, #ccc);
-  box-shadow: -8px 0 16px 0 rgba(0, 0, 0, 0.12);
   padding: calc(var(--spacing) / 1);
   gap: calc(var(--spacing) / 2);
   overflow: hidden;
 
   &.is--dragOver {
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: -8px 0 24px 0 rgba(0, 0, 0, 0.18);
   }
 }
 

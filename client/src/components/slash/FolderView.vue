@@ -7,53 +7,77 @@
       />
     </div>
 
-    <div class="_viewArea">
-      <TopLeftMenu
-        :folder="folder"
-        :folder_path="folder.$path"
-        :current_folder_title="folder_display_title"
-        :canvas_zoom="canvas_zoom"
-        :canvas_scroll="canvas_scroll"
-        @toggleFoldersSidebar="$emit('toggleFoldersSidebar')"
-        @openCurrentFolderSettings="openCurrentFolderSettings"
-      />
-      <ViewModeBar
-        :value="view_mode"
-        :filter_open="filter_bar_open"
-        :canvas_zoom="canvas_zoom"
-        :zoom_range="zoom_range"
-        @input="switchViewMode"
-        @toggle-filter="filter_bar_open = !filter_bar_open"
-        @update:canvas_zoom="canvas_zoom = $event"
-      />
-      <LargeCanvas
-        v-if="view_mode === 'canvas'"
-        :files="filtered_files"
-        :all_files="sorted_files"
-        :zoom="canvas_zoom"
-        :zoom_range="zoom_range"
-        :folder_path="folder.$path"
-        :show_media_list_sidebar="show_media_list_sidebar"
-        :media_list_paths="media_list_paths"
-        @update:zoom="canvas_zoom = $event"
-        @update:scroll="canvas_scroll = $event"
-      />
-      <GeoMapView
-        v-if="view_mode === 'map'"
-        :files="filtered_files_without_canvas_items"
-      />
-      <TimelineView
-        v-if="view_mode === 'timeline'"
-        :files="filtered_files_without_canvas_items"
-        :show_media_list_sidebar="show_media_list_sidebar"
-        :media_list_paths="media_list_paths"
-      />
-      <MediaGridView
-        v-if="view_mode === 'grid'"
-        :files="filtered_files_without_canvas_items"
-        :show_media_list_sidebar="show_media_list_sidebar"
-        :media_list_paths="media_list_paths"
-      />
+    <div class="_mainContent">
+      <div class="_viewArea">
+        <TopLeftMenu
+          :folder="folder"
+          :folder_path="folder.$path"
+          :current_folder_title="folder_display_title"
+          :canvas_zoom="canvas_zoom"
+          :canvas_scroll="canvas_scroll"
+          @toggleFoldersSidebar="$emit('toggleFoldersSidebar')"
+          @openCurrentFolderSettings="openCurrentFolderSettings"
+        />
+        <ViewModeBar
+          :value="view_mode"
+          :filter_open="filter_bar_open"
+          :canvas_zoom="canvas_zoom"
+          :zoom_range="zoom_range"
+          @input="switchViewMode"
+          @toggle-filter="filter_bar_open = !filter_bar_open"
+          @update:canvas_zoom="canvas_zoom = $event"
+        />
+        <LargeCanvas
+          v-if="view_mode === 'canvas'"
+          :files="filtered_files"
+          :all_files="sorted_files"
+          :zoom="canvas_zoom"
+          :zoom_range="zoom_range"
+          :folder_path="folder.$path"
+          :show_media_list_sidebar="show_media_list_sidebar"
+          :media_list_paths="media_list_paths"
+          @update:zoom="canvas_zoom = $event"
+          @update:scroll="canvas_scroll = $event"
+        />
+        <GeoMapView
+          v-if="view_mode === 'map'"
+          :files="filtered_files_without_canvas_items"
+        />
+        <TimelineView
+          v-if="view_mode === 'timeline'"
+          :files="filtered_files_without_canvas_items"
+          :show_media_list_sidebar="show_media_list_sidebar"
+          :media_list_paths="media_list_paths"
+        />
+        <MediaGridView
+          v-if="view_mode === 'grid'"
+          :files="filtered_files_without_canvas_items"
+          :show_media_list_sidebar="show_media_list_sidebar"
+          :media_list_paths="media_list_paths"
+        />
+
+        <button
+          type="button"
+          class="u-button u-button_icon _mediaListToggle u-overlayPanel"
+          :class="{ 'is--active': show_media_list_sidebar }"
+          title="Media list"
+          aria-label="Media list"
+          @click="toggleMediaListSidebar"
+        >
+          <b-icon icon="printer" />
+        </button>
+      </div>
+
+      <transition name="mediaListSidebarSlide">
+        <MediaListSidebar
+          v-show="show_media_list_sidebar"
+          ref="mediaListSidebar"
+          :files="sorted_files"
+          :media_list_paths="media_list_paths"
+          @update:media_list_paths="onMediaListPathsUpdate"
+          @close="closeMediaListSidebar"
+        />
+      </transition>
     </div>
 
     <ItemModal
@@ -61,28 +85,6 @@
       :file="opened_file"
       @close="closeItemModalWithTransition"
     />
-
-    <button
-      type="button"
-      class="u-button u-button_icon _mediaListToggle u-overlayPanel"
-      :class="{ 'is--active': show_media_list_sidebar }"
-      title="Media list"
-      aria-label="Media list"
-      @click="toggleMediaListSidebar"
-    >
-      <b-icon icon="printer" />
-    </button>
-
-    <transition name="mediaListSidebarSlide">
-      <MediaListSidebar
-        v-show="show_media_list_sidebar"
-        ref="mediaListSidebar"
-        :files="sorted_files"
-        :media_list_paths="media_list_paths"
-        @update:media_list_paths="onMediaListPathsUpdate"
-        @close="closeMediaListSidebar"
-      />
-    </transition>
 
     <FolderSettingsModal
       :show_modal="show_folder_settings_modal"
@@ -597,16 +599,25 @@ export default {
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+._mainContent {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
 ._viewArea {
   position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 ._mediaListToggle {
-  position: fixed;
+  position: absolute;
   bottom: var(--fixed-ui-margins);
   right: var(--fixed-ui-margins);
   z-index: 900;

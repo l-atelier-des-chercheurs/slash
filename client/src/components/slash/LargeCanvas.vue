@@ -1,5 +1,6 @@
 <template>
   <div class="_largeCanvas" :data-mode="current_mode" draggable="false">
+    <ViewEmptyMessage v-if="!files.length" />
     <SlashPanZoom2
       ref="viewer"
       :zoom="zoom"
@@ -120,6 +121,7 @@ import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import QuickAddToCanvas from "@/components/slash/QuickAddToCanvas.vue";
 import MiniMap from "@/components/slash/MiniMap.vue";
 import FpsCounter from "@/components/slash/FpsCounter.vue";
+import ViewEmptyMessage from "@/components/slash/ViewEmptyMessage.vue";
 
 export default {
   props: {
@@ -154,6 +156,7 @@ export default {
     QuickAddToCanvas,
     MiniMap,
     FpsCounter,
+    ViewEmptyMessage,
   },
   data() {
     return {

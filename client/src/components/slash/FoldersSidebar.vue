@@ -125,6 +125,10 @@ export default {
     },
     onSelectFolder(folder) {
       if (!this.canAccessFolder(folder)) return;
+      if (folder.$path === this.current_folder_path) {
+        this.$emit("close");
+        return;
+      }
       this.$emit("selectFolder", folder.$path);
     },
     onOpenNewFolder(new_folder_slug) {
@@ -231,7 +235,6 @@ export default {
   }
 
   &.is--active {
-    pointer-events: none;
     border-color: var(--c-noir);
     // box-shadow: 0 0 0 3px var(--c-noir), 0 12px 32px rgba(0, 0, 0, 0.12);
   }

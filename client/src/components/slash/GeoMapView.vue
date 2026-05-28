@@ -1,5 +1,6 @@
 <template>
   <div class="_geoMapView">
+    <ViewEmptyMessage v-if="!has_geo_files" />
     <div ref="mapContainer" class="_geoMapView--map"></div>
     <div
       ref="popupContainer"
@@ -24,6 +25,7 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import CanvasItem from "./CanvasItem.vue";
+import ViewEmptyMessage from "@/components/slash/ViewEmptyMessage.vue";
 
 export default {
   props: {
@@ -32,7 +34,7 @@ export default {
       default: () => [],
     },
   },
-  components: { CanvasItem },
+  components: { CanvasItem, ViewEmptyMessage },
   data() {
     return {
       map: null,
@@ -42,6 +44,10 @@ export default {
     };
   },
   computed: {
+    has_geo_files() {
+      if (!this.files?.length) return false;
+      return this.files.some((file) => !!this.getFileCoordinates(file));
+    },
     popupStyle() {
       if (!this.popupLngLat || !this.map) return {};
       const pt = this.map.project(this.popupLngLat);

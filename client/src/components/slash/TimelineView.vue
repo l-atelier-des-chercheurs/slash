@@ -1,5 +1,6 @@
 <template>
   <div class="_timelineView" ref="container" @wheel.prevent="onWheel">
+    <ViewEmptyMessage v-if="!files.length" />
     <div class="_timelineView--track" ref="track">
       <!-- Horizontal lines background -->
       <div class="_timelineView--background"></div>
@@ -84,6 +85,7 @@
 
 <script>
 import CanvasItem from "@/components/slash/CanvasItem.vue";
+import ViewEmptyMessage from "@/components/slash/ViewEmptyMessage.vue";
 
 // Plain JS date helpers (no moment) — all in local time
 function startOfDay(d) {
@@ -162,6 +164,7 @@ export default {
   },
   components: {
     CanvasItem,
+    ViewEmptyMessage,
   },
   data() {
     return {

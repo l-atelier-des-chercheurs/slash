@@ -1,5 +1,6 @@
 <template>
   <div class="_mediaGridView">
+    <ViewEmptyMessage v-if="!files.length" />
     <div class="_mediaGridView--grid">
       <CanvasItem
         v-for="file in files"
@@ -16,6 +17,7 @@
 </template>
 <script>
 import CanvasItem from "@/components/slash/CanvasItem.vue";
+import ViewEmptyMessage from "@/components/slash/ViewEmptyMessage.vue";
 
 export default {
   props: {
@@ -34,6 +36,7 @@ export default {
   },
   components: {
     CanvasItem,
+    ViewEmptyMessage,
   },
 };
 </script>
