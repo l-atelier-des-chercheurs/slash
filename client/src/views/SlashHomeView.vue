@@ -206,7 +206,7 @@ export default {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--c-gris);
+  background: var(--c-gris_clair);
 }
 
 ._folderViewPane {

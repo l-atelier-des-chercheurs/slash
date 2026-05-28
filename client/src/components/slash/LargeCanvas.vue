@@ -864,7 +864,6 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: var(--c-gris);
 }
 
 ._canvasContent {
@@ -888,7 +887,7 @@ export default {
   background-position: -24px -24px;
 
   border-radius: 40px;
-  outline: 10px solid var(--c-gris);
+  outline: 10px solid var(--c-gris_clair);
 
   transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1),
     height 0.3s cubic-bezier(0.19, 1, 0.22, 1);

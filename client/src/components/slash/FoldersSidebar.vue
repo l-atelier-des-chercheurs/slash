@@ -31,33 +31,38 @@
           <span class="_foldersPanel--cardTitle">New folder</span>
         </button>
 
-        <button
+        <div
           v-for="folder in sorted_folders"
           :key="folder.$path"
-          type="button"
           class="_foldersPanel--card u-card2"
           :class="{
             'is--active': folder.$path === current_folder_path,
             'is--disabled': !canAccessFolder(folder),
           }"
-          :disabled="!canAccessFolder(folder)"
+          role="button"
+          tabindex="0"
           :title="!canAccessFolder(folder) ? 'Private folder' : ''"
           @click="onSelectFolder(folder)"
+          @keydown.enter="onSelectFolder(folder)"
+          @keydown.space.prevent="onSelectFolder(folder)"
         >
-          <!-- <div
-            class="_foldersPanel--cardIcon"
-            :style="{ backgroundColor: getFolderColor(folder) }"
-          >
-            <b-icon icon="folder-fill" />
-          </div> -->
           <span class="_foldersPanel--cardTitle">{{
             folder.title || folder.$path.split("/").pop()
           }}</span>
+
+          <div class="_foldersPanel--cardContributors" @click.stop>
+            <AdminsAndContributorsField
+              :folder="folder"
+              :can_edit="false"
+              :show_label="false"
+            />
+          </div>
+
           <span v-if="isPrivateFolder(folder)" class="_foldersPanel--cardBadge">
             <b-icon icon="file-lock2-fill" />
             Private
           </span>
-        </button>
+        </div>
       </div>
     </div>
 
@@ -73,21 +78,12 @@
 
 <script>
 import CreateFolder from "@/adc-core/modals/CreateFolder.vue";
-
-const FOLDER_COLORS = [
-  "#ffd166",
-  "#06d6a0",
-  "#118ab2",
-  "#ef476f",
-  "#8338ec",
-  "#fb5607",
-  "#3a86ff",
-  "#ff006e",
-];
+import AdminsAndContributorsField from "@/adc-core/fields/AdminsAndContributorsField.vue";
 
 export default {
   components: {
     CreateFolder,
+    AdminsAndContributorsField,
   },
   props: {
     folders: {
@@ -127,14 +123,6 @@ export default {
     isPrivateFolder(folder) {
       return folder?.$status === "private";
     },
-    getFolderColor(folder) {
-      const label = folder.title || folder.$path.split("/").pop() || "";
-      let hash = 0;
-      for (let i = 0; i < label.length; i++) {
-        hash = label.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return FOLDER_COLORS[Math.abs(hash) % FOLDER_COLORS.length];
-    },
     onSelectFolder(folder) {
       if (!this.canAccessFolder(folder)) return;
       this.$emit("selectFolder", folder.$path);
@@ -152,7 +140,7 @@ export default {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: var(--c-blanc);
+  background: white;
   overflow: auto;
 
   &.is--overlay {
@@ -226,7 +214,7 @@ export default {
   min-height: 190px;
   padding: calc(var(--spacing) * 1.25);
   text-align: left;
-  background: var(--c-blanc);
+  background: white;
   border: 2px solid var(--c-gris);
   border-radius: calc(var(--border-radius) * 1.5);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -252,6 +240,7 @@ export default {
     opacity: 0.4;
     cursor: not-allowed;
     box-shadow: none;
+    pointer-events: none;
   }
 
   &.is--create {
@@ -263,7 +252,7 @@ export default {
     &:hover,
     &:focus-visible {
       border-color: var(--c-noir);
-      background: var(--c-blanc);
+      background: white;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     }
   }
@@ -281,7 +270,7 @@ export default {
   flex-shrink: 0;
 
   &.is--create {
-    background: var(--c-blanc);
+    background: white;
     border: 2px dashed var(--c-gris);
     color: var(--c-noir);
   }
@@ -289,9 +278,25 @@ export default {
 
 ._foldersPanel--cardTitle {
   font-size: var(--sl-font-size-large);
-  // font-weight: 700;
-  // line-height: 1.25;
   word-break: break-word;
+}
+
+._foldersPanel--cardContributors {
+  width: 100%;
+  margin-top: auto;
+
+  ::v-deep ._adminsAndContributorsField {
+    margin: 0;
+  }
+
+  ::v-deep .u-listOfAvatars {
+    padding: 0;
+  }
+
+  ::v-deep ._indicators {
+    font-size: var(--sl-font-size-x-small);
+    color: var(--c-text-secondary, #666);
+  }
 }
 
 ._foldersPanel--cardBadge {
