@@ -1,6 +1,10 @@
 <template>
   <div class="_geoMapView">
-    <ViewEmptyMessage v-if="!has_geo_files" />
+    <ViewEmptyMessage
+      v-if="!has_geo_files"
+      :message_key="files.length ? 'slash_no_geolocated_media' : 'nothing_to_show'"
+      :show_cta="!files.length"
+    />
     <div ref="mapContainer" class="_geoMapView--map"></div>
     <div
       ref="popupContainer"

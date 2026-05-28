@@ -564,6 +564,11 @@ export default {
   back_to_publications: "Back to publications",
   generate_preview: "Generate preview",
   nothing_to_show: "Nothing to show",
+  slash_import_medias_cta:
+    "Import one or more medias by clicking one of the icons at the top left.",
+  slash_import_medias_cta_canvas:
+    "Import one or more medias by clicking the icons at the top left, or anywhere on the canvas.",
+  slash_no_geolocated_media: "No media with a location to show.",
   make_publication_public: "Make the publication visible to everyone",
   story: "Story",
   story_with_sections: "Story",

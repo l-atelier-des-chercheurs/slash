@@ -5,11 +5,12 @@
         <div class="_dropMenu--folderLabelWrapper">
           <button
             type="button"
-            class="u-button u-button_transparent _dropMenu--foldersButton"
+            class="u-button u-button_transparent u-button_icon _dropMenu--foldersButton"
+            title="All folders"
+            aria-label="All folders"
             @click="$emit('toggleFoldersSidebar')"
           >
             <b-icon icon="folder2" />
-            All folders
           </button>
           <button
             type="button"
@@ -167,11 +168,7 @@ export default {
 }
 
 ._dropMenu--foldersButton {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(var(--spacing) / 3);
-  font-weight: 700;
-  white-space: nowrap;
+  flex-shrink: 0;
   padding: calc(var(--spacing) / 2);
 }
 

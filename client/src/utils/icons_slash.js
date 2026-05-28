@@ -4,21 +4,29 @@
  */
 import Vue from "vue";
 import {
-  BIconChatLeft,
+  BIconBox,
+  BIconCalendarDay,
+  BIconCameraVideo,
+  BIconChatLeftText,
   BIconChatLeftTextFill,
   BIconCursor,
+  BIconFileEarmarkPdf,
+  BIconFolder2,
   BIconGrid,
   BIconLayoutWtf,
-  BIconCalendarDay,
-  BIconHandIndex,
-  BIconRecordCircle,
+  BIconLink45deg,
+  BIconMusicNoteBeamed,
 } from "bootstrap-vue";
 
-Vue.component("BIconChatLeft", BIconChatLeft);
+Vue.component("BIconBox", BIconBox);
+Vue.component("BIconCalendarDay", BIconCalendarDay);
+Vue.component("BIconCameraVideo", BIconCameraVideo);
+Vue.component("BIconChatLeftText", BIconChatLeftText);
 Vue.component("BIconChatLeftTextFill", BIconChatLeftTextFill);
 Vue.component("BIconCursor", BIconCursor);
+Vue.component("BIconFileEarmarkPdf", BIconFileEarmarkPdf);
+Vue.component("BIconFolder2", BIconFolder2);
 Vue.component("BIconGrid", BIconGrid);
 Vue.component("BIconLayoutWtf", BIconLayoutWtf);
-Vue.component("BIconCalendarDay", BIconCalendarDay);
-Vue.component("BIconHandIndex", BIconHandIndex);
-Vue.component("BIconRecordCircle", BIconRecordCircle);
+Vue.component("BIconLink45deg", BIconLink45deg);
+Vue.component("BIconMusicNoteBeamed", BIconMusicNoteBeamed);

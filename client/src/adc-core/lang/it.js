@@ -196,6 +196,11 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
   back_to_publications: "Torna alle pubblicazioni",
   generate_preview: "Genera un'anteprima",
   nothing_to_show: "Niente da visualizzare",
+  slash_import_medias_cta:
+    "Importa uno o più media cliccando su una delle icone in alto a sinistra.",
+  slash_import_medias_cta_canvas:
+    "Importa uno o più media cliccando sulle icone in alto a sinistra, o in un punto qualsiasi della tela.",
+  slash_no_geolocated_media: "Nessun media con posizione da visualizzare.",
   make_publication_public: "Rendi la pubblicazione visibile a tutti",
 
   story: "Racconto",

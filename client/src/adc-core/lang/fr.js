@@ -220,6 +220,11 @@ export default {
   back_to_publications: "Retour aux publications",
   generate_preview: "Générer un aperçu",
   nothing_to_show: "Rien à afficher",
+  slash_import_medias_cta:
+    "Importez un ou plusieurs médias en cliquant sur l’une des icônes en haut à gauche.",
+  slash_import_medias_cta_canvas:
+    "Importez un ou plusieurs médias en cliquant sur les icônes en haut à gauche, ou n’importe où sur le canevas.",
+  slash_no_geolocated_media: "Aucun média géolocalisé à afficher.",
   make_publication_public:
     "Rendre la publication visible à tous, sans mot de passe général",
 

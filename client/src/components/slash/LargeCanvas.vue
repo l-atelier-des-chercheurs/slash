@@ -1,6 +1,9 @@
 <template>
   <div class="_largeCanvas" :data-mode="current_mode" draggable="false">
-    <ViewEmptyMessage v-if="!files.length" />
+    <ViewEmptyMessage
+      v-if="!files.length"
+      cta_key="slash_import_medias_cta_canvas"
+    />
     <SlashPanZoom2
       ref="viewer"
       :zoom="zoom"
