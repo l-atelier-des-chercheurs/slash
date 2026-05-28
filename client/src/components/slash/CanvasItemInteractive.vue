@@ -30,6 +30,7 @@
       :file="file"
       :resolution="optimalResolution"
       :mode="'canvas'"
+      :scale_factor="canvas_zoom"
       class="_canvasItemContent"
     />
 
@@ -292,28 +293,21 @@ export default {
       };
     },
     optimalResolution() {
-      // Available thumbnail resolutions
       const availableResolutions = [50, 320, 640, 1600];
 
-      // Get the current item width
       const itemWidth =
         this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
 
-      // Calculate displayed width (item width * zoom level)
       const displayedWidth = itemWidth * this.canvas_zoom;
-
-      // Account for device pixel ratio (retina/high-DPI displays)
       const devicePixelRatio = window.devicePixelRatio || 1;
       const requiredResolution = displayedWidth * devicePixelRatio;
 
-      // Select the smallest resolution that is at least as large as the required resolution
       for (const resolution of availableResolutions) {
         if (resolution >= requiredResolution) {
           return resolution;
         }
       }
 
-      // If required resolution is larger than all available resolutions, use the largest
       return availableResolutions[availableResolutions.length - 1];
     },
   },
@@ -850,6 +844,9 @@ export default {
     ._canvasItem--text {
       pointer-events: none;
     }
+    ._canvasItemContent ::v-deep ._canvasItem--mediaListHandle {
+      pointer-events: auto;
+    }
     &:not(.is--selected) ._canvasItem--selectedBorder.is--shape {
       pointer-events: none;
     }
@@ -878,6 +875,9 @@ export default {
     }
     ._canvasItem--open ._openBtn {
       pointer-events: auto;
+    }
+    ._canvasItemContent ::v-deep ._canvasItem--mediaListHandle {
+      pointer-events: auto !important;
     }
   }
 

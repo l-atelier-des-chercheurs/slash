@@ -55,11 +55,12 @@ export default {
 <style lang="scss" scoped>
 ._fpsCounter {
   position: absolute;
-  top: var(--fixed-ui-margins);
-  right: var(--fixed-ui-margins);
+  top: 0;
+  right: 0;
   z-index: 1000;
   font-family: var(--sl-font-mono, monospace);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
+  border-radius: 0;
 }
 </style>

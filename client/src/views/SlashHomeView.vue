@@ -3,18 +3,6 @@
     <LoginModal v-if="show_login_modal" @close="show_login_modal = false" />
 
     <div class="_homeLayout">
-      <transition name="sidebarPush">
-        <FoldersSidebar
-          v-if="show_folders_sidebar"
-          :folders="folders"
-          :current_folder_path="current_folder_path"
-          :folders_path="folders_path"
-          @close="closeFoldersSidebar"
-          @selectFolder="selectFolder"
-          @openNewFolder="openNewFolder"
-        />
-      </transition>
-
       <transition name="folderViewTransition" mode="out-in">
         <div
           v-if="current_folder_path"
@@ -27,6 +15,19 @@
             @folderRemoved="onCurrentFolderRemoved"
           />
         </div>
+      </transition>
+
+      <transition name="foldersPanel">
+        <FoldersSidebar
+          v-if="show_folders_sidebar"
+          :folders="folders"
+          :current_folder_path="current_folder_path"
+          :folders_path="folders_path"
+          :is_overlay="!!current_folder_path"
+          @close="closeFoldersSidebar"
+          @selectFolder="selectFolder"
+          @openNewFolder="openNewFolder"
+        />
       </transition>
     </div>
   </div>
@@ -199,7 +200,7 @@ export default {
 }
 
 ._homeLayout {
-  display: flex;
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
@@ -209,21 +210,21 @@ export default {
 }
 
 ._folderViewPane {
-  flex: 1 1 auto;
+  position: absolute;
+  inset: 0;
   min-width: 0;
-  height: 100%;
 }
 
-.sidebarPush-enter-active,
-.sidebarPush-leave-active {
-  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
-    opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+.foldersPanel-enter-active,
+.foldersPanel-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.19, 1, 0.22, 1),
+    transform 0.22s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-.sidebarPush-enter,
-.sidebarPush-leave-to {
-  transform: translateX(-16px);
+.foldersPanel-enter,
+.foldersPanel-leave-to {
   opacity: 0;
+  transform: scale(0.98);
 }
 
 .folderViewTransition-enter-active,

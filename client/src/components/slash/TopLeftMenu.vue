@@ -5,10 +5,11 @@
         <div class="_dropMenu--folderLabelWrapper">
           <button
             type="button"
-            class="u-button u-button_transparent u-button_icon"
+            class="u-button u-button_transparent _dropMenu--foldersButton"
             @click="$emit('toggleFoldersSidebar')"
           >
-            <b-icon icon="layout-sidebar" />
+            <b-icon icon="folder2" />
+            All folders
           </button>
           <button
             type="button"
@@ -163,6 +164,15 @@ export default {
   align-items: center;
   // justify-content: space-between;
   gap: calc(var(--spacing) / 4);
+}
+
+._dropMenu--foldersButton {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 3);
+  font-weight: 700;
+  white-space: nowrap;
+  padding: calc(var(--spacing) / 2);
 }
 
 ._dropMenu--folderLabel {

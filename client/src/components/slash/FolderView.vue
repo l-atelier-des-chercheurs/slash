@@ -56,6 +56,27 @@
       @close="closeItemModalWithTransition"
     />
 
+    <button
+      type="button"
+      class="u-button u-button_icon _mediaListToggle u-overlayPanel"
+      :class="{ 'is--active': show_media_list_sidebar }"
+      title="Media list"
+      aria-label="Media list"
+      @click="toggleMediaListSidebar"
+    >
+      <b-icon icon="printer" />
+    </button>
+
+    <transition name="mediaListSidebarSlide">
+      <MediaListSidebar
+        v-if="show_media_list_sidebar"
+        :files="sorted_files"
+        :media_list_paths="media_list_paths"
+        @update:media_list_paths="onMediaListPathsUpdate"
+        @close="closeMediaListSidebar"
+      />
+    </transition>
+
     <FolderSettingsModal
       :show_modal="show_folder_settings_modal"
       :folder="folder"
@@ -76,6 +97,11 @@ import TimelineView from "@/components/slash/TimelineView.vue";
 import ViewModeBar from "@/components/slash/ViewModeBar.vue";
 import ItemModal from "@/components/slash/ItemModal.vue";
 import FolderSettingsModal from "@/components/slash/FolderSettingsModal.vue";
+import MediaListSidebar from "@/components/slash/MediaListSidebar.vue";
+import {
+  loadMediaListPaths,
+  saveMediaListPaths,
+} from "@/utils/mediaListUtils.js";
 
 export default {
   props: {
@@ -94,6 +120,7 @@ export default {
     ViewModeBar,
     ItemModal,
     FolderSettingsModal,
+    MediaListSidebar,
   },
   data() {
     return {
@@ -106,6 +133,8 @@ export default {
       canvas_scroll: null,
       zoom_range: [0.1, 1],
       show_folder_settings_modal: false,
+      show_media_list_sidebar: false,
+      media_list_paths: [],
     };
   },
   async created() {
@@ -118,6 +147,7 @@ export default {
       "canvasItem.openWithTransition",
       this.switchToFileWithTransition
     );
+    this.$eventHub.$on("mediaList.ensureOpen", this.openMediaListSidebar);
   },
   beforeDestroy() {
     this.$eventHub.$off("canvasItem.open", this.openItemModal);
@@ -125,6 +155,7 @@ export default {
       "canvasItem.openWithTransition",
       this.switchToFileWithTransition
     );
+    this.$eventHub.$off("mediaList.ensureOpen", this.openMediaListSidebar);
     if (this.folder_path && this.isRoomJoined(this.folder_path)) {
       this.$api.leave({ room: this.folder_path });
     }
@@ -154,6 +185,7 @@ export default {
 
         try {
           this.folder = await this.loadFolder(new_folder_path);
+          this.loadMediaListForFolder(new_folder_path);
           if (!this.isRoomJoined(new_folder_path)) {
             this.$api.join({ room: new_folder_path });
           }
@@ -168,6 +200,13 @@ export default {
           this.$emit("toggleFoldersSidebar", true);
         }
       },
+    },
+    sorted_files() {
+      if (!this.folder_path || !this.media_list_paths.length) return;
+      const pruned = this.pruneMediaListPaths(this.media_list_paths);
+      if (pruned.length !== this.media_list_paths.length) {
+        this.onMediaListPathsUpdate(pruned);
+      }
     },
   },
   computed: {
@@ -501,6 +540,32 @@ export default {
         },
       });
     },
+    loadMediaListForFolder(folder_path) {
+      const stored_paths = loadMediaListPaths(folder_path);
+      this.media_list_paths = this.pruneMediaListPaths(stored_paths);
+      if (this.media_list_paths.length !== stored_paths.length && folder_path) {
+        saveMediaListPaths(folder_path, this.media_list_paths);
+      }
+    },
+    pruneMediaListPaths(paths) {
+      const valid_paths = new Set(this.sorted_files.map((file) => file.$path));
+      return paths.filter((path) => valid_paths.has(path));
+    },
+    toggleMediaListSidebar() {
+      this.show_media_list_sidebar = !this.show_media_list_sidebar;
+    },
+    openMediaListSidebar() {
+      this.show_media_list_sidebar = true;
+    },
+    closeMediaListSidebar() {
+      this.show_media_list_sidebar = false;
+    },
+    onMediaListPathsUpdate(paths) {
+      this.media_list_paths = paths;
+      if (this.folder_path) {
+        saveMediaListPaths(this.folder_path, paths);
+      }
+    },
   },
 };
 </script>
@@ -531,5 +596,46 @@ export default {
   min-height: 0;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+._mediaListToggle {
+  position: fixed;
+  bottom: var(--fixed-ui-margins);
+  right: var(--fixed-ui-margins);
+  z-index: 900;
+  padding: calc(var(--spacing) / 1.5);
+  color: var(--c-gris_fonce, #555);
+  transition: color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
+  ::v-deep .b-icon.bi {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--c-bleuvert, #2a9d8f);
+    background-color: rgba(42, 157, 143, 0.12);
+    transform: translateY(-1px);
+  }
+
+  &.is--active {
+    color: white;
+    background-color: var(--c-bleuvert, #2a9d8f);
+  }
+}
+
+.mediaListSidebarSlide-enter-active,
+.mediaListSidebarSlide-leave-active {
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.mediaListSidebarSlide-enter,
+.mediaListSidebarSlide-leave-to {
+  transform: translateX(16px);
+  opacity: 0;
 }
 </style>

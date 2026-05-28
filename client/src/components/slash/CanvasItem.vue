@@ -22,14 +22,25 @@
       <div class="_canvasItem--caption" v-if="file.$type !== 'text'">
         <span v-if="caption" v-html="caption" />
       </div>
-      <!-- <span class="_canvasItem--chatBubble" :aria-label="$t('chats')">
-        <b-icon icon="chat-left-text-fill" />
-      </span> -->
+    </div>
+
+    <div
+      v-if="can_show_media_list_handle"
+      class="_canvasItem--mediaListHandle"
+    >
+      <MediaListDragHandle
+        :file="file"
+        :size="mode === 'canvas' ? 'small' : ''"
+        :scale_factor="mode === 'canvas' ? scale_factor : 1"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import MediaListDragHandle from "@/components/slash/MediaListDragHandle.vue";
+import { isMediaListFile } from "@/utils/mediaListUtils.js";
+
 export default {
   props: {
     file: {
@@ -48,8 +59,14 @@ export default {
       type: Number,
       default: null,
     },
+    scale_factor: {
+      type: Number,
+      default: 1,
+    },
   },
-  components: {},
+  components: {
+    MediaListDragHandle,
+  },
   data() {
     return {};
   },
@@ -95,6 +112,9 @@ export default {
     caption() {
       return this.$sanitize(this.file.caption);
     },
+    can_show_media_list_handle() {
+      return isMediaListFile(this.file);
+    },
   },
   methods: {
     openItemModal() {
@@ -110,6 +130,14 @@ export default {
   width: 100%;
   height: 100%;
   min-height: 3rem;
+}
+
+._canvasItem--mediaListHandle {
+  position: absolute;
+  top: calc(var(--spacing) / 4);
+  right: calc(var(--spacing) / 4);
+  z-index: 6;
+  pointer-events: auto;
 }
 
 ._canvasItem--shadow {
