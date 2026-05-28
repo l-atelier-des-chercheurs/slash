@@ -36,15 +36,20 @@
         :class="{ 'is--dragOver': drag_over }"
       />
 
-      <ol
+      <transition-group
         v-else
         ref="list"
+        tag="ol"
+        name="mediaListReorder"
         class="_mediaListSidebar--list"
         @dragover.prevent="onListDragOver"
       >
-        <template v-for="(item, index) in resolved_items">
-          <li
-            :key="`${item.file.$path}-drop-${index}`"
+        <li
+          v-for="(item, index) in resolved_items"
+          :key="item.file.$path"
+          class="_mediaListSidebar--row"
+        >
+          <div
             class="_mediaListSidebar--dropZone"
             :class="{
               'is--active': isDropZoneActive(index),
@@ -57,8 +62,7 @@
             @drop.prevent="onDropZoneDrop($event, index)"
           />
 
-          <li
-            :key="item.file.$path"
+          <div
             class="_mediaListSidebar--item"
             :class="{
               'is--dragging': dragging_index === index,
@@ -90,8 +94,8 @@
             >
               <b-icon icon="x" />
             </button>
-          </li>
-        </template>
+          </div>
+        </li>
 
         <li
           v-if="resolved_items.length"
@@ -108,7 +112,7 @@
           @dragleave="onDropZoneDragLeave"
           @drop.prevent="onDropZoneDrop($event, resolved_items.length)"
         />
-      </ol>
+      </transition-group>
     </div>
 
     <p class="_mediaListSidebar--instructions">
@@ -364,8 +368,16 @@ export default {
       next.splice(to_index, 0, moved);
       this.emitPaths(next);
     },
+    getListRootEl() {
+      const list_ref = this.$refs.list;
+      if (list_ref) {
+        const el = list_ref.$el || list_ref;
+        if (el?.querySelectorAll) return el;
+      }
+      return this.$el?.querySelector("._mediaListSidebar--list") || null;
+    },
     getDropIndexFromEvent(event) {
-      const list = this.$refs.list;
+      const list = this.getListRootEl();
       if (!list) return this.resolved_items.length;
 
       const items = list.querySelectorAll("._mediaListSidebar--item");
@@ -444,6 +456,13 @@ export default {
   margin: 0;
   padding: 0;
   list-style: none;
+  position: relative;
+}
+
+._mediaListSidebar--row {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
 ._mediaListSidebar--dropZone {
@@ -507,6 +526,10 @@ export default {
       transform: translateY(4px);
       transition: transform 0.2s 0.15s ease;
     }
+  }
+
+  &.is--last {
+    margin-top: calc(var(--spacing) / -2);
   }
 }
 
@@ -594,5 +617,30 @@ export default {
   color: var(--c-gris_fonce, #666);
   text-align: center;
   line-height: 1.4;
+}
+
+.mediaListReorder-move {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.mediaListReorder-enter-active,
+.mediaListReorder-leave-active {
+  transition: opacity 0.25s cubic-bezier(0.19, 1, 0.22, 1),
+    transform 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.mediaListReorder-enter,
+.mediaListReorder-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.mediaListReorder-leave-active {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 0;
 }
 </style>

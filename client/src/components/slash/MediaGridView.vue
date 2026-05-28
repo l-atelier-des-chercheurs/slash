@@ -6,6 +6,8 @@
         :key="file.$path"
         :file="file"
         mode="grid"
+        :show_media_list_sidebar="show_media_list_sidebar"
+        :media_list_paths="media_list_paths"
         class="_mediaGridView--item"
         :data-file-path="file.$path"
       />
@@ -18,6 +20,14 @@ import CanvasItem from "@/components/slash/CanvasItem.vue";
 export default {
   props: {
     files: {
+      type: Array,
+      default: () => [],
+    },
+    show_media_list_sidebar: {
+      type: Boolean,
+      default: false,
+    },
+    media_list_paths: {
       type: Array,
       default: () => [],
     },

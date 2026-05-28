@@ -31,6 +31,8 @@
       :resolution="optimalResolution"
       :mode="'canvas'"
       :scale_factor="canvas_zoom"
+      :show_media_list_sidebar="show_media_list_sidebar"
+      :media_list_paths="media_list_paths"
       class="_canvasItemContent"
     />
 
@@ -120,6 +122,14 @@ export default {
     in_viewport: {
       type: Boolean,
       default: true,
+    },
+    show_media_list_sidebar: {
+      type: Boolean,
+      default: false,
+    },
+    media_list_paths: {
+      type: Array,
+      default: () => [],
     },
   },
   components: {

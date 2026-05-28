@@ -2,10 +2,14 @@
   <div v-if="can_show">
     <div
       class="_mediaListDragHandle panzoom-exclude"
-      :class="{ 'is--dragging': is_dragging }"
+      :class="{
+        'is--dragging': is_dragging,
+        'is--disabled': is_in_media_list,
+      }"
       :style="handle_style"
-      @mousedown.stop.prevent="onPointerDown"
-      @touchstart.stop.prevent="onTouchStart"
+      :title="handle_title"
+      @mousedown="onPointerDown"
+      @touchstart="onTouchStart"
     >
       <button
         type="button"
@@ -14,7 +18,7 @@
           'is--dragged': is_dragging,
           'u-button_small': size === 'small',
         }"
-        title="Add to media list"
+        :disabled="is_in_media_list"
         tabindex="-1"
       >
         <b-icon icon="hand-index-thumb" />
@@ -89,6 +93,10 @@ export default {
       type: Number,
       default: 1,
     },
+    media_list_paths: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
@@ -106,6 +114,15 @@ export default {
   computed: {
     can_show() {
       return isMediaListFile(this.file);
+    },
+    is_in_media_list() {
+      return this.media_list_paths.includes(this.file.$path);
+    },
+    handle_title() {
+      if (this.is_in_media_list) {
+        return "Media already part of the list";
+      }
+      return "Add to media list";
     },
     handle_style() {
       if (this.scale_factor === 1) return null;
@@ -235,12 +252,18 @@ export default {
       this.has_source_clone = false;
     },
     onPointerDown(event) {
+      if (this.is_in_media_list) return;
       if (event.button !== 0) return;
+      event.stopPropagation();
+      event.preventDefault();
       this.beginPointerSession(event.clientX, event.clientY);
     },
     onTouchStart(event) {
+      if (this.is_in_media_list) return;
       const touch = event.touches?.[0];
       if (!touch) return;
+      event.stopPropagation();
+      event.preventDefault();
       this.beginPointerSession(touch.clientX, touch.clientY);
     },
     beginPointerSession(client_x, client_y) {
@@ -291,12 +314,12 @@ export default {
       this.ghost_client_x = client_x;
       this.ghost_client_y = client_y;
       this.$eventHub.$emit("mediaList.ensureOpen");
-      this.$eventHub.$emit("mediaList.pointerDragStart", {
-        file: this.file,
-        client_x,
-        client_y,
-      });
       this.$nextTick(() => {
+        this.$eventHub.$emit("mediaList.pointerDragStart", {
+          file: this.file,
+          client_x,
+          client_y,
+        });
         this.mountGhostClone();
       });
     },
@@ -345,6 +368,14 @@ export default {
   &:active,
   &.is--dragging {
     cursor: grabbing;
+  }
+
+  &.is--disabled {
+    cursor: not-allowed;
+
+    ::v-deep button {
+      opacity: 0.45;
+    }
   }
 
   ::v-deep button {

@@ -33,6 +33,8 @@
         :zoom="canvas_zoom"
         :zoom_range="zoom_range"
         :folder_path="folder.$path"
+        :show_media_list_sidebar="show_media_list_sidebar"
+        :media_list_paths="media_list_paths"
         @update:zoom="canvas_zoom = $event"
         @update:scroll="canvas_scroll = $event"
       />
@@ -43,10 +45,14 @@
       <TimelineView
         v-if="view_mode === 'timeline'"
         :files="filtered_files_without_canvas_items"
+        :show_media_list_sidebar="show_media_list_sidebar"
+        :media_list_paths="media_list_paths"
       />
       <MediaGridView
         v-if="view_mode === 'grid'"
         :files="filtered_files_without_canvas_items"
+        :show_media_list_sidebar="show_media_list_sidebar"
+        :media_list_paths="media_list_paths"
       />
     </div>
 
@@ -69,7 +75,8 @@
 
     <transition name="mediaListSidebarSlide">
       <MediaListSidebar
-        v-if="show_media_list_sidebar"
+        v-show="show_media_list_sidebar"
+        ref="mediaListSidebar"
         :files="sorted_files"
         :media_list_paths="media_list_paths"
         @update:media_list_paths="onMediaListPathsUpdate"

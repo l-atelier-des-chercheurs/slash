@@ -44,6 +44,8 @@
                   :mode="'timeline'"
                   :timeline-height="item.height"
                   :event-phase="item.eventPhase"
+                  :show_media_list_sidebar="show_media_list_sidebar"
+                  :media_list_paths="media_list_paths"
                   class="_timelineView--item _canvasItem"
                   :data-file-path="item.file.$path"
                 />
@@ -146,6 +148,14 @@ function chunkItemsIntoColumns(
 export default {
   props: {
     files: {
+      type: Array,
+      default: () => [],
+    },
+    show_media_list_sidebar: {
+      type: Boolean,
+      default: false,
+    },
+    media_list_paths: {
       type: Array,
       default: () => [],
     },

@@ -32,6 +32,7 @@
         :file="file"
         :size="mode === 'canvas' ? 'small' : ''"
         :scale_factor="mode === 'canvas' ? scale_factor : 1"
+        :media_list_paths="media_list_paths"
       />
     </div>
   </div>
@@ -62,6 +63,14 @@ export default {
     scale_factor: {
       type: Number,
       default: 1,
+    },
+    show_media_list_sidebar: {
+      type: Boolean,
+      default: false,
+    },
+    media_list_paths: {
+      type: Array,
+      default: () => [],
     },
   },
   components: {
@@ -113,7 +122,9 @@ export default {
       return this.$sanitize(this.file.caption);
     },
     can_show_media_list_handle() {
-      return isMediaListFile(this.file);
+      return (
+        this.show_media_list_sidebar && isMediaListFile(this.file)
+      );
     },
   },
   methods: {

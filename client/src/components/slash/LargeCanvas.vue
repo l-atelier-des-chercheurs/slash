@@ -50,6 +50,8 @@
           :mode="current_mode"
           :is_selected="currently_selected_files.includes(file.$path)"
           :in_viewport="visible_file_paths.has(file.$path)"
+          :show_media_list_sidebar="show_media_list_sidebar"
+          :media_list_paths="media_list_paths"
           @width-update="handleWidthUpdate"
           @select="handleSelect"
         />
@@ -135,6 +137,14 @@ export default {
     },
     zoom_range: Array,
     folder_path: String,
+    show_media_list_sidebar: {
+      type: Boolean,
+      default: false,
+    },
+    media_list_paths: {
+      type: Array,
+      default: () => [],
+    },
   },
   components: {
     SlashPanZoom2,
