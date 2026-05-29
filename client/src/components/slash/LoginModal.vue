@@ -1,88 +1,38 @@
 <template>
   <BaseModal2
-    :title="'Hello Slashers!'"
+    :title="$t('hello_slashers')"
     :is_closable="is_logged_in"
     @close="$emit('close')"
   >
     <div>
       <p class="u-spacingBottom">
-        Before using the app, please pick your name so all your contributions
-        are credited to you. Choose an existing account or create a new one
-        below.
+        {{ $t("login_modal_description") }}
       </p>
 
       <div v-if="!is_logged_in">
-        <!-- Create new account: Name or pseudo + Role -->
-        <template v-if="show_create">
-          <div class="_loginRow u-spacingBottom">
-            <div class="_loginRow__name">
-              <label class="u-label">Name or pseudo</label>
-              <input
-                v-model="new_author_name"
-                type="text"
-                class="u-input"
-                :placeholder="name_placeholder"
-              />
-            </div>
-            <div class="_loginRow__role">
-              <label class="u-label">Role</label>
-              <select v-model="selected_structure_role" class="u-input">
-                <option disabled value="">Choose…</option>
-                <option
-                  v-for="opt in structure_role_options"
-                  :key="opt"
-                  :value="opt"
-                >
-                  {{ opt }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <ColorInput
-            class="u-spacingBottom"
-            :label="$t('color')"
-            :value="new_author_color"
-            :allow_transparent="false"
-            :can_toggle="false"
-            :default_value="suggested_colors[0]"
-            :default_colors="suggested_colors"
-            @save="new_author_color = $event"
-          />
-        </template>
-
-        <!-- Login with existing account -->
-        <div v-else class="u-spacingBottom">
-          <label class="u-label">Choose an existing account</label>
-          <select v-model="selected_author" class="u-input">
-            <option disabled value="">
-              {{ $t("identify_yourself_here") }}
-            </option>
-            <optgroup
-              v-for="group in author_select_groups"
-              :key="group.category"
-              :label="group.category"
+        <label class="u-label">{{ $t("pick_your_name_label") }}</label>
+        <select v-model="selected_author" class="u-input u-spacingBottom">
+          <option disabled value="">
+            {{ $t("identify_yourself_here") }}
+          </option>
+          <optgroup
+            v-for="group in author_select_groups"
+            :key="group.category"
+            :label="group.category"
+          >
+            <option
+              v-for="author in group.authors"
+              :key="author.path"
+              :value="author"
             >
-              <option
-                v-for="author in group.authors"
-                :key="author.path"
-                :value="author"
-              >
-                {{ author.name
-                }}{{
-                  (author.group || []).length
-                    ? " (" + (author.group || []).join(", ") + ")"
-                    : ""
-                }}
-              </option>
-            </optgroup>
-          </select>
-        </div>
+              {{ author.name }}
+            </option>
+          </optgroup>
+        </select>
       </div>
       <div v-else class="u-spacingBottom">
-        <p>
-          You are currently logged in as
-
+        <p class="u-spacingBottom">
+          {{ $t("logged_in_as") }}
           <strong :style="{ backgroundColor: connected_as.color }">{{
             connected_as.name
           }}</strong
@@ -91,19 +41,7 @@
           >.
         </p>
 
-        <div class="u-spacingBottom"></div>
-
-        <button
-          type="button"
-          class="u-button u-button_small"
-          :class="{ 'is--active': show_color_input }"
-          @click="show_color_input = !show_color_input"
-        >
-          <b-icon icon="palette-fill" /> Change color
-        </button>
         <ColorInput
-          v-if="show_color_input"
-          class="u-spacingBottom"
           :label="$t('color')"
           :value="connected_as.color"
           :allow_transparent="false"
@@ -117,46 +55,28 @@
 
     <template slot="footer">
       <button
-        v-if="!is_logged_in"
-        type="button"
-        class="u-button u-button_white u-button_small"
-        @click="show_create = !show_create"
-      >
-        {{ show_create ? "Choose existing account" : "Create new account" }}
-      </button>
-      <button
         v-if="is_logged_in"
         type="button"
         class="u-button u-button_red"
         @click="logout()"
       >
-        Logout
+        {{ $t("logout") }}
       </button>
-      <template v-else>
-        <button
-          v-if="show_create"
-          type="button"
-          class="u-button u-button_bleuvert"
-          :disabled="!can_create"
-          @click="createAccount()"
-        >
-          Create account
-        </button>
-        <button
-          v-else
-          type="button"
-          class="u-button u-button_bleuvert"
-          :disabled="!can_login"
-          @click="login()"
-        >
-          Login
-        </button>
-      </template>
+      <button
+        v-else
+        type="button"
+        class="u-button u-button_bleuvert"
+        :disabled="!can_login"
+        @click="login()"
+      >
+        {{ $t("login") }}
+      </button>
     </template>
   </BaseModal2>
 </template>
 <script>
 import randomcolor from "randomcolor";
+import { slash_contributors_list } from "@/config/slash_contributors_list.js";
 
 export default {
   props: {},
@@ -172,23 +92,12 @@ export default {
     }
     return {
       selected_author: saved_author || "",
-      selected_structure_role: "",
-
-      show_create: false,
-      new_author_name: "",
-      new_author_color: "",
-
       authors_by_path: {},
-      structure_role_options: ["Artist"],
-      show_color_input: false,
     };
   },
   async created() {
     await this.fetchAuthors();
   },
-  mounted() {},
-  beforeDestroy() {},
-  watch: {},
   computed: {
     is_logged_in() {
       return !!this.connected_as;
@@ -197,17 +106,8 @@ export default {
       const g = this.connected_as?.group;
       return Array.isArray(g) && g.length ? g.join(", ") : "";
     },
-    name_placeholder() {
-      return "Your name or pseudonym";
-    },
     can_login() {
       return !!this.selected_author;
-    },
-    can_create() {
-      return (
-        (this.new_author_name || "").trim().length > 0 &&
-        !!this.selected_structure_role
-      );
     },
     suggested_colors() {
       return randomcolor({
@@ -215,9 +115,17 @@ export default {
         count: 25,
       });
     },
+    listed_author_paths() {
+      const paths = new Set();
+      for (const group of slash_contributors_list) {
+        for (const author of group.authors || []) {
+          paths.add(author.path);
+        }
+      }
+      return paths;
+    },
     author_select_groups() {
-      const groups = this.$root.slash_contributors_list || [];
-      return groups
+      const groups = slash_contributors_list
         .map((group) => ({
           category: group.category,
           authors: (group.authors || [])
@@ -228,17 +136,32 @@ export default {
             ),
         }))
         .filter((group) => group.authors.length > 0);
+
+      const other_authors = Object.values(this.authors_by_path)
+        .filter((author) => !this.listed_author_paths.has(author.path))
+        .sort((author_a, author_b) =>
+          author_a.name.localeCompare(author_b.name)
+        );
+
+      if (other_authors.length) {
+        groups.push({
+          category: this.$t("other_authors_category"),
+          authors: other_authors,
+        });
+      }
+
+      return groups;
     },
   },
   methods: {
     _preset_authors_from_contributors_list() {
-      const groups = this.$root.slash_contributors_list || [];
-      return groups.flatMap((group) =>
+      return slash_contributors_list.flatMap((group) =>
         (group.authors || []).map((author) => ({
           name: author.name,
           path: author.path,
           group: author.group || [group.category],
           email: author.email,
+          color: author.color,
         }))
       );
     },
@@ -271,6 +194,7 @@ export default {
           path: f.$path,
           group: f.group || [],
           email: f.email,
+          color: f.color,
         }));
       } catch (e) {
         console.error("Failed to fetch authors", e);
@@ -281,25 +205,22 @@ export default {
         from_presets: this._preset_authors_from_contributors_list(),
       });
     },
-    _group_from_role() {
-      return this.selected_structure_role ? [this.selected_structure_role] : [];
-    },
     async ensureAuthorFolder(author) {
       try {
         await this.$api.getFolder({ path: author.path });
-        return;
+        return false;
       } catch (e) {
         if (e?.code !== "not_found") throw e;
       }
 
       const requested_slug = author.path.replace(/^authors\//, "");
+      const default_password = "slash";
       const color =
         author.color ||
+        this.authors_by_path[author.path]?.color ||
         randomcolor({
           luminosity: "light",
         });
-
-      const default_password = "slash";
 
       await this.$api.createFolder({
         path: "authors",
@@ -307,6 +228,7 @@ export default {
           name: author.name,
           email: author.email,
           requested_slug,
+          $status: "public",
           $password: default_password,
           group: author.group || [],
           color,
@@ -314,19 +236,22 @@ export default {
       });
 
       await this.fetchAuthors();
+      return true;
     },
     async login() {
-      if (!this.selected_author) return;
+      if (!this.can_login) return;
 
       const default_password = "slash";
+      const author = this.selected_author;
 
       try {
-        await this.ensureAuthorFolder(this.selected_author);
+        await this.ensureAuthorFolder(author);
+
         await this.$api.loginToFolder({
-          path: this.selected_author.path,
+          path: author.path,
           password: default_password,
         });
-        this.$alertify.success("Logged in");
+        this.$alertify.success(this.$t("login"));
         this.$emit("close");
       } catch (e) {
         const msg =
@@ -336,43 +261,12 @@ export default {
         this.$alertify.error("Login failed: " + msg);
       }
     },
-    async createAccount() {
-      if (!this.can_create) return;
-
-      const default_password = "slash";
-      const name = (this.new_author_name || "").trim();
-      const color = this.new_author_color;
-
-      try {
-        const new_folder_slug = await this.$api.createFolder({
-          path: "authors",
-          additional_meta: {
-            name,
-            $password: default_password,
-            requested_slug: name,
-            group: this._group_from_role(),
-            color,
-          },
-        });
-        await this.$api.loginToFolder({
-          path: `authors/${new_folder_slug}`,
-          password: default_password,
-        });
-
-        this.$alertify.success(`Account created for ${name}`);
-        this.$emit("close");
-      } catch (e) {
-        console.error(e);
-        this.$alertify.error("Failed to create account: " + (e.message || e));
-      }
-    },
     async logout() {
       if (this.$api.tokenpath.token_path) {
         await this.$api.logoutFromFolder();
       }
       this.selected_author = "";
-      this.selected_structure_role = "";
-      this.$alertify.success("Logged out");
+      this.$alertify.success(this.$t("logout"));
     },
     async updateConnectedAs(meta) {
       await this.$api.updateMeta({
@@ -384,18 +278,6 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-._loginRow {
-  display: flex;
-  gap: var(--spacing);
-  align-items: flex-end;
-}
-._loginRow__name {
-  flex: 1;
-  min-width: 0;
-}
-._loginRow__role {
-  flex: 1;
-}
 .u-label {
   display: block;
   margin-bottom: calc(var(--spacing) / 4);
@@ -407,15 +289,5 @@ export default {
   padding: calc(var(--spacing) / 2);
   border: 1px solid var(--c-gris);
   border-radius: 4px;
-}
-.u-background-white {
-  background: white;
-  border: 1px solid var(--c-gris);
-}
-.u-border-radius {
-  border-radius: 4px;
-}
-.u-padding {
-  padding: var(--spacing);
 }
 </style>

@@ -2,9 +2,12 @@ export default {
   // LoginModal
   hello_slashers: "Hello Slashers!",
   login_modal_description:
-    "Before using the app, please pick your name in this list so all your contributions are credited to you. If your name is missing, get in touch with Louis to add it (and in the future a form will allow you to do it yourself):",
+    "Before using the app, pick your name in the list below so all your contributions are credited to you.",
+  pick_your_name_label: "Pick your name",
   identify_yourself_here: "Identify yourself here",
+  other_authors_category: "Other",
   login: "Login",
+  change_color: "Change color",
 
   // DropMenu
   logged_in_as: "Logged in as:",
