@@ -54,23 +54,25 @@
     </div>
 
     <template slot="footer">
-      <button
-        v-if="is_logged_in"
-        type="button"
-        class="u-button u-button_red"
-        @click="logout()"
-      >
-        {{ $t("logout") }}
-      </button>
-      <button
-        v-else
-        type="button"
-        class="u-button u-button_bleuvert"
-        :disabled="!can_login"
-        @click="login()"
-      >
-        {{ $t("login") }}
-      </button>
+      <div class="_loginModal--footer">
+        <button
+          v-if="is_logged_in"
+          type="button"
+          class="u-button u-button_red"
+          @click="logout()"
+        >
+          {{ $t("logout") }}
+        </button>
+        <button
+          v-else
+          type="button"
+          class="u-button u-button_bleuvert"
+          :disabled="!can_login"
+          @click="login()"
+        >
+          {{ $t("login") }}
+        </button>
+      </div>
     </template>
   </BaseModal2>
 </template>
@@ -278,6 +280,12 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+._loginModal--footer {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+}
+
 .u-label {
   display: block;
   margin-bottom: calc(var(--spacing) / 4);
