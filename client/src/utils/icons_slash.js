@@ -9,12 +9,15 @@ import {
   BIconCameraVideo,
   BIconChatLeftText,
   BIconChatLeftTextFill,
+  BIconChevronDown,
   BIconCursor,
   BIconFileEarmarkPdf,
+  BIconFilter,
   BIconFolder2,
   BIconGrid,
   BIconLayoutWtf,
   BIconLink45deg,
+  BIconMap,
   BIconMusicNoteBeamed,
 } from "bootstrap-vue";
 
@@ -23,10 +26,13 @@ Vue.component("BIconCalendarDay", BIconCalendarDay);
 Vue.component("BIconCameraVideo", BIconCameraVideo);
 Vue.component("BIconChatLeftText", BIconChatLeftText);
 Vue.component("BIconChatLeftTextFill", BIconChatLeftTextFill);
+Vue.component("BIconChevronDown", BIconChevronDown);
 Vue.component("BIconCursor", BIconCursor);
+Vue.component("BIconFilter", BIconFilter);
 Vue.component("BIconFileEarmarkPdf", BIconFileEarmarkPdf);
 Vue.component("BIconFolder2", BIconFolder2);
 Vue.component("BIconGrid", BIconGrid);
 Vue.component("BIconLayoutWtf", BIconLayoutWtf);
+Vue.component("BIconMap", BIconMap);
 Vue.component("BIconLink45deg", BIconLink45deg);
 Vue.component("BIconMusicNoteBeamed", BIconMusicNoteBeamed);
