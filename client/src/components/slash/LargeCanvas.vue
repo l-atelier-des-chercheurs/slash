@@ -107,6 +107,15 @@
       :current_mode.sync="current_mode"
       :draw_stroke_width.sync="draw_stroke_width"
     />
+    <transition name="fade">
+      <CanvasSelectionBar
+        v-if="show_selection_bar"
+        :show_stroke_controls="selected_shape_files.length > 0"
+        :shape_stroke_width="selection_shape_stroke_width"
+        @remove="removeSelectedFiles"
+        @update:shape_stroke_width="setSelectedShapesStrokeWidth"
+      />
+    </transition>
     <FpsCounter v-if="show_fps_counter" />
   </div>
 </template>
@@ -124,6 +133,7 @@ import {
 } from "@/utils/textCanvasUtils.js";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
+import CanvasSelectionBar from "@/components/slash/CanvasSelectionBar.vue";
 import QuickAddToCanvas from "@/components/slash/QuickAddToCanvas.vue";
 import MiniMap from "@/components/slash/MiniMap.vue";
 import FpsCounter from "@/components/slash/FpsCounter.vue";
@@ -159,6 +169,7 @@ export default {
     CanvasItemInteractive,
     CanvasDrawOverlay,
     LeftToolbar,
+    CanvasSelectionBar,
     QuickAddToCanvas,
     MiniMap,
     FpsCounter,
@@ -311,6 +322,26 @@ export default {
         ? this.selected_files
         : [];
     },
+    show_selection_bar() {
+      return (
+        this.current_mode === "select" &&
+        this.currently_selected_files.length > 0
+      );
+    },
+    selected_shape_files() {
+      if (!this.show_selection_bar) return [];
+      const selected = new Set(this.currently_selected_files);
+      return this.files.filter(
+        (file) =>
+          file.$type === "canvas_shape" && selected.has(file.$path)
+      );
+    },
+    selection_shape_stroke_width() {
+      const shapes = this.selected_shape_files;
+      if (!shapes.length) return this.draw_stroke_width;
+      const first = Number(shapes[0].shape_stroke_width);
+      return Number.isFinite(first) && first > 0 ? first : 5;
+    },
     show_fps_counter() {
       return this.$root.app_infos?.debug_mode === true;
     },
@@ -409,6 +440,23 @@ export default {
           }
         };
         window.addEventListener("keyup", restoreMode);
+      }
+    },
+    async setSelectedShapesStrokeWidth(width) {
+      if (!Number.isFinite(width) || this.selected_shape_files.length === 0) {
+        return;
+      }
+      this.draw_stroke_width = width;
+      for (const file of this.selected_shape_files) {
+        this.$set(file, "shape_stroke_width", width);
+        try {
+          await this.$api.updateMeta({
+            path: file.$path,
+            new_meta: { shape_stroke_width: width },
+          });
+        } catch (err) {
+          console.error("Failed to save shape stroke width:", err);
+        }
       }
     },
     async removeSelectedFiles() {
