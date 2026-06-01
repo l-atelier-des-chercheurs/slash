@@ -252,6 +252,7 @@ export default {
 html,
 body {
   height: 100%;
+  height: 100dvh;
   // background: white;
   background-color: var(--c-bodybg);
   // background: linear-gradient(to top, var(--c-bodybg) 0, white 50vh);
@@ -266,6 +267,7 @@ body {
 
 html {
   height: 100%;
+  height: 100dvh;
 
   font-family: "Rubik", sans-serif;
   font-style: normal;
@@ -280,6 +282,7 @@ html {
 }
 body {
   min-height: 100%;
+  min-height: 100dvh;
   margin: 0;
 }
 
@@ -303,7 +306,9 @@ button {
 #app {
   /* font-family: "Work Sans"; */
   height: 100%;
+  height: 100dvh;
   min-height: 100%;
+  min-height: 100dvh;
 }
 
 .authorLabel {
