@@ -118,7 +118,10 @@ import {
   QUICK_NOTE_HEIGHT,
   measureQuickNoteWidth,
 } from "@/utils/quickNoteUtils.js";
-import { getTextCanvasDimensions } from "@/utils/textCanvasUtils.js";
+import {
+  getTextCanvasDimensions,
+  getTextCanvasDisplayHeight,
+} from "@/utils/textCanvasUtils.js";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
 import QuickAddToCanvas from "@/components/slash/QuickAddToCanvas.vue";
@@ -669,7 +672,12 @@ export default {
         width = measureQuickNoteWidth(file.text);
         height = QUICK_NOTE_HEIGHT;
       } else if (file.$type === "text") {
-        ({ width, height } = getTextCanvasDimensions(file.$content, width));
+        ({ width } = getTextCanvasDimensions(file.$content, width));
+        height = getTextCanvasDisplayHeight(
+          file.$content,
+          width,
+          file.height
+        );
       } else if (ratio !== undefined) {
         height = width * ratio;
       } else if (file.$type === "canvas_shape") {

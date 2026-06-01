@@ -1,4 +1,3 @@
-export const TEXT_CANVAS_MAX_LINES = 10;
 export const TEXT_CANVAS_MIN_WIDTH = 50;
 export const TEXT_CANVAS_MAX_WIDTH = 1000;
 export const TEXT_CANVAS_DEFAULT_WIDTH = 320;
@@ -52,14 +51,16 @@ export function clampTextCanvasWidth(width) {
   );
 }
 
-export function measureTextCanvasHeight(content, width) {
+export function measureTextCanvasHeight(content, width, { max_lines = null } = {}) {
   const bounded_width = clampTextCanvasWidth(width);
+  const line_cap = max_lines;
   const node = getMeasureNode();
   const padding = getSpacingPx();
 
   if (!node) {
     const fallback_line = 24;
-    return padding * 2 + fallback_line * TEXT_CANVAS_MAX_LINES;
+    const cap = line_cap ?? 200;
+    return padding * 2 + fallback_line * cap;
   }
 
   node.style.width = `${bounded_width}px`;
@@ -69,9 +70,79 @@ export function measureTextCanvasHeight(content, width) {
   const styles = getComputedStyle(node);
   const line_height = parseFloat(styles.lineHeight) || 24;
   const min_height = padding * 2 + line_height;
-  const max_height = padding * 2 + line_height * TEXT_CANVAS_MAX_LINES;
+  const scroll_height = Math.ceil(node.scrollHeight);
+  const content_height = Math.max(scroll_height, min_height);
 
-  return Math.min(Math.max(Math.ceil(node.scrollHeight), min_height), max_height);
+  if (line_cap == null) {
+    return content_height;
+  }
+
+  const max_height = padding * 2 + line_height * line_cap;
+  return Math.min(content_height, max_height);
+}
+
+/** Hauteur du contenu à cette largeur (toutes les lignes, sans plafond). */
+export function getTextCanvasNeededHeight(content, width) {
+  return measureTextCanvasHeight(content, clampTextCanvasWidth(width));
+}
+
+/** Hauteur affichée : hauteur enregistrée, ou hauteur du contenu. */
+export function getTextCanvasDisplayHeight(content, width, stored_height) {
+  const bounded_width = clampTextCanvasWidth(width);
+  const parsed_height = Number(stored_height);
+  if (Number.isFinite(parsed_height) && parsed_height > 0) {
+    return Math.round(parsed_height);
+  }
+  return getTextCanvasNeededHeight(content, bounded_width);
+}
+
+/**
+ * Après un changement de largeur : réduire si trop haut, ne jamais agrandir.
+ * @param {number|null|undefined} stored_height - meta file.height
+ * @param {number} baseline_height - hauteur affichée au début du resize largeur
+ */
+export function resolveTextCanvasHeightForWidthChange(
+  content,
+  width,
+  { stored_height, baseline_height }
+) {
+  const needed = getTextCanvasNeededHeight(content, width);
+  const has_stored =
+    stored_height != null &&
+    Number.isFinite(Number(stored_height)) &&
+    Number(stored_height) > 0;
+  const current = has_stored
+    ? Math.round(Number(stored_height))
+    : Math.round(baseline_height);
+
+  if (current > needed) {
+    return {
+      height: needed,
+      persist_height: has_stored,
+    };
+  }
+  if (current < needed) {
+    return {
+      height: current,
+      persist_height: true,
+    };
+  }
+  return {
+    height: needed,
+    persist_height: false,
+  };
+}
+
+/** Hauteur minimale pour le redimensionnement vertical manuel (1 ligne). */
+export function getTextCanvasMinHeight(content, width) {
+  return measureTextCanvasHeight(content, clampTextCanvasWidth(width), {
+    max_lines: 1,
+  });
+}
+
+/** Hauteur maximale : contenu complet (pas de vide sous le texte). */
+export function getTextCanvasMaxHeight(content, width) {
+  return getTextCanvasNeededHeight(content, width);
 }
 
 export function getTextCanvasDimensions(content, width) {

@@ -20,8 +20,11 @@
 
 <script>
 import { pointsToSvgPath, getPointsBounds } from "@/utils/shapeUtils.js";
-import { measureQuickNoteWidth, QUICK_NOTE_HEIGHT } from "@/utils/quickNoteUtils.js";
-import { measureTextCanvasHeight } from "@/utils/textCanvasUtils.js";
+import {
+  measureQuickNoteWidth,
+  QUICK_NOTE_HEIGHT,
+} from "@/utils/quickNoteUtils.js";
+import { getTextCanvasDisplayHeight } from "@/utils/textCanvasUtils.js";
 
 export default {
   props: {
@@ -360,7 +363,7 @@ export default {
       }
       const width = this.getItemWidth(file);
       if (file.$type === "text") {
-        return measureTextCanvasHeight(file.$content, width);
+        return getTextCanvasDisplayHeight(file.$content, width, file.height);
       }
       const ratio = file.$infos && file.$infos.ratio;
       if (ratio !== undefined) return width * ratio;
@@ -432,8 +435,9 @@ export default {
   width: clamp(100px, 50vmin, 200px);
   z-index: 1000;
   cursor: pointer;
-  border-radius: var(--border-radius);
+  // border-radius: calc(var(--border-radius) / 2);
   overflow: hidden;
+  padding: 0;
 }
 
 ._canvasWrapper {
@@ -449,7 +453,7 @@ export default {
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: var(--border-radius);
+  border-radius: calc(var(--border-radius) / 4);
 }
 
 ._viewportCanvas {

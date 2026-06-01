@@ -44,8 +44,24 @@
       @touchstart.stop.prevent="handleItemTouchStart"
     ></div>
     <div
+      v-if="file.$type === 'text' && is_selected"
+      class="_canvasItem--resizeHandle is--widthOnly"
+      :style="'--scale-factor: ' + canvas_zoom"
+      @mousedown.stop="handleResizeStart($event, 'width')"
+      @touchstart.stop.prevent="handleResizeTouchStart($event, 'width')"
+    />
+    <div
+      v-if="file.$type === 'text' && is_selected"
+      class="_canvasItem--resizeHandle is--heightOnly"
+      :style="'--scale-factor: ' + canvas_zoom"
+      @mousedown.stop="handleResizeStart($event, 'height')"
+      @touchstart.stop.prevent="handleResizeTouchStart($event, 'height')"
+    />
+    <div
       v-if="
-        !['canvas_shape', 'canvas_text'].includes(file.$type) && is_selected
+        is_selected &&
+        file.$type !== 'text' &&
+        !['canvas_shape', 'canvas_text'].includes(file.$type)
       "
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
@@ -82,7 +98,10 @@ import {
 } from "@/utils/quickNoteUtils.js";
 import {
   TEXT_CANVAS_DEFAULT_WIDTH,
-  measureTextCanvasHeight,
+  getTextCanvasDisplayHeight,
+  getTextCanvasMaxHeight,
+  getTextCanvasMinHeight,
+  resolveTextCanvasHeightForWidthChange,
 } from "@/utils/textCanvasUtils.js";
 
 export default {
@@ -157,6 +176,7 @@ export default {
       resizeStartWidth: 0,
       resizeStartHeight: 0,
       resize_mode: "width",
+      resize_start_text_height: null,
       saveTimeout: null,
 
       item_min_width: 50,
@@ -266,7 +286,7 @@ export default {
 
       let height = this.default_item_height;
       if (this.file.$type === "text") {
-        height = measureTextCanvasHeight(this.file.$content, width);
+        height = this.getTextItemHeight(width);
       } else if (ratio) {
         height = width * ratio;
       } else if (this.file.$type === "canvas_shape") {
@@ -369,9 +389,19 @@ export default {
         return this.default_item_height;
       }
       if (this.file.$type === "text") {
-        return measureTextCanvasHeight(this.file.$content, width);
+        return this.getTextItemHeight(width);
       }
       return 160;
+    },
+    getTextItemHeight(width) {
+      if (this.currentHeight !== null) {
+        return this.currentHeight;
+      }
+      return getTextCanvasDisplayHeight(
+        this.file.$content,
+        width,
+        this.file.height
+      );
     },
     handleItemTouchStart(event) {
       if (this.mode === "pan-zoom") return;
@@ -444,12 +474,29 @@ export default {
       // Store initial mouse position and current dimensions
       this.resizeStartX = event.clientX;
       this.resizeStartY = event.clientY;
+      const default_width =
+        this.file.$type === "text" ? TEXT_CANVAS_DEFAULT_WIDTH : 160;
       this.resizeStartWidth =
-        this.currentWidth !== null ? this.currentWidth : this.file.width || 160;
-      this.resizeStartHeight =
-        this.currentHeight !== null
-          ? this.currentHeight
-          : this.default_item_height;
+        this.currentWidth !== null
+          ? this.currentWidth
+          : this.file.width || default_width;
+      this.resizeStartHeight = this.getItemHeightFromWidth(this.resizeStartWidth);
+      this.resize_start_text_height =
+        this.file.$type === "text"
+          ? this.getTextItemHeight(this.resizeStartWidth)
+          : null;
+    },
+    applyTextHeightAfterWidthChange(width) {
+      const { height, persist_height } = resolveTextCanvasHeightForWidthChange(
+        this.file.$content,
+        width,
+        {
+          stored_height: this.file.height,
+          baseline_height: this.resize_start_text_height,
+        }
+      );
+      this.currentHeight = height;
+      return { height, persist_height };
     },
     handleOpen() {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
@@ -506,10 +553,30 @@ export default {
           const delta_y = event.clientY - this.resizeStartY;
           const adjusted_delta_y = delta_y / this.canvas_zoom;
           const next_height = this.resizeStartHeight + adjusted_delta_y;
-          const bounded_height = Math.min(
-            this.item_max_height,
-            Math.max(this.item_min_height, next_height)
-          );
+          let bounded_height = next_height;
+          if (this.file.$type === "text") {
+            const resize_width =
+              this.currentWidth !== null
+                ? this.currentWidth
+                : this.file.width || TEXT_CANVAS_DEFAULT_WIDTH;
+            const min_height = getTextCanvasMinHeight(
+              this.file.$content,
+              resize_width
+            );
+            const max_height = getTextCanvasMaxHeight(
+              this.file.$content,
+              resize_width
+            );
+            bounded_height = Math.min(
+              max_height,
+              Math.max(min_height, next_height)
+            );
+          } else {
+            bounded_height = Math.min(
+              this.item_max_height,
+              Math.max(this.item_min_height, next_height)
+            );
+          }
           this.currentHeight = Math.round(bounded_height);
           this.$emit("width-update", {
             file: this.file,
@@ -533,7 +600,13 @@ export default {
 
           // Emit width update (include height for canvas_shape so parent can update locally)
           const payload = { file: this.file, width: this.currentWidth };
-          if (this.file.$type === "canvas_shape") {
+          if (this.file.$type === "text") {
+            const { height, persist_height } =
+              this.applyTextHeightAfterWidthChange(this.currentWidth);
+            if (persist_height) {
+              payload.height = height;
+            }
+          } else if (this.file.$type === "canvas_shape") {
             const old_width = this.file.width || 160;
             const old_height =
               this.file.height ??
@@ -637,9 +710,17 @@ export default {
             final_dimensions_payload.height = Math.round(
               finalWidth * (old_height / old_width)
             );
+          } else if (this.file.$type === "text") {
+            const { height, persist_height } =
+              this.applyTextHeightAfterWidthChange(finalWidth);
+            if (persist_height) {
+              final_dimensions_payload.height = height;
+            }
           }
           // Clear current width to use file width
           this.currentWidth = null;
+          this.currentHeight = null;
+          this.resize_start_text_height = null;
         }
         this.resize_mode = "width";
 
