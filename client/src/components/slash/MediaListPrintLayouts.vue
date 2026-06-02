@@ -21,11 +21,23 @@
       <div
         v-if="slot.media"
         class="_mediaListPrintLayouts--media"
+        :class="{ 'is--text': slot.media.$type === 'text' }"
         draggable="true"
         @dragstart="onMediaDragStart($event, slot.media, slot.index)"
         @dragend="onMediaDragEnd"
       >
-        <MediaContent :file="slot.media" context="full" :resolution="320" />
+        <p
+          v-if="slot.media.$type === 'text'"
+          class="_mediaListPrintLayouts--text"
+          :style="printTextCssStyle(slot)"
+          v-text="printTextPreview(slot.media)"
+        />
+        <MediaContent
+          v-else
+          :file="slot.media"
+          context="full"
+          :resolution="320"
+        />
       </div>
     </div>
   </div>
@@ -36,6 +48,7 @@ import MediaContent from "@/adc-core/fields/MediaContent.vue";
 import {
   MEDIA_LIST_DRAG_MIME,
   MEDIA_LIST_PRINT_SLOT_MIME,
+  plainTextFromMediaFile,
 } from "@/utils/mediaListUtils.js";
 import {
   layoutSlotsWithMedias,
@@ -43,6 +56,7 @@ import {
   printPageSlotStyle,
   resolvePrintPageLayout,
 } from "@/utils/mediaListPrintPageEngine.js";
+import { printTextCssStyleForSlot } from "@/utils/mediaListPrintTypography.js";
 
 export default {
   components: {
@@ -83,6 +97,13 @@ export default {
     },
   },
   methods: {
+    printTextPreview(file) {
+      const text = plainTextFromMediaFile(file);
+      return text || "Text";
+    },
+    printTextCssStyle(slot) {
+      return printTextCssStyleForSlot(this.page_layout, slot.index);
+    },
     slot_style(slot) {
       return printPageSlotStyle(slot);
     },
@@ -248,6 +269,12 @@ export default {
   cursor: grab;
   transition: transform 0.15s ease;
 
+  &.is--text {
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
   &:hover {
     transform: scale(0.95);
   }
@@ -270,5 +297,16 @@ export default {
     max-height: 100%;
     object-fit: contain;
   }
+}
+
+._mediaListPrintLayouts--text {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--c-noir, #111);
 }
 </style>

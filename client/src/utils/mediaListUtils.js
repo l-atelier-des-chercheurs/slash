@@ -21,6 +21,24 @@ export function isMediaListFile(file) {
   return MEDIA_LIST_TYPES.has(file.$type);
 }
 
+export function htmlToPlainText(content) {
+  if (content == null) return "";
+  return String(content)
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+export function plainTextFromMediaFile(file) {
+  if (!file) return "";
+  const raw = file.$content ?? file.text ?? file.caption ?? "";
+  return htmlToPlainText(raw);
+}
+
 export function getMediaListStorageKey(folder_path) {
   return `slash_media_list_${folder_path}`;
 }

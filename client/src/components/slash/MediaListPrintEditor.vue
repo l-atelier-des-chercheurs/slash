@@ -41,6 +41,17 @@
     <p v-else class="_mediaListPrintEditor--empty">
       No pages — add medias to the list first.
     </p>
+
+    <button
+      v-if="pages.length"
+      type="button"
+      class="_mediaListPrintEditor--printBtn u-button u-button_bleuvert"
+      :disabled="is_exporting_pdf"
+      @click="exportPdf"
+    >
+      <b-icon class="inlineSVG" icon="printer" />
+      {{ is_exporting_pdf ? $t("export_in_progress") : $t("export_in_pdf") }}
+    </button>
   </div>
 </template>
 
@@ -59,8 +70,11 @@ import {
   createPrintPageData,
   DEFAULT_PRINT_PAGE_TEMPLATE,
 } from "@/utils/mediaListPrintPageEngine.js";
+import { exportPrintPagesToPdf } from "@/utils/mediaListPrintPdfExport.js";
+import Medias from "@/mixins/Medias.js";
 
 export default {
+  mixins: [Medias],
   components: {
     MediaListPrintInsertZone,
     MediaListPrintLayouts,
@@ -83,6 +97,7 @@ export default {
     return {
       pages: [],
       drag_payload: null,
+      is_exporting_pdf: false,
     };
   },
   computed: {
@@ -195,12 +210,73 @@ export default {
       );
       this.onPrintDragEnd();
     },
+    getPrintMediaUrls(file) {
+      if (!file?.$path) return [];
+
+      const thumb_resolutions = [1600, 640, 320, 50];
+      const urls = [];
+
+      if (file.$type === "image") {
+        if (file.$media_filename?.endsWith(".gif")) {
+          urls.push(
+            this.makeMediaFileURL({
+              $path: file.$path,
+              $media_filename: file.$media_filename,
+            })
+          );
+          return urls;
+        }
+        for (const resolution of thumb_resolutions) {
+          if (!file.$thumbs?.[resolution]) continue;
+          const url = this.getFirstThumbURLForMedia({ file, resolution });
+          if (url) urls.push(url);
+        }
+        urls.push(
+          this.makeMediaFileURL({
+            $path: file.$path,
+            $media_filename: file.$media_filename,
+          })
+        );
+        return urls;
+      }
+
+      if (
+        ["video", "audio", "pdf", "url", "stl", "obj"].includes(file.$type)
+      ) {
+        for (const resolution of thumb_resolutions) {
+          const url = this.getFirstThumbURLForMedia({ file, resolution });
+          if (url && !url.includes("undefined")) urls.push(url);
+        }
+      }
+
+      return urls;
+    },
+    async exportPdf() {
+      if (!this.pages.length || this.is_exporting_pdf) return;
+
+      this.is_exporting_pdf = true;
+      try {
+        const folder_slug = this.folder_path.split("/").pop() || "print";
+        await exportPrintPagesToPdf({
+          pages: this.pages,
+          getSlotMediasForPage: (page) => this.slotMediasForPage(page),
+          getMediaUrls: (file) => this.getPrintMediaUrls(file),
+          filename: `${folder_slug}-print.pdf`,
+        });
+      } catch (err) {
+        console.error("Failed to export print PDF:", err);
+        this.$alertify?.delay(4000)?.error(this.$t("failed_to_export"));
+      } finally {
+        this.is_exporting_pdf = false;
+      }
+    },
   },
 };
 </script>
 
 <style lang="scss" scoped>
 ._mediaListPrintEditor {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -219,6 +295,7 @@ export default {
   align-items: flex-start;
   gap: calc(var(--spacing) / 2) 0;
   padding: calc(var(--spacing) * 1);
+  padding-bottom: calc(var(--spacing) * 4);
   align-content: start;
 }
 
@@ -280,5 +357,15 @@ export default {
 .printPageList-leave-active {
   position: absolute;
   z-index: 0;
+}
+
+._mediaListPrintEditor--printBtn {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--spacing) * 1);
+  transform: translateX(-50%);
+  z-index: 20;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;
 }
 </style>
