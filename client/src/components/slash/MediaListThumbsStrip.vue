@@ -11,11 +11,7 @@
       @dragstart="onDragStart($event, item.file)"
     >
       <span class="_mediaListThumbsStrip--order">{{ index + 1 }}</span>
-      <MediaContent
-        :file="item.file"
-        context="preview"
-        :resolution="160"
-      />
+      <MediaContent :file="item.file" context="preview" :resolution="320" />
     </button>
   </div>
 </template>

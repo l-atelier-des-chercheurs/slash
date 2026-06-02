@@ -1,12 +1,6 @@
 <template>
   <BaseModal2 size="full" :nopadding="true" @close="$emit('close')">
     <div class="_mediaListEditorModal">
-      <MediaListThumbsStrip
-        :resolved_items="resolved_items"
-        :active_path="active_thumb_path"
-        :draggable="mode === 'print'"
-        @select="onThumbSelect"
-      />
       <MediaListWebEditor
         v-if="mode === 'web'"
         ref="webEditor"
@@ -19,6 +13,7 @@
         v-else-if="mode === 'print'"
         :folder_path="folder_path"
         :resolved_items="resolved_items"
+        :media_list_paths="media_list_paths"
       />
     </div>
   </BaseModal2>

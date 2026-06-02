@@ -1,8 +1,8 @@
+import { computeAutoPrintLayout } from "@/utils/mediaListPrintPageEngine.js";
+
 export const PUBLICATIONS_ROOT = "publications";
 export const PUBLICATION_TYPE_WEB = "web";
 export const PUBLICATION_TYPE_PRINT = "print";
-export const MAX_MEDIAS_PER_PRINT_PAGE = 3;
-
 export function getSlashFolderSlug(folder_path) {
   return folder_path?.split("/").pop() || "";
 }
@@ -45,10 +45,16 @@ function getPublicationPath(api, slash_folder_path, publication_type) {
 }
 
 export function layoutIdFromMediaCount(count) {
-  const n = Math.min(Math.max(0, count), MAX_MEDIAS_PER_PRINT_PAGE);
+  const n = Math.max(0, count);
   if (n <= 1) return "one";
   if (n === 2) return "two";
-  return "three";
+  if (n === 3) return "three";
+  return `grid-${n}`;
+}
+
+export function computePrintGridLayout(media_count) {
+  const { cols, rows, slots } = computeAutoPrintLayout(media_count);
+  return { cols, rows, slots };
 }
 
 export function filePathToSourceMedia(file_path) {
@@ -272,7 +278,7 @@ export async function deletePrintPage(api, slash_folder_path, page_file) {
 }
 
 export async function updatePrintPageMedias(api, page_file, source_medias) {
-  const pruned = source_medias.slice(0, MAX_MEDIAS_PER_PRINT_PAGE);
+  const pruned = Array.isArray(source_medias) ? source_medias : [];
   const layout_id = layoutIdFromMediaCount(pruned.length);
   await api.updateMeta({
     path: page_file.$path,
@@ -282,6 +288,52 @@ export async function updatePrintPageMedias(api, page_file, source_medias) {
     },
   });
   return { source_medias: pruned, layout_id };
+}
+
+export async function ensureOneMediaPerPageSetup(
+  api,
+  slash_folder_path,
+  seed_paths = []
+) {
+  await ensurePrintPublication(api, slash_folder_path);
+  let pages = await loadPrintPages(api, slash_folder_path);
+
+  const valid_meta_names = new Set(
+    seed_paths.map((p) => p.split("/").pop()).filter(Boolean)
+  );
+  const seed = seed_paths.map(filePathToSourceMedia).filter(Boolean);
+  const assigned_meta_names = new Set();
+
+  for (const page of pages) {
+    const pruned = pruneSourceMedias(page.source_medias || [], seed_paths);
+
+    if (!pruned.length) {
+      await deletePrintPage(api, slash_folder_path, page);
+      continue;
+    }
+
+    if (pruned.length !== (page.source_medias || []).length) {
+      await updatePrintPageMedias(api, page, pruned);
+    }
+
+    for (const sm of pruned) {
+      assigned_meta_names.add(sm.meta_filename_in_project);
+    }
+  }
+
+  pages = await loadPrintPages(api, slash_folder_path);
+
+  let page_index = pages.length;
+  for (const sm of seed) {
+    const meta = sm.meta_filename_in_project;
+    if (!valid_meta_names.has(meta) || assigned_meta_names.has(meta)) continue;
+
+    page_index += 1;
+    const page = await createPrintPage(api, slash_folder_path, page_index);
+    await updatePrintPageMedias(api, page, [sm]);
+  }
+
+  return loadPrintPages(api, slash_folder_path);
 }
 
 export async function saveWebSourceMedias(api, slash_folder_path, source_medias) {

@@ -133,7 +133,7 @@ export default {
       return this.$root.is_mobile_view;
     },
     view_modes() {
-      return ["canvas", "grid", "map", "timeline"];
+      return ["canvas", "grid", "timeline", "map"];
     },
   },
   watch: {

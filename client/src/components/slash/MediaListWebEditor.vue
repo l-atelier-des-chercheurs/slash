@@ -12,11 +12,7 @@
         class="_mediaListWebEditor--slide"
       >
         <div class="_mediaListWebEditor--media" v-if="slide.file">
-          <MediaContent
-            :file="slide.file"
-            context="full"
-            :resolution="1280"
-          />
+          <MediaContent :file="slide.file" context="full" :resolution="320" />
         </div>
         <div v-else class="_mediaListWebEditor--missing">Media unavailable</div>
         <p
@@ -135,11 +131,7 @@ export default {
           source_medias = this.media_list_paths.map((p) => ({
             meta_filename_in_project: p.split("/").pop(),
           }));
-          await saveWebSourceMedias(
-            this.$api,
-            this.folder_path,
-            source_medias
-          );
+          await saveWebSourceMedias(this.$api, this.folder_path, source_medias);
         }
         this.source_medias = source_medias;
       } finally {

@@ -1,110 +1,145 @@
 <template>
   <div
     class="_mediaListPrintLayouts"
-    :class="`is--layout-${layout_id}`"
+    :class="{ 'is--dragOver': drag_over }"
+    :style="grid_style"
+    @dragenter.prevent="onDragEnter"
     @dragover.prevent="onDragOver"
+    @dragleave.prevent="onDragLeave"
     @drop.prevent="onDrop"
   >
     <div
-      v-for="(slot, index) in slots"
-      :key="`slot-${index}`"
+      v-for="slot in layout_slots"
+      :key="`slot-${slot.index}`"
       class="_mediaListPrintLayouts--slot"
-      :class="{ 'is--filled': !!slot.media }"
-      @dragover.prevent
-      @drop.prevent="onDropSlot($event, index)"
+      :style="slot_style(slot)"
     >
-      <template v-if="slot.media">
+      <div
+        v-if="slot.media"
+        class="_mediaListPrintLayouts--media"
+        draggable="true"
+        @dragstart="onMediaDragStart($event, slot.media)"
+      >
         <MediaContent
           :file="slot.media"
           context="preview"
-          :resolution="480"
+          :resolution="320"
         />
-        <button
-          type="button"
-          class="u-button u-button_icon _mediaListPrintLayouts--remove"
-          title="Remove"
-          @click="$emit('removeAt', index)"
-        >
-          <b-icon icon="x" />
-        </button>
-      </template>
-      <span v-else class="_mediaListPrintLayouts--placeholder">
-        Drop media {{ index + 1 }}
-      </span>
+      </div>
     </div>
-    <p class="_mediaListPrintLayouts--layoutLabel">Layout: {{ layout_label }}</p>
   </div>
 </template>
 
 <script>
 import MediaContent from "@/adc-core/fields/MediaContent.vue";
-import { MEDIA_LIST_DRAG_MIME } from "@/utils/mediaListUtils.js";
 import {
-  MAX_MEDIAS_PER_PRINT_PAGE,
-  filePathToSourceMedia,
-} from "@/utils/mediaListProjectUtils.js";
+  MEDIA_LIST_DRAG_MIME,
+  MEDIA_LIST_PRINT_SLOT_MIME,
+} from "@/utils/mediaListUtils.js";
+import {
+  layoutSlotsWithMedias,
+  printPageGridStyle,
+  printPageSlotStyle,
+  resolvePrintPageLayout,
+} from "@/utils/mediaListPrintPageEngine.js";
 
 export default {
   components: {
     MediaContent,
   },
   props: {
-    layout_id: {
+    page_index: {
+      type: Number,
+      required: true,
+    },
+    template: {
       type: String,
-      default: "one",
+      default: "auto",
     },
     slot_medias: {
       type: Array,
       default: () => [],
     },
-    files_by_path: {
-      type: Map,
-      default: () => new Map(),
-    },
+  },
+  data() {
+    return {
+      drag_over: false,
+      drag_enter_count: 0,
+    };
   },
   computed: {
-    slots() {
-      const layout_count =
-        this.layout_id === "three"
-          ? 3
-          : this.layout_id === "two"
-          ? 2
-          : 1;
-      const count = Math.min(
-        MAX_MEDIAS_PER_PRINT_PAGE,
-        Math.max(layout_count, this.slot_medias.length || 1)
-      );
-      const items = [];
-      for (let i = 0; i < count; i++) {
-        items.push({ media: this.slot_medias[i] || null });
-      }
-      return items;
+    page_layout() {
+      const count = Math.max(1, this.slot_medias.length);
+      return resolvePrintPageLayout({ template: this.template }, count);
     },
-    layout_label() {
-      if (this.layout_id === "two") return "2 items";
-      if (this.layout_id === "three") return "3 items";
-      return "1 item";
+    layout_slots() {
+      return layoutSlotsWithMedias(this.page_layout, this.slot_medias);
+    },
+    grid_style() {
+      return printPageGridStyle(this.page_layout);
     },
   },
   methods: {
-    onDragOver() {},
+    slot_style(slot) {
+      return printPageSlotStyle(slot);
+    },
+    onMediaDragStart(event, file) {
+      if (!file?.$path) return;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData(
+        MEDIA_LIST_PRINT_SLOT_MIME,
+        JSON.stringify({
+          page_index: this.page_index,
+          file_path: file.$path,
+        })
+      );
+      event.dataTransfer.setData(MEDIA_LIST_DRAG_MIME, file.$path);
+      event.dataTransfer.setData("text/plain", file.$path);
+    },
+    onDragEnter() {
+      this.drag_enter_count += 1;
+      this.drag_over = true;
+    },
+    onDragOver(event) {
+      event.dataTransfer.dropEffect = "move";
+    },
+    onDragLeave() {
+      this.drag_enter_count -= 1;
+      if (this.drag_enter_count <= 0) {
+        this.drag_enter_count = 0;
+        this.drag_over = false;
+      }
+    },
+    resetDragOver() {
+      this.drag_enter_count = 0;
+      this.drag_over = false;
+    },
+    readDraggedPayload(event) {
+      const slot_raw = event.dataTransfer.getData(MEDIA_LIST_PRINT_SLOT_MIME);
+      if (!slot_raw) return null;
+      try {
+        const payload = JSON.parse(slot_raw);
+        if (
+          typeof payload?.page_index !== "number" ||
+          !payload?.file_path
+        ) {
+          return null;
+        }
+        return payload;
+      } catch {
+        return null;
+      }
+    },
     onDrop(event) {
-      this.onDropSlot(event, this.slot_medias.length);
-    },
-    onDropSlot(event, index) {
-      if (index >= MAX_MEDIAS_PER_PRINT_PAGE) return;
-      const path = this.readDraggedPath(event);
-      if (!path) return;
-      const file = this.files_by_path.get(path);
-      if (!file) return;
-      const source_media = filePathToSourceMedia(path);
-      this.$emit("addAt", { index, source_media, file });
-    },
-    readDraggedPath(event) {
-      const path =
-        event.dataTransfer.getData(MEDIA_LIST_DRAG_MIME) ||
-        event.dataTransfer.getData("text/plain");
-      return path || null;
+      this.resetDragOver();
+      const payload = this.readDraggedPayload(event);
+      if (!payload) return;
+      if (payload.page_index === this.page_index) return;
+      this.$emit("moveMedia", {
+        from_page_index: payload.page_index,
+        to_page_index: this.page_index,
+        media_path: payload.file_path,
+      });
     },
   },
 };
@@ -112,82 +147,59 @@ export default {
 
 <style lang="scss" scoped>
 ._mediaListPrintLayouts {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
+  width: 250px;
   aspect-ratio: 210 / 297;
-  margin: 0 auto;
   display: grid;
-  gap: calc(var(--spacing) / 3);
-  padding: calc(var(--spacing) / 2);
+  gap: 2px;
+  padding: calc(var(--spacing) / 3);
   background: white;
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-}
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: outline-color 0.15s, box-shadow 0.15s;
 
-._mediaListPrintLayouts.is--layout-one {
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-}
-
-._mediaListPrintLayouts.is--layout-two {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-}
-
-._mediaListPrintLayouts.is--layout-three {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-
-  ._mediaListPrintLayouts--slot:first-child {
-    grid-column: 1 / -1;
+  &.is--dragOver {
+    outline: 2px solid var(--c-bleuvert, #2a9d8f);
+    box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.12);
   }
 }
 
 ._mediaListPrintLayouts--slot {
-  position: relative;
   min-height: 0;
-  border: 2px dashed var(--c-gris, #ccc);
-  border-radius: calc(var(--border-radius) - 2px);
+  min-width: 0;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--c-gris_clair, #f5f5f5);
+}
 
-  &.is--filled {
-    border-style: solid;
-    border-color: transparent;
+._mediaListPrintLayouts--media {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: scale(0.95);
   }
 
-  ::v-deep ._mediaContent,
-  ::v-deep img {
+  &:active {
+    cursor: grabbing;
+  }
+
+  ::v-deep ._mediaContent {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-}
 
-._mediaListPrintLayouts--placeholder {
-  font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce, #666);
-  text-align: center;
-  padding: calc(var(--spacing) / 2);
-}
-
-._mediaListPrintLayouts--remove {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 2;
-}
-
-._mediaListPrintLayouts--layoutLabel {
-  position: absolute;
-  left: calc(var(--spacing) / 2);
-  bottom: calc(var(--spacing) / 4);
-  margin: 0;
-  font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce, #888);
+  ::v-deep img,
+  ::v-deep video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
 }
 </style>
