@@ -150,6 +150,7 @@ export default {
   async created() {
     // Initialize view mode from URL or localStorage fallback
     this.initializeViewMode();
+    this.syncMediaListEditorFromUrl(this.$route.query.editor);
   },
   mounted() {
     this.$eventHub.$on("canvasItem.open", this.openItemModal);
@@ -181,6 +182,9 @@ export default {
         this.view_mode = new_view;
       }
     },
+    "$route.query.editor"(editor) {
+      this.syncMediaListEditorFromUrl(editor);
+    },
     folder_path: {
       immediate: true,
       async handler(new_folder_path, old_folder_path) {
@@ -196,6 +200,7 @@ export default {
         try {
           this.folder = await this.loadFolder(new_folder_path);
           this.loadMediaListForFolder(new_folder_path);
+          this.syncMediaListEditorFromUrl(this.$route.query.editor);
           if (!this.isRoomJoined(new_folder_path)) {
             this.$api.join({ room: new_folder_path });
           }
@@ -569,6 +574,11 @@ export default {
     },
     closeMediaListSidebar() {
       this.show_media_list_sidebar = false;
+    },
+    syncMediaListEditorFromUrl(editor) {
+      if (editor === "print" || editor === "web") {
+        this.show_media_list_sidebar = true;
+      }
     },
     onMediaListPathsUpdate(paths) {
       this.media_list_paths = paths;

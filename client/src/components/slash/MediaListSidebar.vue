@@ -146,7 +146,7 @@
       :folder_path="folder_path"
       :resolved_items="resolved_items"
       :media_list_paths="media_list_paths"
-      @close="active_editor = null"
+      @close="closeEditor"
     />
   </aside>
 </template>
@@ -160,7 +160,6 @@ import {
 } from "@/utils/mediaListUtils.js";
 import {
   ensureWebPublication,
-  ensurePrintPublication,
 } from "@/utils/mediaListProjectUtils.js";
 
 export default {
@@ -221,6 +220,19 @@ export default {
         this.media_list_paths.length > 0 &&
         !this.is_opening_editor
       );
+    },
+  },
+  watch: {
+    "$route.query.editor": {
+      handler(editor) {
+        this.syncEditorFromUrl(editor);
+      },
+      immediate: true,
+    },
+    can_open_editors(can_open) {
+      if (can_open) {
+        this.syncEditorFromUrl(this.$route.query.editor);
+      }
     },
   },
   mounted() {
@@ -438,7 +450,7 @@ export default {
       return items.length;
     },
     async openEditor(mode) {
-      if (!this.can_open_editors || this.active_editor) return;
+      if (!this.can_open_editors || this.active_editor === mode) return;
       this.is_opening_editor = true;
       try {
         if (mode === "web") {
@@ -447,10 +459,9 @@ export default {
             this.folder_path,
             this.media_list_paths
           );
-        } else if (mode === "print") {
-          await ensurePrintPublication(this.$api, this.folder_path);
         }
         this.active_editor = mode;
+        this.setEditorQuery(mode);
       } catch (err) {
         console.error("Failed to open media list editor:", err);
         const code = err?.code || err?.message;
@@ -467,6 +478,40 @@ export default {
         }
       } finally {
         this.is_opening_editor = false;
+      }
+    },
+    closeEditor() {
+      this.active_editor = null;
+      this.clearEditorQuery();
+    },
+    setEditorQuery(mode) {
+      if (this.$route.query.editor === mode) return;
+      this.$router.replace({
+        query: {
+          ...this.$route.query,
+          editor: mode,
+        },
+      });
+    },
+    clearEditorQuery() {
+      if (!this.$route.query.editor) return;
+      this.$router.replace({
+        query: {
+          ...this.$route.query,
+          editor: undefined,
+        },
+      });
+    },
+    syncEditorFromUrl(editor) {
+      if (editor === "print" || editor === "web") {
+        if (this.active_editor === editor) return;
+        if (this.can_open_editors) {
+          this.openEditor(editor);
+        }
+        return;
+      }
+      if (this.active_editor) {
+        this.active_editor = null;
       }
     },
   },

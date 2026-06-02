@@ -82,13 +82,26 @@ export function resolvePrintPageLayout(page, media_count) {
   return resolver(media_count);
 }
 
+export function createPrintPageId() {
+  return `print-page-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export function createPrintPageData(
   medias_filepaths = [],
   template = DEFAULT_PRINT_PAGE_TEMPLATE
 ) {
   return {
+    page_id: createPrintPageId(),
     medias_filepaths: [...medias_filepaths],
     template,
+  };
+}
+
+export function clonePrintPageData(page) {
+  return {
+    page_id: page?.page_id || createPrintPageId(),
+    medias_filepaths: [...(page?.medias_filepaths || [])],
+    template: page?.template || DEFAULT_PRINT_PAGE_TEMPLATE,
   };
 }
 
