@@ -1477,6 +1477,8 @@ export default {
     "Vous n’êtes pas autorisé à poster des messages dans cette discussion.",
   write_a_message: "Écrivez un message…",
   participants: "Participants",
+  folder_participants_count:
+    "0 autre participant·e | 1 autre participant·e | {count} autres participant·ice·s",
   chat_admin_instructions:
     "Les référents sont responsables de la gestion de la discussion (suppression d’un message, changement du nom de la discussion, ajout/retrait d’un participant).",
   chat_contrib_instructions:

@@ -113,6 +113,13 @@ export default {
 ._dropMenu--content {
 }
 
+._dropMenu--main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) / 3);
+}
+
 ._dropMenu--identity {
   display: flex;
   flex-flow: row nowrap;

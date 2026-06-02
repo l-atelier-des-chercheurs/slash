@@ -1,17 +1,26 @@
 <template>
-  <ul v-if="contributors.length" class="_folderContributorsList">
-    <li
-      v-for="author in contributors"
-      :key="author.$path"
-      class="_folderContributorsList--item"
-    >
-      <span
-        class="_folderContributorsList--color"
-        :style="{ backgroundColor: author.color }"
-      ></span>
-      <span class="_folderContributorsList--name">{{ author.name }}</span>
-    </li>
-  </ul>
+  <details v-if="contributors.length" class="_folderContributorsDetails">
+    <summary class="_folderContributorsDetails--summary">
+      {{
+        $tc("folder_participants_count", contributors.length, {
+          count: contributors.length,
+        })
+      }}
+    </summary>
+    <ul class="_folderContributorsList">
+      <li
+        v-for="author in contributors"
+        :key="author.$path"
+        class="_folderContributorsList--item"
+      >
+        <span
+          class="_folderContributorsList--color"
+          :style="{ backgroundColor: author.color }"
+        ></span>
+        <span class="_folderContributorsList--name">{{ author.name }}</span>
+      </li>
+    </ul>
+  </details>
 </template>
 <script>
 export default {
@@ -64,9 +73,45 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+._folderContributorsDetails {
+  width: 100%;
+  padding: 0 calc(var(--spacing) / 2);
+}
+
+._folderContributorsDetails--summary {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 4);
+  cursor: pointer;
+  font-size: var(--sl-font-size-small);
+  font-weight: 600;
+  color: var(--c-gris_fonce);
+  list-style: none;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-top: 0.3em solid transparent;
+    border-bottom: 0.3em solid transparent;
+    border-left: 0.45em solid currentColor;
+    transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+}
+
+._folderContributorsDetails[open] ._folderContributorsDetails--summary::before {
+  transform: rotate(90deg);
+}
+
 ._folderContributorsList {
   list-style: none;
-  margin: 0;
+  margin: calc(var(--spacing) / 4) 0 0;
   padding: 0 0 0 calc(var(--spacing) / 2);
   display: flex;
   flex-direction: column;

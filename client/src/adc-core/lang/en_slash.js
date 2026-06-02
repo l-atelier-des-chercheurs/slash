@@ -24,4 +24,7 @@ export default {
   remove_folder_expl:
     "This permanently deletes the folder and all media inside it. This cannot be undone.",
   folder_was_removed: "The folder has been deleted.",
+
+  folder_participants_count:
+    "0 other participants | 1 other participant | {count} other participants",
 };

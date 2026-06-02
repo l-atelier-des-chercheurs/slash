@@ -1392,6 +1392,8 @@ export default {
     "You are not allowed to post messages to this topic.",
   write_a_message: "Write a message…",
   participants: "Participants",
+  folder_participants_count:
+    "0 other participants | 1 other participant | {count} other participants",
 
   chat_admin_instructions:
     "Topic referents are responsible for managing the discussion (changing its name, deleting a message, adding/removing a participant or removing it with all its contents).",
