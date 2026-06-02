@@ -25,7 +25,7 @@
         @dragstart="onMediaDragStart($event, slot.media, slot.index)"
         @dragend="onMediaDragEnd"
       >
-        <MediaContent :file="slot.media" context="preview" :resolution="320" />
+        <MediaContent :file="slot.media" context="full" :resolution="320" />
       </div>
     </div>
   </div>
@@ -232,7 +232,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--c-gris_clair, #f5f5f5);
+  background: white;
+  font-size: 6px;
   transition: outline-color 0.15s;
 
   &.is--slotDragOver {
