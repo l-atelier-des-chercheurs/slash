@@ -10,9 +10,24 @@
         :key="slide.key"
         :ref="`slide-${index}`"
         class="_mediaListWebEditor--slide"
+        :class="{ 'is--text': slide.file?.$type === 'text' }"
       >
-        <div class="_mediaListWebEditor--media" v-if="slide.file">
-          <MediaContent :file="slide.file" context="full" :resolution="320" />
+        <div
+          v-if="slide.file"
+          class="_mediaListWebEditor--media"
+          :class="{ 'is--text': slide.file.$type === 'text' }"
+        >
+          <p
+            v-if="slide.file.$type === 'text'"
+            class="_mediaListWebEditor--text"
+            v-text="slideTextPreview(slide.file)"
+          />
+          <MediaContent
+            v-else
+            :file="slide.file"
+            context="full"
+            :resolution="0"
+          />
         </div>
         <div v-else class="_mediaListWebEditor--missing">Media unavailable</div>
         <p
@@ -37,6 +52,7 @@ import {
   saveWebSourceMedias,
   filePathFromSourceMedia,
 } from "@/utils/mediaListProjectUtils.js";
+import { plainTextFromMediaFile } from "@/utils/mediaListUtils.js";
 
 export default {
   components: {
@@ -117,6 +133,10 @@ export default {
       const raw = (file.caption || "").replace(/<[^>]+>/g, "").trim();
       return raw;
     },
+    slideTextPreview(file) {
+      const text = plainTextFromMediaFile(file);
+      return text || "Text";
+    },
     async loadWebPublication() {
       this.is_loading = true;
       try {
@@ -179,7 +199,7 @@ export default {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #111;
+  background: #fff;
 }
 
 ._mediaListWebEditor--scroller {
@@ -187,6 +207,7 @@ export default {
   min-height: 0;
   overflow-y: auto;
   scroll-snap-type: y mandatory;
+  background: #fff;
 }
 
 ._mediaListWebEditor--slide {
@@ -198,12 +219,24 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background: #fff;
+
+  &.is--text {
+    align-items: stretch;
+    justify-content: stretch;
+  }
 }
 
 ._mediaListWebEditor--media {
   width: 100%;
   height: 100%;
+
+  &.is--text {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow: auto;
+  }
 
   ::v-deep ._mediaContent {
     width: 100%;
@@ -221,8 +254,21 @@ export default {
   }
 }
 
+._mediaListWebEditor--text {
+  width: 100%;
+  max-width: min(720px, 100%);
+  margin: 0 auto;
+  padding: calc(var(--spacing) * 2);
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--sl-font-size-medium, 1rem);
+  line-height: 1.5;
+  color: var(--c-noir, #111);
+}
+
 ._mediaListWebEditor--missing {
-  color: #888;
+  color: var(--c-gris_fonce, #666);
   font-size: var(--sl-font-size-small);
 }
 
@@ -235,18 +281,19 @@ export default {
   margin: 0;
   padding: calc(var(--spacing) / 2) calc(var(--spacing) / 1);
   border-radius: var(--border-radius);
-  background: rgba(0, 0, 0, 0.55);
-  color: white;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--c-noir, #111);
   text-align: center;
   font-size: var(--sl-font-size-small);
   line-height: 1.4;
   pointer-events: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 ._mediaListWebEditor--empty {
   margin: auto;
   padding: calc(var(--spacing) * 2);
-  color: #aaa;
+  color: var(--c-gris_fonce, #666);
   text-align: center;
 }
 </style>
