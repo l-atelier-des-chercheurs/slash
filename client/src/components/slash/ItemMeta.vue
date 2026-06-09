@@ -68,6 +68,7 @@
     />
 
     <div class="_itemMeta--remove">
+      <DownloadFile :file="file" />
       <button
         type="button"
         class="u-button u-button_red u-button_small"
@@ -151,5 +152,9 @@ export default {
 ._itemMeta--remove {
   margin-top: auto;
   padding-top: calc(var(--spacing) * 1);
+  display: flex;
+  flex-flow: row wrap;
+  gap: calc(var(--spacing) / 2);
+  align-items: center;
 }
 </style>

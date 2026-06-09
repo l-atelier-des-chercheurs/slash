@@ -113,6 +113,22 @@
           @drop.prevent="onDropZoneDrop($event, resolved_items.length)"
         />
       </transition-group>
+
+      <button
+        v-if="resolved_items.length"
+        type="button"
+        class="u-button u-button_small _mediaListSidebar--downloadAll"
+        :disabled="is_downloading_sources"
+        @click="downloadAllSources"
+      >
+        <b-icon
+          v-if="is_downloading_sources"
+          icon="arrow-repeat"
+          class="_spinner"
+        />
+        <b-icon v-else icon="file-earmark-arrow-down" />
+        {{ $t("download_all") }}
+      </button>
     </div>
 
     <p class="_mediaListSidebar--instructions">
@@ -189,6 +205,7 @@ export default {
       pointer_drag_active: false,
       active_editor: null,
       is_opening_editor: false,
+      is_downloading_sources: false,
     };
   },
   computed: {
@@ -321,6 +338,21 @@ export default {
     },
     clearList() {
       this.emitPaths([]);
+    },
+    async downloadAllSources() {
+      if (!this.folder_path || !this.media_list_paths.length) return;
+      const meta_filenames = this.media_list_paths.map((p) => p.split("/").pop());
+      this.is_downloading_sources = true;
+      try {
+        await this.$api.downloadSources({
+          path: this.folder_path,
+          meta_filenames,
+        });
+      } catch (err) {
+        this.$alertify?.error(this.$t("failed_to_download"));
+      } finally {
+        this.is_downloading_sources = false;
+      }
     },
     openItem(path) {
       this.$eventHub.$emit("canvasItem.openWithTransition", path);
@@ -578,6 +610,12 @@ export default {
   padding: 0;
   list-style: none;
   position: relative;
+}
+
+._mediaListSidebar--downloadAll {
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: calc(var(--spacing) / 2);
 }
 
 ._mediaListSidebar--row {

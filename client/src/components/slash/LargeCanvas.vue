@@ -110,8 +110,10 @@
     <transition name="fade">
       <CanvasSelectionBar
         v-if="show_selection_bar"
+        :is_downloading="is_downloading_sources"
         :show_stroke_controls="selected_shape_files.length > 0"
         :shape_stroke_width="selection_shape_stroke_width"
+        @download="downloadSelectedFiles"
         @remove="removeSelectedFiles"
         @update:shape_stroke_width="setSelectedShapesStrokeWidth"
       />
@@ -200,6 +202,8 @@ export default {
       show_drop_menu: false,
 
       selected_files: [],
+
+      is_downloading_sources: false,
 
       viewport_props_throttled: {
         left_pct: 0,
@@ -483,6 +487,23 @@ export default {
           .delay(4000)
           .success(this.$t("removed_successfully"));
         this.$emit("items-removed", paths);
+      }
+    },
+    async downloadSelectedFiles() {
+      const paths = [...this.currently_selected_files];
+      if (paths.length === 0 || !this.folder_path) return;
+
+      const meta_filenames = paths.map((p) => p.split("/").pop());
+      this.is_downloading_sources = true;
+      try {
+        await this.$api.downloadSources({
+          path: this.folder_path,
+          meta_filenames,
+        });
+      } catch (err) {
+        this.$alertify?.error(this.$t("failed_to_download"));
+      } finally {
+        this.is_downloading_sources = false;
       }
     },
     handleCanvasClick(event) {

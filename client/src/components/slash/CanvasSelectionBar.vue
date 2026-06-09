@@ -3,6 +3,21 @@
     <div class="_canvasSelectionBar--row">
       <button
         type="button"
+        class="u-button u-button_icon u-button_bleuvert"
+        :title="$t('download_selected')"
+        :aria-label="$t('download_selected')"
+        :disabled="is_downloading"
+        @click="$emit('download')"
+      >
+        <b-icon
+          v-if="is_downloading"
+          icon="arrow-repeat"
+          class="_spinner"
+        />
+        <b-icon v-else icon="file-earmark-arrow-down" />
+      </button>
+      <button
+        type="button"
         class="u-button u-button_icon u-button_red"
         :title="$t('remove')"
         :aria-label="$t('remove')"
@@ -34,6 +49,10 @@
 export default {
   name: "CanvasSelectionBar",
   props: {
+    is_downloading: {
+      type: Boolean,
+      default: false,
+    },
     show_stroke_controls: {
       type: Boolean,
       default: false,
