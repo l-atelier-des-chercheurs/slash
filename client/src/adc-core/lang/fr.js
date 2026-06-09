@@ -432,6 +432,7 @@ export default {
   download: "Télécharger",
   download_all: "Tout télécharger",
   download_selected: "Télécharger la sélection",
+  items_selected: "Éléments sélectionnés",
   failed_to_download: "Échec du téléchargement",
   download_project: "Télécharger le projet {name}",
   download_project_instr:

@@ -47,8 +47,10 @@
                   :event-phase="item.eventPhase"
                   :show_media_list_sidebar="show_media_list_sidebar"
                   :media_list_paths="media_list_paths"
+                  :is_selected="selected_files.includes(item.file.$path)"
                   class="_timelineView--item _canvasItem"
                   :data-file-path="item.file.$path"
+                  @select="onSelect"
                 />
               </div>
             </div>
@@ -158,6 +160,10 @@ export default {
       default: false,
     },
     media_list_paths: {
+      type: Array,
+      default: () => [],
+    },
+    selected_files: {
       type: Array,
       default: () => [],
     },
@@ -329,10 +335,12 @@ export default {
     onWheel(e) {
       const track = this.$refs.track;
       if (!track) return;
-      // Vertical wheel → horizontal scroll; horizontal wheel → horizontal scroll (like Les Cahiers)
       const delta = e.deltaX + e.deltaY;
       if (delta === 0) return;
       track.scrollLeft += delta;
+    },
+    onSelect(file_path, mode) {
+      this.$emit("select", file_path, mode);
     },
   },
 };

@@ -1,16 +1,17 @@
 <template>
   <div
     class="_canvasItemContentWrapper"
-    :class="wrapperClasses"
+    :class="[
+      wrapperClasses,
+      { 'is--selected': is_selected && enable_selection },
+    ]"
     :style="itemStyle"
   >
-    <!-- <div class="_canvasItem--shadow" /> -->
-
     <div
       class="_canvasItem--content"
       :data-filetype="file.$type"
-      @click.stop="openItemModal"
       :data-file-path="file.$path"
+      @click.stop="handleContentClick"
     >
       <MediaContent
         :file="file"
@@ -22,6 +23,22 @@
       <div class="_canvasItem--caption" v-if="file.$type !== 'text'">
         <span v-if="caption" v-html="caption" />
       </div>
+    </div>
+
+    <div
+      v-if="enable_selection"
+      class="_canvasItem--selectedBorder"
+      :class="{ 'is--visible': is_selected }"
+    />
+
+    <div v-if="show_open_button" class="_canvasItem--open">
+      <button
+        type="button"
+        class="u-button u-button_icon u-button_glass _openBtn"
+        @click.stop="openItemModal"
+      >
+        <b-icon icon="box-arrow-up-right" />
+      </button>
     </div>
 
     <div
@@ -72,12 +89,13 @@ export default {
       type: Array,
       default: () => [],
     },
+    is_selected: {
+      type: Boolean,
+      default: false,
+    },
   },
   components: {
     MediaListDragHandle,
-  },
-  data() {
-    return {};
   },
   computed: {
     wrapperClasses() {
@@ -86,6 +104,12 @@ export default {
         "is--grid": this.mode === "grid",
         "is--canvas": this.mode === "canvas",
       };
+    },
+    enable_selection() {
+      return this.mode === "grid" || this.mode === "timeline";
+    },
+    show_open_button() {
+      return this.enable_selection;
     },
     itemStyle() {
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
@@ -99,7 +123,6 @@ export default {
         style.height = "100%";
       }
       if (this.mode === "timeline") {
-        // Timeline mode: flex layout
         const width = 224;
         const ratio = this.file.$infos?.ratio;
         const height =
@@ -111,7 +134,6 @@ export default {
           style.height = `${height}px`;
         }
 
-        // Set aspect ratio for images
         if (this.file.$type === "image" && ratio) {
           style.aspectRatio = ratio;
         }
@@ -128,6 +150,14 @@ export default {
     },
   },
   methods: {
+    handleContentClick(event) {
+      if (!this.enable_selection) {
+        this.openItemModal();
+        return;
+      }
+      const mode = event.metaKey || event.shiftKey ? "append" : "replace";
+      this.$emit("select", this.file.$path, mode);
+    },
     openItemModal() {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
@@ -151,21 +181,6 @@ export default {
   pointer-events: auto;
 }
 
-._canvasItem--shadow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgb(221, 221, 221);
-  border-radius: var(--border-radius);
-  z-index: -1;
-
-  .is--grid & {
-    display: none;
-  }
-}
-
 ._canvasItem--content {
   position: relative;
   border-radius: var(--border-radius);
@@ -175,10 +190,8 @@ export default {
   cursor: pointer;
 
   background: var(--author-color, var(--c-gris_fonce));
-  // color: white;
 
   &:not([data-filetype="audio"]) {
-    // not audio because we need to keep the controls tooltip when hovering the seek bar
     overflow: hidden;
   }
 
@@ -234,40 +247,56 @@ export default {
   }
 }
 
-._canvasItem--chatBubble {
+._canvasItem--selectedBorder {
   position: absolute;
-  top: calc(var(--spacing) / 1);
-  right: calc(var(--spacing) / 1);
+  inset: 0;
+  border-radius: var(--border-radius);
+  outline: 2px solid var(--c-bleuvert, #2a9d8f);
+  outline-offset: -2px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: none;
-  border-radius: calc(var(--border-radius) - 2px);
-  color: var(--g-800);
-
-  background: transparent;
-  cursor: pointer;
-
-  transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
-
-  transform-origin: top right;
-  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.15s;
-
-  &:hover {
+  &.is--visible {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.7);
-  }
-
-  > .b-icon.bi {
-    width: 1rem;
-    height: 1rem;
-    // box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
 }
 
-/* Timeline specific styles that affect content */
+._canvasItem--open {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
+  ._openBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 2.5rem;
+    border-radius: 8rem;
+    pointer-events: auto;
+    font-size: 1.25rem;
+
+    &:not(:hover) {
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+  }
+}
+
+.is--grid,
+.is--timeline {
+  &:hover ._canvasItem--open,
+  &.is--selected ._canvasItem--open {
+    opacity: 1;
+  }
+}
+
 .is--timeline {
   margin-top: 0;
   overflow: hidden;
@@ -280,16 +309,6 @@ export default {
     z-index: 100;
     transform: scale(1.02);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  }
-
-  ._canvasItem--content[data-filetype="text"] {
-    // background-color: #fff9c4; /* Post-it yellow */
-    // padding: 10px;
-
-    ::v-deep ._mediaContent {
-      // font-family: var(--sl-font-handwritten, cursive);
-      // font-size: 1.1em;
-    }
   }
 }
 
@@ -305,12 +324,8 @@ export default {
   left: calc(var(--spacing) / 2);
   max-width: calc(100% - var(--spacing) * 1);
   background: var(--author-color);
-  // color: white;
   padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
-  //transform: scale(min(5, calc(1 / var(--scale-factor, 1))));
-  // transform-origin: top left;
-
   transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.15s;
 
   &:empty {
@@ -321,7 +336,6 @@ export default {
     display: block;
     overflow: hidden;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
   }
 }

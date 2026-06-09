@@ -401,6 +401,7 @@ Lascia il campo vuoto per rendere l'accesso aperto a tuttə. `,
   download: "Scarica",
   download_all: "Scarica tutto",
   download_selected: "Scarica selezionati",
+  items_selected: "Elementi selezionati",
   failed_to_download: "Download fallito",
   download_project: "Scarica il progetto {name}",
   download_project_instr:

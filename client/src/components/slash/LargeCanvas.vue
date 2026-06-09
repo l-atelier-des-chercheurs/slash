@@ -107,17 +107,6 @@
       :current_mode.sync="current_mode"
       :draw_stroke_width.sync="draw_stroke_width"
     />
-    <transition name="fade">
-      <CanvasSelectionBar
-        v-if="show_selection_bar"
-        :is_downloading="is_downloading_sources"
-        :show_stroke_controls="selected_shape_files.length > 0"
-        :shape_stroke_width="selection_shape_stroke_width"
-        @download="downloadSelectedFiles"
-        @remove="removeSelectedFiles"
-        @update:shape_stroke_width="setSelectedShapesStrokeWidth"
-      />
-    </transition>
     <FpsCounter v-if="show_fps_counter" />
   </div>
 </template>
@@ -135,7 +124,6 @@ import {
 } from "@/utils/textCanvasUtils.js";
 import CanvasDrawOverlay from "@/components/slash/CanvasDrawOverlay.vue";
 import LeftToolbar from "@/components/slash/LeftToolbar.vue";
-import CanvasSelectionBar from "@/components/slash/CanvasSelectionBar.vue";
 import QuickAddToCanvas from "@/components/slash/QuickAddToCanvas.vue";
 import MiniMap from "@/components/slash/MiniMap.vue";
 import FpsCounter from "@/components/slash/FpsCounter.vue";
@@ -165,13 +153,16 @@ export default {
       type: Array,
       default: () => [],
     },
+    selected_files: {
+      type: Array,
+      default: () => [],
+    },
   },
   components: {
     SlashPanZoom2,
     CanvasItemInteractive,
     CanvasDrawOverlay,
     LeftToolbar,
-    CanvasSelectionBar,
     QuickAddToCanvas,
     MiniMap,
     FpsCounter,
@@ -200,10 +191,6 @@ export default {
 
       show_add_menu: false,
       show_drop_menu: false,
-
-      selected_files: [],
-
-      is_downloading_sources: false,
 
       viewport_props_throttled: {
         left_pct: 0,
@@ -326,26 +313,6 @@ export default {
         ? this.selected_files
         : [];
     },
-    show_selection_bar() {
-      return (
-        this.current_mode === "select" &&
-        this.currently_selected_files.length > 0
-      );
-    },
-    selected_shape_files() {
-      if (!this.show_selection_bar) return [];
-      const selected = new Set(this.currently_selected_files);
-      return this.files.filter(
-        (file) =>
-          file.$type === "canvas_shape" && selected.has(file.$path)
-      );
-    },
-    selection_shape_stroke_width() {
-      const shapes = this.selected_shape_files;
-      if (!shapes.length) return this.draw_stroke_width;
-      const first = Number(shapes[0].shape_stroke_width);
-      return Number.isFinite(first) && first > 0 ? first : 5;
-    },
     show_fps_counter() {
       return this.$root.app_infos?.debug_mode === true;
     },
@@ -384,6 +351,7 @@ export default {
     this.restoreStateFromLocalStorage();
   },
   mounted() {
+    this.$emit("update:interaction_mode", this.current_mode);
     this.$eventHub.$on("canvas.dragEnd", this.handleDragEnd);
     window.addEventListener("keydown", this.handleGlobalKeydown);
     this.$nextTick(() => {
@@ -407,6 +375,7 @@ export default {
       if (new_mode !== "select") {
         this.show_drop_menu = false;
       }
+      this.$emit("update:interaction_mode", new_mode);
       this.saveStateToLocalStorage();
     },
     draw_stroke_width() {
@@ -427,7 +396,7 @@ export default {
 
       if (event.key === "Backspace" || event.key === "Delete") {
         event.preventDefault();
-        if (this.selected_files.length > 0) this.removeSelectedFiles();
+        if (this.selected_files.length > 0) this.$emit("remove-selected");
       } else if (event.key === " ") {
         event.preventDefault();
         if (this.current_mode !== "pan-zoom") {
@@ -447,11 +416,17 @@ export default {
       }
     },
     async setSelectedShapesStrokeWidth(width) {
-      if (!Number.isFinite(width) || this.selected_shape_files.length === 0) {
+      if (!Number.isFinite(width)) {
         return;
       }
+      const selected = new Set(this.currently_selected_files);
+      const selected_shape_files = this.files.filter(
+        (file) => file.$type === "canvas_shape" && selected.has(file.$path)
+      );
+      if (selected_shape_files.length === 0) return;
+
       this.draw_stroke_width = width;
-      for (const file of this.selected_shape_files) {
+      for (const file of selected_shape_files) {
         this.$set(file, "shape_stroke_width", width);
         try {
           await this.$api.updateMeta({
@@ -463,48 +438,8 @@ export default {
         }
       }
     },
-    async removeSelectedFiles() {
-      const paths = [...this.selected_files];
-      this.selected_files = [];
-      if (paths.length === 0) return;
-
-      const meta_filenames = paths.map((p) => p.split("/").pop());
-      let result;
-      try {
-        result = await this.$api.deleteItems({
-          path: this.folder_path,
-          meta_filenames,
-        });
-      } catch (err) {
-        console.error("Failed to delete items:", err);
-        return;
-      }
-
-      const succeeded = result?.success ?? [];
-      if (succeeded.length > 0) {
-        this.$alertify
-          .closeLogOnClick(true)
-          .delay(4000)
-          .success(this.$t("removed_successfully"));
-        this.$emit("items-removed", paths);
-      }
-    },
-    async downloadSelectedFiles() {
-      const paths = [...this.currently_selected_files];
-      if (paths.length === 0 || !this.folder_path) return;
-
-      const meta_filenames = paths.map((p) => p.split("/").pop());
-      this.is_downloading_sources = true;
-      try {
-        await this.$api.downloadSources({
-          path: this.folder_path,
-          meta_filenames,
-        });
-      } catch (err) {
-        this.$alertify?.error(this.$t("failed_to_download"));
-      } finally {
-        this.is_downloading_sources = false;
-      }
+    updateSelectedFiles(next_paths) {
+      this.$emit("update:selected_files", next_paths);
     },
     handleCanvasClick(event) {
       if (this.current_mode !== "select") return;
@@ -518,7 +453,7 @@ export default {
       if (event.metaKey || event.shiftKey) {
         return;
       } else if (this.selected_files.length > 0) {
-        this.selected_files = [];
+        this.updateSelectedFiles([]);
         return;
       }
 
@@ -585,11 +520,11 @@ export default {
     },
     handleSelect(file_path, mode) {
       this.show_drop_menu = false;
-      // if command or shift is pressed, append to selected_files; otherwise, replace
       if (mode === "append") {
-        this.selected_files.push(file_path);
+        if (this.selected_files.includes(file_path)) return;
+        this.updateSelectedFiles([...this.selected_files, file_path]);
       } else {
-        this.selected_files = [file_path];
+        this.updateSelectedFiles([file_path]);
       }
     },
     startLasso(event) {
@@ -655,7 +590,7 @@ export default {
           selected.push(file.$path);
         }
       }
-      this.selected_files = selected;
+      this.updateSelectedFiles(selected);
     },
     endLasso() {
       window.removeEventListener("mousemove", this.updateLasso);

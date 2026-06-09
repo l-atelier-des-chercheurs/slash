@@ -29,6 +29,7 @@
         />
         <LargeCanvas
           v-if="view_mode === 'canvas'"
+          ref="largeCanvas"
           :files="filtered_files"
           :all_files="sorted_files"
           :zoom="canvas_zoom"
@@ -36,6 +37,10 @@
           :folder_path="folder.$path"
           :show_media_list_sidebar="show_media_list_sidebar"
           :media_list_paths="media_list_paths"
+          :selected_files="selected_files"
+          @update:selected_files="selected_files = $event"
+          @update:interaction_mode="canvas_interaction_mode = $event"
+          @remove-selected="removeSelectedFiles"
           @update:zoom="canvas_zoom = $event"
           @update:scroll="canvas_scroll = $event"
         />
@@ -48,12 +53,16 @@
           :files="filtered_files_without_canvas_items"
           :show_media_list_sidebar="show_media_list_sidebar"
           :media_list_paths="media_list_paths"
+          :selected_files="selected_files"
+          @select="handleItemSelect"
         />
         <MediaGridView
           v-if="view_mode === 'grid'"
           :files="filtered_files_without_canvas_items"
           :show_media_list_sidebar="show_media_list_sidebar"
           :media_list_paths="media_list_paths"
+          :selected_files="selected_files"
+          @select="handleItemSelect"
         />
 
         <button
@@ -66,6 +75,20 @@
         >
           <b-icon icon="printer" />
         </button>
+
+        <transition name="fade">
+          <CanvasSelectionBar
+            v-if="show_selection_bar"
+            :selection_count="selected_files.length"
+            :is_downloading="is_downloading_sources"
+            :show_stroke_controls="show_shape_stroke_controls"
+            :shape_stroke_width="selection_shape_stroke_width"
+            @download="downloadSelectedFiles"
+            @remove="removeSelectedFiles"
+            @clear="selected_files = []"
+            @update:shape_stroke_width="onShapeStrokeWidthUpdate"
+          />
+        </transition>
       </div>
 
       <transition name="mediaListSidebarSlide">
@@ -108,6 +131,7 @@ import ViewModeBar from "@/components/slash/ViewModeBar.vue";
 import ItemModal from "@/components/slash/ItemModal.vue";
 import FolderSettingsModal from "@/components/slash/FolderSettingsModal.vue";
 import MediaListSidebar from "@/components/slash/MediaListSidebar.vue";
+import CanvasSelectionBar from "@/components/slash/CanvasSelectionBar.vue";
 import {
   loadMediaListPaths,
   saveMediaListPaths,
@@ -131,6 +155,7 @@ export default {
     ItemModal,
     FolderSettingsModal,
     MediaListSidebar,
+    CanvasSelectionBar,
   },
   data() {
     return {
@@ -145,6 +170,9 @@ export default {
       show_folder_settings_modal: false,
       show_media_list_sidebar: false,
       media_list_paths: [],
+      selected_files: [],
+      is_downloading_sources: false,
+      canvas_interaction_mode: "pan-zoom",
     };
   },
   async created() {
@@ -196,6 +224,9 @@ export default {
         ) {
           this.$api.leave({ room: old_folder_path });
         }
+        if (old_folder_path && old_folder_path !== new_folder_path) {
+          this.selected_files = [];
+        }
 
         try {
           this.folder = await this.loadFolder(new_folder_path);
@@ -221,6 +252,16 @@ export default {
       const pruned = this.pruneMediaListPaths(this.media_list_paths);
       if (pruned.length !== this.media_list_paths.length) {
         this.onMediaListPathsUpdate(pruned);
+      }
+
+      if (this.selected_files.length) {
+        const valid_paths = new Set(this.sorted_files.map((file) => file.$path));
+        const pruned_selection = this.selected_files.filter((path) =>
+          valid_paths.has(path)
+        );
+        if (pruned_selection.length !== this.selected_files.length) {
+          this.selected_files = pruned_selection;
+        }
       }
     },
   },
@@ -278,6 +319,35 @@ export default {
     current_folder_status() {
       if (!this.folder?.$status) return "public";
       return this.folder.$status === "private" ? "private" : "public";
+    },
+    show_selection_bar() {
+      if (!this.selected_files.length) return false;
+      if (this.view_mode === "grid" || this.view_mode === "timeline") {
+        return true;
+      }
+      if (this.view_mode === "canvas") {
+        return this.canvas_interaction_mode === "select";
+      }
+      return false;
+    },
+    selected_shape_files() {
+      const selected = new Set(this.selected_files);
+      return this.filtered_files.filter(
+        (file) => file.$type === "canvas_shape" && selected.has(file.$path)
+      );
+    },
+    show_shape_stroke_controls() {
+      return (
+        this.view_mode === "canvas" &&
+        this.canvas_interaction_mode === "select" &&
+        this.selected_shape_files.length > 0
+      );
+    },
+    selection_shape_stroke_width() {
+      const shapes = this.selected_shape_files;
+      if (!shapes.length) return 5;
+      const first = Number(shapes[0].shape_stroke_width);
+      return Number.isFinite(first) && first > 0 ? first : 5;
     },
   },
   methods: {
@@ -338,6 +408,10 @@ export default {
     },
     async switchViewMode(newMode) {
       if (this.view_mode === newMode) return;
+
+      if (this.view_mode === "canvas" && newMode !== "canvas") {
+        this.pruneCanvasOnlySelection();
+      }
 
       // 1. Capture positions of current visible items
       const firstPositions = this.capturePositions();
@@ -584,6 +658,65 @@ export default {
       this.media_list_paths = paths;
       if (this.folder_path) {
         saveMediaListPaths(this.folder_path, paths);
+      }
+    },
+    handleItemSelect(file_path, mode) {
+      if (mode === "append") {
+        if (this.selected_files.includes(file_path)) return;
+        this.selected_files = [...this.selected_files, file_path];
+        return;
+      }
+      this.selected_files = [file_path];
+    },
+    pruneCanvasOnlySelection() {
+      this.selected_files = this.selected_files.filter((path) => {
+        const file = this.sorted_files.find((f) => f.$path === path);
+        return file && !file.$type.startsWith("canvas_");
+      });
+    },
+    onShapeStrokeWidthUpdate(width) {
+      this.$refs.largeCanvas?.setSelectedShapesStrokeWidth(width);
+    },
+    async removeSelectedFiles() {
+      const paths = [...this.selected_files];
+      this.selected_files = [];
+      if (paths.length === 0 || !this.folder_path) return;
+
+      const meta_filenames = paths.map((p) => p.split("/").pop());
+      let result;
+      try {
+        result = await this.$api.deleteItems({
+          path: this.folder_path,
+          meta_filenames,
+        });
+      } catch (err) {
+        console.error("Failed to delete items:", err);
+        return;
+      }
+
+      const succeeded = result?.success ?? [];
+      if (succeeded.length > 0) {
+        this.$alertify
+          .closeLogOnClick(true)
+          .delay(4000)
+          .success(this.$t("removed_successfully"));
+      }
+    },
+    async downloadSelectedFiles() {
+      const paths = [...this.selected_files];
+      if (paths.length === 0 || !this.folder_path) return;
+
+      const meta_filenames = paths.map((p) => p.split("/").pop());
+      this.is_downloading_sources = true;
+      try {
+        await this.$api.downloadSources({
+          path: this.folder_path,
+          meta_filenames,
+        });
+      } catch (err) {
+        this.$alertify?.error(this.$t("failed_to_download"));
+      } finally {
+        this.is_downloading_sources = false;
       }
     },
   },

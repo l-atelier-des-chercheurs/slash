@@ -2,6 +2,13 @@
   <div class="_canvasSelectionBar u-overlayPanel">
     <div class="_canvasSelectionBar--row">
       <button
+        v-if="selection_count > 0"
+        type="button"
+        class="_canvasSelectionBar--count"
+        :title="$t('items_selected')"
+        @click="$emit('clear')"
+      >{{ selection_count }}</button>
+      <button
         type="button"
         class="u-button u-button_icon u-button_bleuvert"
         :title="$t('download_selected')"
@@ -49,6 +56,10 @@
 export default {
   name: "CanvasSelectionBar",
   props: {
+    selection_count: {
+      type: Number,
+      default: 0,
+    },
     is_downloading: {
       type: Boolean,
       default: false,
@@ -88,6 +99,24 @@ export default {
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 4);
+}
+
+._canvasSelectionBar--count {
+  min-width: 1.5rem;
+  padding: 0 calc(var(--spacing) / 4);
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-font-size-small);
+  font-weight: 700;
+  text-align: center;
+  color: var(--c-noir, #111);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+
+  &:hover {
+    background: var(--c-gris_clair, #f0f0f0);
+  }
 }
 
 ._canvasSelectionBar--divider {

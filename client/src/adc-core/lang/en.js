@@ -250,6 +250,7 @@ export default {
   download: "Download",
   download_all: "Download all",
   download_selected: "Download selected",
+  items_selected: "Items selected",
   failed_to_download: "Failed to download",
   download_project: "Download project {name}",
   download_project_instr:

@@ -9,8 +9,10 @@
         mode="grid"
         :show_media_list_sidebar="show_media_list_sidebar"
         :media_list_paths="media_list_paths"
+        :is_selected="selected_files.includes(file.$path)"
         class="_mediaGridView--item"
         :data-file-path="file.$path"
+        @select="onSelect"
       />
     </div>
   </div>
@@ -33,10 +35,19 @@ export default {
       type: Array,
       default: () => [],
     },
+    selected_files: {
+      type: Array,
+      default: () => [],
+    },
   },
   components: {
     CanvasItem,
     ViewEmptyMessage,
+  },
+  methods: {
+    onSelect(file_path, mode) {
+      this.$emit("select", file_path, mode);
+    },
   },
 };
 </script>
