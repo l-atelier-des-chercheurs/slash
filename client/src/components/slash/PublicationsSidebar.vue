@@ -564,14 +564,19 @@ export default {
 
 <style lang="scss" scoped>
 ._publicationsSidebar {
+  --pub-bg: var(--c-slash-blue, var(--c-bleuvert));
+  --pub-fg: var(--c-slash-mint, #e5ffdb);
+  --pub-accent: var(--c-slash-burgundy, var(--c-rouge));
+
   flex: 0 0 min(320px, 40vw);
   width: min(320px, 40vw);
   min-width: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--c-gris_clair);
-  border-left: 1px solid var(--c-gris, #ccc);
+  background: var(--pub-bg);
+  color: var(--pub-fg);
+  border-left: 1px solid color-mix(in srgb, var(--pub-fg) 30%, transparent);
   padding: calc(var(--spacing) / 1);
   gap: calc(var(--spacing) / 2);
   overflow: hidden;
@@ -583,6 +588,11 @@ export default {
   justify-content: space-between;
   flex-shrink: 0;
   gap: calc(var(--spacing) / 3);
+  color: var(--pub-fg);
+
+  .u-button {
+    color: var(--pub-fg);
+  }
 }
 
 ._publicationsSidebar--headerLeft {
@@ -595,6 +605,7 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--pub-fg);
   }
 }
 
@@ -613,12 +624,15 @@ export default {
   gap: calc(var(--spacing) / 3);
   width: 100%;
   padding: calc(var(--spacing) / 2);
-  border: 1px dashed var(--c-gris_fonce, #666);
-  border-radius: var(--border-radius);
+  border: 2px dashed var(--pub-fg);
+  border-radius: calc(var(--border-radius) * 1.25);
   background: transparent;
+  color: var(--pub-fg);
   font-weight: 600;
   cursor: pointer;
   text-align: left;
+  transition: background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:disabled,
   &.is--disabled {
@@ -627,8 +641,8 @@ export default {
   }
 
   &:not(:disabled):not(.is--disabled):hover {
-    border-color: var(--c-bleuvert, #2a9d8f);
-    background: rgba(42, 157, 143, 0.08);
+    border-color: var(--pub-fg);
+    background: color-mix(in srgb, var(--pub-fg) 12%, transparent);
   }
 }
 
@@ -637,7 +651,7 @@ export default {
   margin: 0;
   padding: calc(var(--spacing) / 2);
   font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce, #666);
+  color: color-mix(in srgb, var(--pub-fg) 80%, transparent);
   text-align: center;
 }
 
@@ -657,22 +671,30 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: calc(var(--spacing) / 8);
+  gap: calc(var(--spacing) / 4);
   padding: calc(var(--spacing) / 2);
-  border: 1px solid var(--c-gris, #ccc);
-  border-radius: var(--border-radius);
-  background: white;
+  border: 2px solid var(--pub-fg);
+  border-radius: calc(var(--border-radius) * 1.25);
+  background: var(--pub-fg);
+  color: var(--pub-accent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   text-align: left;
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    box-shadow 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:hover {
-    border-color: var(--c-bleuvert, #2a9d8f);
+    transform: translateY(-2px);
+    border-color: var(--pub-accent);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
   }
 }
 
 ._publicationsSidebar--pubTitle {
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--sl-font-size-small);
+  color: var(--pub-accent);
 }
 
 ._publicationsSidebar--pubMeta {
@@ -680,7 +702,7 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 4);
   font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce, #666);
+  color: color-mix(in srgb, var(--pub-accent) 70%, transparent);
 }
 
 ._publicationsSidebar--formats {
@@ -693,18 +715,24 @@ export default {
   position: relative;
   aspect-ratio: 1;
   width: 100%;
-  border: none;
-  border-radius: var(--border-radius);
-  background: var(--c-bleuvert, #2a9d8f);
-  color: white;
+  border: 2px solid var(--pub-fg);
+  border-radius: calc(var(--border-radius) * 1.25);
+  background: var(--pub-fg);
+  color: var(--pub-accent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: calc(var(--spacing) / 2);
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    box-shadow 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:hover {
-    filter: brightness(0.95);
+    transform: translateY(-2px);
+    border-color: var(--pub-accent);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
   }
 }
 
@@ -713,7 +741,7 @@ export default {
   top: calc(var(--spacing) / 3);
   right: calc(var(--spacing) / 3);
   font-size: 0.85rem;
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 ._publicationsSidebar--formatLabel {
@@ -726,6 +754,12 @@ export default {
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 2);
+  color: var(--pub-fg);
+
+  ::v-deep .u-label,
+  ::v-deep ._dLabel {
+    color: var(--pub-fg);
+  }
 }
 
 ._publicationsSidebar--selectedFormat {
@@ -734,12 +768,17 @@ export default {
   gap: calc(var(--spacing) / 3);
   margin: 0;
   font-weight: 600;
+  color: var(--pub-fg);
 }
 
 ._publicationsSidebar--formActions {
   display: flex;
   gap: calc(var(--spacing) / 3);
   justify-content: flex-end;
+
+  .u-button:not(.u-button_bleuvert) {
+    color: var(--pub-fg);
+  }
 }
 
 ._publicationsSidebar--openTemplate {
@@ -782,7 +821,7 @@ export default {
   border-color: var(--c-gris, #ccc);
 
   &:hover {
-    border-color: var(--c-bleuvert, #2a9d8f);
+    border-color: var(--active-color);
   }
 }
 
