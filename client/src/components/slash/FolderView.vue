@@ -719,6 +719,10 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._folderView {
+  --folder-bg: var(--c-slash-blue, var(--c-bleuvert));
+  --folder-fg: var(--c-slash-mint, #e5ffdb);
+  --folder-accent: var(--c-slash-burgundy, var(--c-rouge));
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -732,9 +736,9 @@ export default {
 ._filterBar {
   flex: 0 0 auto;
   width: 100%;
-  background: var(--c-gris_clair);
-  // color: white;
-  border-bottom: 1px solid var(--c-gris, #ccc);
+  background: var(--folder-bg);
+  color: var(--folder-fg);
+  border-bottom: 1px solid color-mix(in srgb, var(--folder-fg) 35%, transparent);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -761,9 +765,10 @@ export default {
   right: var(--fixed-ui-margins);
   z-index: 900;
   padding: calc(var(--spacing) / 1.5);
-  color: var(--c-gris_fonce, #555);
+  color: var(--folder-accent);
   transition: color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
     background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
     transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
   ::v-deep .b-icon.bi {
@@ -773,14 +778,16 @@ export default {
 
   &:hover,
   &:focus-visible {
-    color: var(--c-bleuvert, #2a9d8f);
-    background-color: rgba(42, 157, 143, 0.12);
+    color: var(--folder-accent);
+    background-color: var(--folder-fg);
+    border-color: var(--folder-accent);
     transform: translateY(-1px);
   }
 
   &.is--active {
     color: white;
-    background-color: var(--c-bleuvert, #2a9d8f);
+    background-color: var(--active-color);
+    border-color: var(--active-color);
   }
 }
 

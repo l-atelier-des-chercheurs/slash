@@ -225,13 +225,13 @@ input[type="file"] {
 
   &.is--active {
     &:not([disabled]) {
-      background-color: var(--g-600);
+      background-color: var(--active-color);
       color: white;
 
       &:hover,
       &:active,
       &:focus-visible {
-        background-color: var(--c-gris_fonce);
+        background-color: var(--c-orange_fonce, #d9441f);
       }
     }
   }
@@ -380,19 +380,20 @@ input[type="file"] {
 }
 
 .u-overlayPanel {
-  // outline: 2px solid rgba(241, 241, 241, 0.4);
-  backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 4px 0px rgba(0, 0, 0, 0.2);
+  backdrop-filter: none;
+  background: var(--c-slash-mint, #e5ffdb);
+  color: var(--c-slash-burgundy, var(--c-rouge));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: calc(var(--spacing) / 4);
-  border-radius: var(--border-radius);
+  border-radius: 0;
+  border: 2px solid var(--c-slash-mint, #e5ffdb);
 
-  transition: background-color 4s 2s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: background-color 0.3s cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 0.3s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:hover {
-    // backdrop-filter: blur(4px);
-    background: rgba(255, 255, 255, 1);
-    transition: background-color 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    background: var(--c-slash-mint, #e5ffdb);
+    border-color: var(--c-slash-burgundy, var(--c-rouge));
   }
 }
 

@@ -58,6 +58,7 @@ export default {
   overflow: auto;
   padding: calc(var(--spacing, 1rem) * 2);
   padding-top: calc(var(--spacing, 1rem) * 7); /* under the top bar */
+  background: var(--c-slash-blue, var(--c-bleuvert));
 }
 
 ._mediaGridView--grid {
@@ -70,10 +71,20 @@ export default {
 
 ._mediaGridView--item {
   aspect-ratio: 4 / 3;
-  border-radius: var(--border-radius, 6px);
+  border-radius: 0;
   overflow: hidden;
-  background: var(--c-gris_clair, #f0f0f0);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: var(--c-slash-mint, #e5ffdb);
+  border: 2px solid var(--c-slash-mint, #e5ffdb);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    box-shadow 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--c-slash-burgundy, var(--c-rouge));
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  }
 
   ::v-deep ._mediaContent {
     width: 100%;

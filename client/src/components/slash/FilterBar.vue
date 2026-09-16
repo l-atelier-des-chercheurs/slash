@@ -76,15 +76,27 @@ export default {
   gap: 0.75rem;
   padding: calc(var(--spacing) / 1) var(--fixed-ui-margins);
   min-height: 48px;
+  color: inherit;
 }
 
 ._filterBar-label {
   white-space: nowrap;
-  // font-weight: bold;
+  color: inherit;
+  font-weight: 500;
 }
 
 ._filterBar-select {
   min-width: 140px;
   max-width: 20ch;
+  background-color: var(--c-slash-mint, #e5ffdb);
+  color: var(--c-slash-burgundy, var(--c-rouge));
+  border: 2px solid var(--c-slash-mint, #e5ffdb);
+  border-radius: 0;
+
+  &:hover,
+  &:focus {
+    border-color: var(--c-slash-burgundy, var(--c-rouge));
+    background-color: var(--c-slash-mint, #e5ffdb);
+  }
 }
 </style>

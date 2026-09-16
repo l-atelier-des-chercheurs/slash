@@ -352,7 +352,7 @@ export default {
   inset: 0;
   width: 100%;
   height: 100%;
-  background-color: #fafafa;
+  background-color: var(--c-slash-blue, var(--c-bleuvert));
   --timeline-item-width: 224px;
   --timeline-stagger-offset: calc(var(--timeline-item-width) * 0.55);
 }
@@ -412,7 +412,7 @@ export default {
     display: block;
     width: 1px;
     height: 100%;
-    background: var(--c-gris);
+    background: color-mix(in srgb, var(--c-slash-mint, #e5ffdb) 45%, transparent);
   }
 }
 
@@ -421,21 +421,25 @@ export default {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 0;
   padding: 4px 12px;
   transform: rotate(-90deg);
-  background: white;
+  background: var(--c-slash-mint, #e5ffdb);
+  color: var(--c-slash-burgundy, var(--c-rouge));
+  border: 2px solid var(--c-slash-mint, #e5ffdb);
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 
   &:hover {
-    background: var(--c-gris_fonce);
-    color: white;
+    border-color: var(--c-slash-burgundy, var(--c-rouge));
+    background: var(--c-slash-mint, #e5ffdb);
+    color: var(--c-slash-burgundy, var(--c-rouge));
   }
 
   &.is--collapsed {
-    background: var(--c-noir);
-    color: white;
+    background: var(--c-slash-burgundy, var(--c-rouge));
+    border-color: var(--c-slash-burgundy, var(--c-rouge));
+    color: var(--c-slash-mint, #e5ffdb);
   }
 }
 
@@ -478,8 +482,8 @@ export default {
 ._timelineView--eventBar {
   width: 4px;
   height: 24px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #6b7fd7 0%, #4a5bb5 100%);
+  border-radius: 0;
+  background: var(--active-color);
   flex-shrink: 0;
 }
 
@@ -487,7 +491,7 @@ export default {
   font-family: var(--sl-font-mono, monospace);
   font-size: 0.85rem;
   font-weight: 600;
-  color: #4a5bb5;
+  color: var(--c-slash-mint, #e5ffdb);
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.04em;

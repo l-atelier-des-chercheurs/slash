@@ -108,21 +108,29 @@ export default {
   font-size: var(--sl-font-size-small);
   font-weight: 700;
   text-align: center;
-  color: var(--c-noir, #111);
+  color: inherit;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--border-radius);
+  border-radius: 0;
 
   &:hover {
-    background: var(--c-gris_clair, #f0f0f0);
+    background: color-mix(
+      in srgb,
+      var(--c-slash-burgundy, var(--c-rouge)) 12%,
+      transparent
+    );
   }
 }
 
 ._canvasSelectionBar--divider {
   width: 1px;
   height: 20px;
-  background: var(--c-gris, #ccc);
+  background: color-mix(
+    in srgb,
+    var(--c-slash-burgundy, var(--c-rouge)) 25%,
+    transparent
+  );
   margin: 0 4px;
 }
 

@@ -206,7 +206,8 @@ export default {
     min-width: 2.75rem;
 
     &.is--open {
-      background: white;
+      background: var(--c-slash-mint, #e5ffdb);
+      border-color: var(--c-slash-burgundy, var(--c-rouge));
       backdrop-filter: none;
       transition: background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
     }
@@ -262,7 +263,11 @@ export default {
 ._viewModeBar--divider {
   width: 100%;
   height: 1px;
-  background: var(--c-gris, #ccc);
+  background: color-mix(
+    in srgb,
+    var(--c-slash-burgundy, var(--c-rouge)) 25%,
+    transparent
+  );
   margin: 2px 0;
 
   .is--mobileView & {
