@@ -29,7 +29,8 @@
         <button
           type="button"
           class="_publicationsSidebar--createRow"
-          :disabled="!can_edit"
+          :class="{ 'is--disabled': !can_edit }"
+          :aria-disabled="!can_edit ? 'true' : 'false'"
           @click="openCreate"
         >
           <b-icon icon="plus-lg" />
@@ -418,11 +419,20 @@ export default {
       this.loadPublicationsList(this.folder_path);
     },
     openCreate() {
-      if (!this.can_edit) return;
+      if (!this.can_edit) {
+        this.alertCreateDisabledReason();
+        return;
+      }
       this.selected_template = null;
       this.new_publication_title = "";
       this.create_error = "";
       this.pane = "create";
+    },
+    alertCreateDisabledReason() {
+      const message = !this.connected_as
+        ? this.$t("you_must_login_to_contribute")
+        : this.$t("not_allowed_to_contribute_contact_referent");
+      this.$alertify?.delay(4000)?.error(message);
     },
     selectTemplate(template_key) {
       this.selected_template = template_key;
@@ -610,12 +620,13 @@ export default {
   cursor: pointer;
   text-align: left;
 
-  &:disabled {
+  &:disabled,
+  &.is--disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  &:not(:disabled):hover {
+  &:not(:disabled):not(.is--disabled):hover {
     border-color: var(--c-bleuvert, #2a9d8f);
     background: rgba(42, 157, 143, 0.08);
   }
