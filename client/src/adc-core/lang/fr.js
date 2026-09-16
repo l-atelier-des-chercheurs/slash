@@ -217,6 +217,13 @@ export default {
   visibility_text: `Indiquez ici l’état d’avancement du projet et qui pourra le consulter.`,
 
   publications: "Publications",
+  template_a5_booklet: "Livret A5",
+  template_postcard: "Carte postale",
+  template_carousel: "Carrousel",
+  publication_add_medias_hint: "Ajoutez des médias de ce dossier à la publication.",
+  export_coming_soon: "L’export sera bientôt disponible",
+  failed_to_create_publication: "Échec de la création de la publication",
+  failed_to_save: "Échec de l’enregistrement",
   back_to_publications: "Retour aux publications",
   generate_preview: "Générer un aperçu",
   nothing_to_show: "Rien à afficher",

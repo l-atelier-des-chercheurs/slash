@@ -562,6 +562,13 @@ export default {
   visibility_text:
     "Indicate here the progress of the project and who will be able to consult it.",
   publications: "Publications",
+  template_a5_booklet: "A5 booklet",
+  template_postcard: "Postcard",
+  template_carousel: "Carousel",
+  publication_add_medias_hint: "Add medias from this folder to the publication.",
+  export_coming_soon: "Export will be available soon",
+  failed_to_create_publication: "Failed to create publication",
+  failed_to_save: "Failed to save",
   back_to_publications: "Back to publications",
   generate_preview: "Generate preview",
   nothing_to_show: "Nothing to show",

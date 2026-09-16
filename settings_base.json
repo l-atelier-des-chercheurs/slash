@@ -164,6 +164,41 @@
               "type": "string"
             }
           }
+        },
+        "$folders": {
+          "publications": {
+            "$can_be_created_by": "logged-in",
+            "fields": {
+              "title": {
+                "type": "string"
+              },
+              "template": {
+                "type": "string"
+              },
+              "layout_mode": {
+                "type": "string"
+              },
+              "page_width": {
+                "type": "number"
+              },
+              "page_height": {
+                "type": "number"
+              },
+              "source_medias": {
+                "type": "array"
+              }
+            },
+            "$files": {
+              "fields": {
+                "title": {
+                  "type": "string"
+                },
+                "source_medias": {
+                  "type": "array"
+                }
+              }
+            }
+          }
         }
       },
       "publications": {

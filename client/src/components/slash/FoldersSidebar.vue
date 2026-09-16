@@ -2,9 +2,12 @@
   <div class="_foldersPanel" :class="{ 'is--overlay': is_overlay }">
     <div class="_foldersPanel--inner">
       <header class="_foldersPanel--header">
-        <div>
-          <h1 class="_foldersPanel--title">Your folders</h1>
-          <p class="_foldersPanel--subtitle">Pick a folder to open it</p>
+        <div class="_foldersPanel--brand">
+          <SlashLogo class="_foldersPanel--logo" />
+          <div>
+            <h1 class="_foldersPanel--title">Living archive</h1>
+            <p class="_foldersPanel--subtitle">Pick a folder to open it</p>
+          </div>
         </div>
         <div class="_foldersPanel--headerButtons">
           <button
@@ -79,11 +82,13 @@
 <script>
 import CreateFolder from "@/adc-core/modals/CreateFolder.vue";
 import AdminsAndContributorsField from "@/adc-core/fields/AdminsAndContributorsField.vue";
+import SlashLogo from "@/components/nav/SlashLogo.vue";
 
 export default {
   components: {
     CreateFolder,
     AdminsAndContributorsField,
+    SlashLogo,
   },
   props: {
     folders: {
@@ -141,17 +146,22 @@ export default {
 
 <style lang="scss" scoped>
 ._foldersPanel {
+  --folders-bg: var(--c-slash-blue, var(--c-bleuvert));
+  --folders-fg: var(--c-slash-mint, #e5ffdb);
+  --folders-accent: var(--c-slash-burgundy, var(--c-rouge));
+
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: white;
+  background: var(--folders-bg);
+  color: var(--folders-fg);
   overflow: auto;
 
   &.is--overlay {
     z-index: 9000;
-    background: rgba(255, 255, 255, 0.97);
+    background: color-mix(in srgb, var(--folders-bg) 97%, transparent);
     backdrop-filter: blur(12px);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--folders-fg) 25%, transparent);
   }
 }
 
@@ -168,7 +178,7 @@ export default {
   top: 0;
   padding: calc(var(--spacing)) 0;
   z-index: 100;
-  background: white;
+  background: var(--folders-bg);
   margin-bottom: calc(var(--spacing) * 2);
   display: flex;
   align-items: flex-start;
@@ -177,18 +187,33 @@ export default {
   flex-shrink: 0;
 }
 
+._foldersPanel--brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 1.25);
+}
+
+._foldersPanel--logo {
+  display: block;
+  width: clamp(7.5rem, 18vw, 9.5rem);
+  height: auto;
+  color: var(--folders-fg);
+}
+
 ._foldersPanel--title {
   margin: 0 0 calc(var(--spacing) / 4);
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  color: var(--folders-fg);
 }
 
 ._foldersPanel--subtitle {
   margin: 0;
   font-size: var(--sl-font-size-medium);
-  color: var(--c-text-secondary, #666);
+  color: color-mix(in srgb, var(--folders-fg) 80%, transparent);
 }
 
 ._foldersPanel--headerButtons {
@@ -196,6 +221,10 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 4);
   flex-shrink: 0;
+
+  .u-button {
+    color: var(--folders-fg);
+  }
 }
 
 ._foldersPanel--grid {
@@ -205,7 +234,6 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: calc(var(--spacing) * 1.25);
   align-content: start;
-  // overflow: auto;
   padding-bottom: calc(var(--spacing) / 2);
 }
 
@@ -218,25 +246,26 @@ export default {
   min-height: 190px;
   padding: calc(var(--spacing) * 1.25);
   text-align: left;
-  background: white;
-  border: 2px solid var(--c-gris);
+  color: var(--folders-accent);
+  background: var(--folders-fg);
+  border: 2px solid var(--folders-fg);
   border-radius: calc(var(--border-radius) * 1.5);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
     box-shadow 0.2s cubic-bezier(0.19, 1, 0.22, 1),
-    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+    border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:hover:not(.is--disabled),
   &:focus-visible:not(.is--disabled) {
     transform: translateY(-4px);
-    border-color: var(--c-noir);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    border-color: var(--folders-accent);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
   }
 
   &.is--active {
-    border-color: var(--c-noir);
-    // box-shadow: 0 0 0 3px var(--c-noir), 0 12px 32px rgba(0, 0, 0, 0.12);
+    border-color: var(--folders-accent);
   }
 
   &.is--disabled {
@@ -248,15 +277,16 @@ export default {
 
   &.is--create {
     border-style: dashed;
-    border-color: var(--c-gris);
-    background: var(--c-gris_clair);
+    border-color: var(--folders-fg);
+    background: transparent;
+    color: var(--folders-fg);
     box-shadow: none;
 
     &:hover,
     &:focus-visible {
-      border-color: var(--c-noir);
-      background: white;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      border-color: var(--folders-fg);
+      background: color-mix(in srgb, var(--folders-fg) 12%, transparent);
+      box-shadow: none;
     }
   }
 }
@@ -268,14 +298,14 @@ export default {
   width: 4rem;
   height: 4rem;
   border-radius: calc(var(--border-radius) * 1.25);
-  color: var(--c-noir);
+  color: inherit;
   font-size: 1.75rem;
   flex-shrink: 0;
 
   &.is--create {
-    background: white;
-    border: 2px dashed var(--c-gris);
-    color: var(--c-noir);
+    background: transparent;
+    border: 2px dashed var(--folders-fg);
+    color: var(--folders-fg);
   }
 }
 
@@ -298,7 +328,7 @@ export default {
 
   ::v-deep ._indicators {
     font-size: var(--sl-font-size-x-small);
-    color: var(--c-text-secondary, #666);
+    color: color-mix(in srgb, var(--folders-accent) 70%, transparent);
   }
 }
 
@@ -309,9 +339,9 @@ export default {
   margin-top: auto;
   padding: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
   border-radius: var(--border-radius);
-  background: var(--c-gris_clair);
+  background: color-mix(in srgb, var(--folders-accent) 12%, transparent);
+  color: var(--folders-accent);
   font-size: var(--sl-font-size-x-small);
   font-weight: 600;
-  opacity: 0.85;
 }
 </style>

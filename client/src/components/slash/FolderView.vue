@@ -35,7 +35,7 @@
           :zoom="canvas_zoom"
           :zoom_range="zoom_range"
           :folder_path="folder.$path"
-          :show_media_list_sidebar="show_media_list_sidebar"
+          :show_media_list_sidebar="show_publications_sidebar"
           :media_list_paths="media_list_paths"
           :selected_files="selected_files"
           @update:selected_files="selected_files = $event"
@@ -51,7 +51,7 @@
         <TimelineView
           v-if="view_mode === 'timeline'"
           :files="filtered_files_without_canvas_items"
-          :show_media_list_sidebar="show_media_list_sidebar"
+          :show_media_list_sidebar="show_publications_sidebar"
           :media_list_paths="media_list_paths"
           :selected_files="selected_files"
           @select="handleItemSelect"
@@ -59,7 +59,7 @@
         <MediaGridView
           v-if="view_mode === 'grid'"
           :files="filtered_files_without_canvas_items"
-          :show_media_list_sidebar="show_media_list_sidebar"
+          :show_media_list_sidebar="show_publications_sidebar"
           :media_list_paths="media_list_paths"
           :selected_files="selected_files"
           @select="handleItemSelect"
@@ -67,13 +67,13 @@
 
         <button
           type="button"
-          class="u-button u-button_icon _mediaListToggle u-overlayPanel"
-          :class="{ 'is--active': show_media_list_sidebar }"
-          title="Media list"
-          aria-label="Media list"
-          @click="toggleMediaListSidebar"
+          class="u-button u-button_icon _publicationsToggle u-overlayPanel"
+          :class="{ 'is--active': show_publications_sidebar }"
+          :title="$t('publications')"
+          :aria-label="$t('publications')"
+          @click="togglePublicationsSidebar"
         >
-          <b-icon icon="printer" />
+          <b-icon icon="layout-wtf" />
         </button>
 
         <transition name="fade">
@@ -92,14 +92,14 @@
       </div>
 
       <transition name="mediaListSidebarSlide">
-        <MediaListSidebar
-          v-show="show_media_list_sidebar"
-          ref="mediaListSidebar"
+        <PublicationsSidebar
+          v-show="show_publications_sidebar"
+          ref="publicationsSidebar"
           :folder_path="folder_path"
           :files="sorted_files"
-          :media_list_paths="media_list_paths"
+          :can_edit="can_contribute_current_folder"
           @update:media_list_paths="onMediaListPathsUpdate"
-          @close="closeMediaListSidebar"
+          @close="closePublicationsSidebar"
         />
       </transition>
     </div>
@@ -130,12 +130,8 @@ import TimelineView from "@/components/slash/TimelineView.vue";
 import ViewModeBar from "@/components/slash/ViewModeBar.vue";
 import ItemModal from "@/components/slash/ItemModal.vue";
 import FolderSettingsModal from "@/components/slash/FolderSettingsModal.vue";
-import MediaListSidebar from "@/components/slash/MediaListSidebar.vue";
+import PublicationsSidebar from "@/components/slash/PublicationsSidebar.vue";
 import CanvasSelectionBar from "@/components/slash/CanvasSelectionBar.vue";
-import {
-  loadMediaListPaths,
-  saveMediaListPaths,
-} from "@/utils/mediaListUtils.js";
 
 export default {
   props: {
@@ -154,7 +150,7 @@ export default {
     ViewModeBar,
     ItemModal,
     FolderSettingsModal,
-    MediaListSidebar,
+    PublicationsSidebar,
     CanvasSelectionBar,
   },
   data() {
@@ -168,7 +164,7 @@ export default {
       canvas_scroll: null,
       zoom_range: [0.1, 1],
       show_folder_settings_modal: false,
-      show_media_list_sidebar: false,
+      show_publications_sidebar: false,
       media_list_paths: [],
       selected_files: [],
       is_downloading_sources: false,
@@ -186,7 +182,7 @@ export default {
       "canvasItem.openWithTransition",
       this.switchToFileWithTransition
     );
-    this.$eventHub.$on("mediaList.ensureOpen", this.openMediaListSidebar);
+    this.$eventHub.$on("mediaList.ensureOpen", this.openPublicationsSidebar);
   },
   beforeDestroy() {
     this.$eventHub.$off("canvasItem.open", this.openItemModal);
@@ -194,7 +190,7 @@ export default {
       "canvasItem.openWithTransition",
       this.switchToFileWithTransition
     );
-    this.$eventHub.$off("mediaList.ensureOpen", this.openMediaListSidebar);
+    this.$eventHub.$off("mediaList.ensureOpen", this.openPublicationsSidebar);
     if (this.folder_path && this.isRoomJoined(this.folder_path)) {
       this.$api.leave({ room: this.folder_path });
     }
@@ -230,7 +226,7 @@ export default {
 
         try {
           this.folder = await this.loadFolder(new_folder_path);
-          this.loadMediaListForFolder(new_folder_path);
+          this.media_list_paths = [];
           this.syncMediaListEditorFromUrl(this.$route.query.editor);
           if (!this.isRoomJoined(new_folder_path)) {
             this.$api.join({ room: new_folder_path });
@@ -313,6 +309,15 @@ export default {
       if (!this.folder) return false;
       if (typeof this.canLoggedinEditFolder !== "function") return true;
       return this.canLoggedinEditFolder({
+        folder: this.folder,
+      });
+    },
+    can_contribute_current_folder() {
+      if (!this.folder) return false;
+      if (typeof this.canLoggedinContributeToFolder !== "function") {
+        return this.can_edit_current_folder;
+      }
+      return this.canLoggedinContributeToFolder({
         folder: this.folder,
       });
     },
@@ -629,36 +634,26 @@ export default {
         },
       });
     },
-    loadMediaListForFolder(folder_path) {
-      const stored_paths = loadMediaListPaths(folder_path);
-      this.media_list_paths = this.pruneMediaListPaths(stored_paths);
-      if (this.media_list_paths.length !== stored_paths.length && folder_path) {
-        saveMediaListPaths(folder_path, this.media_list_paths);
-      }
-    },
     pruneMediaListPaths(paths) {
       const valid_paths = new Set(this.sorted_files.map((file) => file.$path));
       return paths.filter((path) => valid_paths.has(path));
     },
-    toggleMediaListSidebar() {
-      this.show_media_list_sidebar = !this.show_media_list_sidebar;
+    togglePublicationsSidebar() {
+      this.show_publications_sidebar = !this.show_publications_sidebar;
     },
-    openMediaListSidebar() {
-      this.show_media_list_sidebar = true;
+    openPublicationsSidebar() {
+      this.show_publications_sidebar = true;
     },
-    closeMediaListSidebar() {
-      this.show_media_list_sidebar = false;
+    closePublicationsSidebar() {
+      this.show_publications_sidebar = false;
     },
     syncMediaListEditorFromUrl(editor) {
-      if (editor === "print" || editor === "web") {
-        this.show_media_list_sidebar = true;
-      }
+      // Legacy ?editor=print|web no longer opens media-list editors.
+      // Kept as a no-op so existing URL watchers stay harmless.
+      void editor;
     },
     onMediaListPathsUpdate(paths) {
-      this.media_list_paths = paths;
-      if (this.folder_path) {
-        saveMediaListPaths(this.folder_path, paths);
-      }
+      this.media_list_paths = Array.isArray(paths) ? paths : [];
     },
     handleItemSelect(file_path, mode) {
       if (mode === "append") {
@@ -760,7 +755,7 @@ export default {
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-._mediaListToggle {
+._publicationsToggle {
   position: absolute;
   bottom: var(--fixed-ui-margins);
   right: var(--fixed-ui-margins);

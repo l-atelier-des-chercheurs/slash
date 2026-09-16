@@ -132,21 +132,27 @@ export default {
 
   --fixed-ui-margins: 1.5vw;
 
-  --c-bleumarine: hsl(227, 63%, 41%);
-  --c-bleumarine_clair: hsl(227, 63%, 81%);
-  --c-bleumarine_fonce: hsl(227, 63%, 21%);
-  --c-bleuvert: hsl(214, 54%, 54%);
-  --c-bleuvert_clair: hsl(214, 54%, 64%);
-  --c-bleuvert_fonce: hsl(214, 54%, 41%);
-  --c-orange: hsl(41, 100%, 60%);
-  --c-orange_clair: #ffd892;
-  --c-orange_fonce: hsl(41, 100%, 45%);
-  --c-rouge: #fc4b60;
-  --c-rouge_clair: #ff808c;
-  --c-rouge_fonce: #cc334a;
+  /* Slash platform brand palette: https://slash-platform.eu/ */
+  --c-slash-blue: #4980c8;
+  --c-slash-mint: #e5ffdb;
+  --c-slash-burgundy: #87221d;
+  --c-slash-orange: #ff5829;
 
-  --c-bleu: hsl(211, 63%, 47%);
-  --c-bleu_clair: hsl(211, 63%, 77%);
+  --c-bleumarine: #3568a8;
+  --c-bleumarine_clair: #9bb8de;
+  --c-bleumarine_fonce: #2a5285;
+  --c-bleuvert: #4980c8;
+  --c-bleuvert_clair: #6b9ad4;
+  --c-bleuvert_fonce: #3568a8;
+  --c-orange: #ff5829;
+  --c-orange_clair: #ff8a66;
+  --c-orange_fonce: #d9441f;
+  --c-rouge: #87221d;
+  --c-rouge_clair: #a84842;
+  --c-rouge_fonce: #6b0505;
+
+  --c-bleu: #4980c8;
+  --c-bleu_clair: #9bb8de;
   --c-noir: hsl(0, 0%, 15%);
   --c-gris: hsl(0, 0%, 83%);
   --c-gris_clair: hsl(0, 0%, 96%);
@@ -170,7 +176,7 @@ export default {
   --c-bodybg: white;
 
   // --c-bodybg: hsl(48, 19%, 98%);
-  --body-bg-pattern-color: hsl(48, 19%, 96%);
+  --body-bg-pattern-color: var(--c-slash-mint);
 
   // --c-bodybg: white;
   --plyr-color-main: var(--c-bleumarine);
@@ -220,7 +226,7 @@ export default {
   --color-make: var(--c-bleumarine);
   --color-publish: var(--c-bleuvert);
 
-  --active-color: var(--c-bleu);
+  --active-color: #ff5829;
 
   --sl-font-mono: "Fira Mono";
 
