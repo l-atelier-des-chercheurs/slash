@@ -27,4 +27,16 @@ export default {
 
   folder_participants_count:
     "0 other participants | 1 other participant | {count} other participants",
+
+  // Publications / postcard
+  template_a5_booklet: "A5 booklet",
+  template_postcard: "Postcard",
+  template_carousel: "Carousel",
+  publication_add_medias_hint: "Add medias from any documentation space.",
+  from_folder: "Or from a folder",
+  filtered_by_type: "Filtered by {type}",
+  select_a_folder: "Select a folder",
+  pick_media_of_type: "Pick a {type}",
+  no_media_of_type_in_folder: "No {type} in this folder",
+  share_url: "Share URL",
 };

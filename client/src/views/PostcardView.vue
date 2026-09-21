@@ -6,20 +6,20 @@
       </a>
       <div class="_postcard--headerText">
         <h1 class="_postcard--title">
-          {{ publication_title || "Carte postale" }}
+          {{ publication_title || "Postcard" }}
         </h1>
         <p class="_postcard--lead">
           {{
             step === "form"
-              ? "Une image, un son, un texte — puis génère ta carte."
-              : "Voici ta carte. Tu peux l’exporter, la partager ou la modifier."
+              ? "One image, one sound, one text — then generate your card."
+              : "Here’s your card. Export, share, or edit it."
           }}
         </p>
       </div>
     </header>
 
     <div class="_postcard--shell" :class="{ 'is--share': is_share_view }">
-      <div v-if="is_loading" class="_postcard--status">Chargement…</div>
+      <div v-if="is_loading" class="_postcard--status">Loading…</div>
       <sl-alert v-else-if="load_error" variant="danger" open>
         <sl-icon slot="icon" name="exclamation-octagon"></sl-icon>
         {{ load_error }}
@@ -31,7 +31,7 @@
         class="_postcard--form"
         @submit.prevent="generateCard"
       >
-        <p class="_postcard--step">Étape 1 · Contenu</p>
+        <p class="_postcard--step">Step 1 · Content</p>
 
         <div class="_postcard--field">
           <span class="_postcard--label">Image</span>
@@ -48,12 +48,12 @@
             type="button"
             :loading="is_uploading_image ? true : null"
             :disabled="!publication || is_uploading_image ? true : null"
-            :title="image_file_name || 'Choisir une image'"
+            :title="image_file_name || 'Choose an image'"
             @click="openImagePicker"
           >
             <sl-icon slot="prefix" name="image"></sl-icon>
             <span class="_postcard--pickLabel">{{
-              image_file_name || "Choisir une image"
+              image_file_name || "Choose an image"
             }}</span>
           </sl-button>
           <button
@@ -67,7 +67,7 @@
         </div>
 
         <div class="_postcard--field">
-          <span class="_postcard--label">Son</span>
+          <span class="_postcard--label">Audio</span>
           <input
             ref="audio_input"
             class="_postcard--fileInput"
@@ -81,12 +81,12 @@
             type="button"
             :loading="is_uploading_audio ? true : null"
             :disabled="!publication || is_uploading_audio ? true : null"
-            :title="audio_file_name || 'Choisir un son'"
+            :title="audio_file_name || 'Choose an audio file'"
             @click="openAudioPicker"
           >
             <sl-icon slot="prefix" name="soundwave"></sl-icon>
             <span class="_postcard--pickLabel">{{
-              audio_file_name || "Choisir un son"
+              audio_file_name || "Choose an audio file"
             }}</span>
           </sl-button>
           <audio
@@ -108,7 +108,7 @@
 
         <div class="_postcard--field">
           <span class="_postcard--label">
-            Texte
+            Text
             <span class="_postcard--counter"
               >{{ postcard_text.length }} / {{ text_max_length }}</span
             >
@@ -119,7 +119,7 @@
             :maxlength="text_max_length"
             :rows="text_line_count"
             resize="vertical"
-            placeholder="Depuis la fenêtre de l’atelier, la lumière du soir. Scan le timbre pour écouter l’esquisse de ce jour. — L."
+            placeholder="From the studio window, evening light. Scan the stamp to hear today’s sketch. — L."
             @sl-input="onSlTextInput"
           ></sl-textarea>
         </div>
@@ -132,7 +132,7 @@
           :disabled="can_generate && !is_saving && !is_generating ? null : true"
         >
           <sl-icon slot="prefix" name="postcard"></sl-icon>
-          Générer la carte
+          Generate card
         </sl-button>
 
         <sl-alert v-if="form_error" variant="warning" open>
@@ -143,16 +143,16 @@
 
       <!-- Step 2 / share view: generated card -->
       <div v-else class="_postcard--result">
-        <p v-if="!is_share_view" class="_postcard--step">Étape 2 · Ta carte</p>
+        <p v-if="!is_share_view" class="_postcard--step">Step 2 · Your card</p>
 
         <div
-          v-if="is_share_view && can_edit"
+          v-if="!is_share_view || can_edit"
           class="_postcard--shareBar"
         >
           <button
             type="button"
             class="_postcard--editBtn"
-            @click="goToEditor"
+            @click="is_share_view ? goToEditor() : goBackToForm()"
           >
             <b-icon icon="pencil" />
             {{ $t("edit") }}
@@ -162,7 +162,7 @@
         <div
           class="_postcard--card"
           :style="card_preview_style"
-          aria-label="Carte postale"
+          aria-label="Postcard"
         >
           <div class="_postcard--imagePane">
             <img
@@ -186,8 +186,8 @@
               :aria-label="
                 has_audio
                   ? is_audio_playing
-                    ? 'Arrêter le son'
-                    : 'Lire le son'
+                    ? 'Stop audio'
+                    : 'Play audio'
                   : undefined
               "
               @click="onStampClick"
@@ -231,7 +231,7 @@
             @click="exportPng"
           >
             <sl-icon slot="prefix" name="download"></sl-icon>
-            Exporter en PNG
+            Export PNG
           </sl-button>
           <sl-button
             class="_postcard--secondary"
@@ -240,10 +240,6 @@
           >
             <sl-icon slot="prefix" name="box-arrow-up-right"></sl-icon>
             {{ $t("share_url") }}
-          </sl-button>
-          <sl-button class="_postcard--secondary" @click="goBackToForm">
-            <sl-icon slot="prefix" name="pencil"></sl-icon>
-            Modifier
           </sl-button>
         </div>
 
@@ -542,7 +538,7 @@ export default {
       this.is_loading = true;
       this.load_error = "";
       if (!this.publication_path) {
-        this.load_error = "Publication introuvable.";
+        this.load_error = "Publication not found.";
         this.is_loading = false;
         return;
       }
@@ -581,7 +577,7 @@ export default {
           this.load_error = this.$t("folder_not_public");
         } else {
           this.load_error =
-            code || "Impossible de charger la publication.";
+            code || "Could not load this publication.";
         }
         this.publication = null;
       } finally {
@@ -683,7 +679,7 @@ export default {
     },
     async uploadMediaFile(kind, file) {
       if (!file || !this.publication?.$path) {
-        this.form_error = "Publication non chargée.";
+        this.form_error = "Publication not loaded.";
         return;
       }
 
@@ -704,7 +700,7 @@ export default {
             ? `${this.publication.$path}/${meta_filename}`
             : "");
         if (!meta_path) {
-          throw new Error("Upload sans chemin de média.");
+          throw new Error("Upload returned no media path.");
         }
         if (kind === "image") {
           this.image_media_path = meta_path;
@@ -714,7 +710,7 @@ export default {
       } catch (err) {
         console.error(err);
         this.form_error =
-          err?.message || "L’envoi du fichier a échoué. Réessaie.";
+          err?.message || "Upload failed. Please try again.";
       } finally {
         this[uploading_key] = false;
       }
@@ -745,11 +741,11 @@ export default {
     async generateCard() {
       this.form_error = "";
       if (!this.can_generate) {
-        this.form_error = "Ajoute une image pour générer la carte.";
+        this.form_error = "Add an image to generate the card.";
         return;
       }
       if (this.is_uploading_image || this.is_uploading_audio) {
-        this.form_error = "Attends la fin de l’envoi des fichiers.";
+        this.form_error = "Wait until file uploads are finished.";
         return;
       }
       if (this.is_generating) return;
@@ -766,7 +762,7 @@ export default {
       } catch (err) {
         console.error(err);
         this.form_error =
-          err?.message || "Impossible d’enregistrer la carte postale.";
+          err?.message || "Could not save the postcard.";
       } finally {
         this.is_generating = false;
       }
@@ -1129,7 +1125,7 @@ export default {
         link.click();
       } catch (err) {
         console.error(err);
-        this.export_error = "L’export a échoué. Réessaie avec une autre image.";
+        this.export_error = "Export failed. Try again with another image.";
       } finally {
         this.is_exporting = false;
       }

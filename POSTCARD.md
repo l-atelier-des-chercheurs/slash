@@ -21,8 +21,8 @@ Helpers: [`client/src/utils/folderPublications.js`](client/src/utils/folderPubli
 ## Home ([`FoldersSidebar.vue`](client/src/components/slash/FoldersSidebar.vue))
 
 1. **Slash/** + Living archive  
-2. **Publication** — dashed create tiles (workspace style, flag copy top-left) + existing pubs newest → oldest with `$cover`  
-3. **Espaces de documentation** — folder grid (New folder + folders)
+2. **Publication** — dashed create tiles + existing pubs (cover with title overlay)  
+3. **Documentation spaces** — folder grid (New folder + folders)
 
 ## Postcard editor (v1)
 

@@ -87,7 +87,7 @@
 
       <section class="_foldersPanel--section">
         <h2 v-if="!is_overlay" class="_foldersPanel--sectionTitle">
-          Espaces de documentation
+          Documentation spaces
         </h2>
         <div class="_foldersPanel--grid">
           <button
@@ -329,7 +329,7 @@ export default {
       }
       this.create_template = template_key;
       this.create_title =
-        template_key === "postcard" ? "Carte postale" : "Booklet";
+        template_key === "postcard" ? "Postcard" : "Booklet";
       this.create_allow_save = true;
       this.create_error = "";
       this.$nextTick(() => {
