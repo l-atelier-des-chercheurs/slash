@@ -449,6 +449,11 @@ export default {
   pick_portrait: "Pick an image for this account",
   pick_media: "Pick one media",
   pick_medias: "Pick one or more medias",
+  pick_media_of_type: "Pick a {type}",
+  from_folder: "Or from a folder",
+  filtered_by_type: "Filtered by {type}",
+  select_a_folder: "Select a folder",
+  no_media_of_type_in_folder: "No {type} in this folder",
   replace_remove_image: "Replace or remove this image",
 
   stop_recording: "Stop recording",
@@ -565,7 +570,7 @@ export default {
   template_a5_booklet: "A5 booklet",
   template_postcard: "Postcard",
   template_carousel: "Carousel",
-  publication_add_medias_hint: "Add medias from this folder to the publication.",
+  publication_add_medias_hint: "Add medias from any documentation space.",
   export_coming_soon: "Export will be available soon",
   failed_to_create_publication: "Failed to create publication",
   failed_to_save: "Failed to save",
@@ -975,6 +980,7 @@ export default {
   add_link: "Add link",
   add_text: "Add text",
   share_link_to_page: "Share a link to this page",
+  share_url: "Share URL",
   download_this_qr_code: "Download this QR code",
   domain: "With a domain",
   domain_instr:

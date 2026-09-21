@@ -1,4 +1,5 @@
 export const PUBLICATIONS_TYPE = "publications";
+export const ROOT_PUBLICATIONS_PATH = "publications";
 
 export const TEMPLATE_REGISTRY = {
   a5_booklet: {
@@ -27,6 +28,15 @@ export const TEMPLATE_REGISTRY = {
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_REGISTRY);
 
+export function getRootPublicationsPath() {
+  return ROOT_PUBLICATIONS_PATH;
+}
+
+export function getRootPublicationPath(publication_slug) {
+  if (!publication_slug) return "";
+  return `${ROOT_PUBLICATIONS_PATH}/${publication_slug}`;
+}
+
 export function getFolderPublicationsPath(folder_path) {
   if (!folder_path) return "";
   return `${folder_path}/${PUBLICATIONS_TYPE}`;
@@ -41,10 +51,20 @@ export function getTemplateConfig(template_key) {
   return TEMPLATE_REGISTRY[template_key] || null;
 }
 
+/**
+ * @param {object} opts
+ * @param {string} opts.title
+ * @param {string} opts.template_key
+ * @param {boolean} [opts.is_private]
+ * @param {boolean} [opts.at_root] — root publications/ (level 0)
+ * @param {string} [opts.admin_path] — author $path required when at_root
+ */
 export function buildPublicationCreateMeta({
   title,
   template_key,
   is_private = false,
+  at_root = false,
+  admin_path = null,
 }) {
   const config = getTemplateConfig(template_key);
   if (!config) {
@@ -57,9 +77,26 @@ export function buildPublicationCreateMeta({
     layout_mode: config.layout_mode,
     requested_slug: title,
     source_medias: [],
+    message: "",
     $status: is_private === true ? "private" : "public",
-    $admins: "parent_contributors",
   };
+
+  // Shareable postcard URLs must bypass instance general password
+  if (config.key === "postcard") {
+    additional_meta.$public = true;
+  }
+
+  if (at_root) {
+    if (!admin_path) {
+      const err = new Error("login_required");
+      err.code = "login_required";
+      throw err;
+    }
+    additional_meta.$admins = [admin_path];
+    additional_meta.$contributors = [admin_path];
+  } else {
+    additional_meta.$admins = "parent_contributors";
+  }
 
   if (typeof config.page_width === "number") {
     additional_meta.page_width = config.page_width;
@@ -71,31 +108,43 @@ export function buildPublicationCreateMeta({
   return additional_meta;
 }
 
+/** Prefer full media $path so publications can reference any folder. */
 export function filePathToSourceMedia(file_path) {
   if (!file_path) return null;
   const meta_filename = file_path.split("/").pop();
   if (!meta_filename) return null;
-  return { meta_filename_in_project: meta_filename };
+  return {
+    path: file_path,
+    meta_filename_in_project: meta_filename,
+  };
 }
 
 export function filePathFromSourceMedia(source_media, folder_path) {
+  if (source_media?.path) return source_media.path;
   if (!source_media?.meta_filename_in_project || !folder_path) return null;
   return `${folder_path}/${source_media.meta_filename_in_project}`;
 }
 
 export function pruneSourceMedias(source_medias, valid_file_paths) {
   if (!Array.isArray(source_medias)) return [];
+  const valid_paths = new Set(valid_file_paths);
   const valid_meta_names = new Set(
     valid_file_paths.map((p) => p.split("/").pop())
   );
-  return source_medias.filter((sm) =>
-    valid_meta_names.has(sm?.meta_filename_in_project)
-  );
+  return source_medias.filter((sm) => {
+    if (sm?.path) return valid_paths.has(sm.path);
+    return valid_meta_names.has(sm?.meta_filename_in_project);
+  });
 }
 
 export function sourceMediasToPaths(source_medias, folder_path) {
-  if (!Array.isArray(source_medias) || !folder_path) return [];
+  if (!Array.isArray(source_medias)) return [];
   return source_medias
     .map((sm) => filePathFromSourceMedia(sm, folder_path))
     .filter(Boolean);
+}
+
+export function publicationSlugFromPath(publication_path) {
+  if (!publication_path) return "";
+  return publication_path.split("/").pop() || "";
 }

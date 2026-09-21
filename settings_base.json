@@ -203,14 +203,36 @@
       },
       "publications": {
         "$can_be_created_by": "logged-in",
+        "$cover": {
+          "width": 2000,
+          "height": 1420,
+          "thumbs": {
+            "resolutions": [50, 320, 640, 2000]
+          }
+        },
         "fields": {
           "title": {
             "type": "string"
+          },
+          "template": {
+            "type": "string"
+          },
+          "layout_mode": {
+            "type": "string"
+          },
+          "page_width": {
+            "type": "number"
+          },
+          "page_height": {
+            "type": "number"
           },
           "publication_type": {
             "type": "string"
           },
           "slash_folder_path": {
+            "type": "string"
+          },
+          "message": {
             "type": "string"
           },
           "source_medias": {

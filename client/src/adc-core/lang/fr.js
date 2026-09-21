@@ -220,7 +220,7 @@ export default {
   template_a5_booklet: "Livret A5",
   template_postcard: "Carte postale",
   template_carousel: "Carrousel",
-  publication_add_medias_hint: "Ajoutez des médias de ce dossier à la publication.",
+  publication_add_medias_hint: "Ajoutez des médias provenant de n’importe quel espace de documentation.",
   export_coming_soon: "L’export sera bientôt disponible",
   failed_to_create_publication: "Échec de la création de la publication",
   failed_to_save: "Échec de l’enregistrement",
@@ -910,6 +910,7 @@ export default {
   add_text: "Ajouter du texte",
 
   share_link_to_page: "Partager un lien vers cette page",
+  share_url: "Partager l’URL",
   download_this_qr_code: "Télécharger ce code QR",
   domain: "Avec un domaine",
   domain_instr:
@@ -951,6 +952,11 @@ export default {
   pick_portrait: "Choisissez une image pour ce compte",
   pick_media: "Choisissez un média",
   pick_medias: "Choisissez un ou plusieurs médias",
+  pick_media_of_type: "Choisir : {type}",
+  from_folder: "Ou depuis un dossier",
+  filtered_by_type: "Filtré par {type}",
+  select_a_folder: "Choisir un dossier",
+  no_media_of_type_in_folder: "Aucun média de type « {type} » dans ce dossier",
   replace_remove_image: "Remplacer ou supprimer cette image",
 
   no_accounts_to_show: "Aucun compte à afficher",

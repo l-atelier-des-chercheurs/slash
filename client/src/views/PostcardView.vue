@@ -1,0 +1,1584 @@
+<template>
+  <div class="_postcard" :class="{ 'is--share': is_share_view }">
+    <header v-if="!is_share_view" class="_postcard--header">
+      <a class="_postcard--brand" href="/" aria-label="Slash">
+        <SlashLogo class="_postcard--logo" />
+      </a>
+      <div class="_postcard--headerText">
+        <h1 class="_postcard--title">
+          {{ publication_title || "Carte postale" }}
+        </h1>
+        <p class="_postcard--lead">
+          {{
+            step === "form"
+              ? "Une image, un son, un texte — puis génère ta carte."
+              : "Voici ta carte. Tu peux l’exporter, la partager ou la modifier."
+          }}
+        </p>
+      </div>
+    </header>
+
+    <div class="_postcard--shell" :class="{ 'is--share': is_share_view }">
+      <div v-if="is_loading" class="_postcard--status">Chargement…</div>
+      <sl-alert v-else-if="load_error" variant="danger" open>
+        <sl-icon slot="icon" name="exclamation-octagon"></sl-icon>
+        {{ load_error }}
+      </sl-alert>
+
+      <!-- Step 1: form -->
+      <form
+        v-else-if="!is_share_view && step === 'form'"
+        class="_postcard--form"
+        @submit.prevent="generateCard"
+      >
+        <p class="_postcard--step">Étape 1 · Contenu</p>
+
+        <div class="_postcard--field">
+          <span class="_postcard--label">Image</span>
+          <input
+            ref="image_input"
+            class="_postcard--fileInput"
+            type="file"
+            accept="image/*"
+            @change="onImageChange"
+          />
+          <sl-button
+            class="_postcard--pick"
+            size="small"
+            type="button"
+            :loading="is_uploading_image ? true : null"
+            :disabled="!publication || is_uploading_image ? true : null"
+            :title="image_file_name || 'Choisir une image'"
+            @click="openImagePicker"
+          >
+            <sl-icon slot="prefix" name="image"></sl-icon>
+            <span class="_postcard--pickLabel">{{
+              image_file_name || "Choisir une image"
+            }}</span>
+          </sl-button>
+          <button
+            type="button"
+            class="_postcard--fromFolder"
+            :disabled="!publication || !accessible_folders.length"
+            @click="openFolderMediaModal('image')"
+          >
+            {{ $t("from_folder") }}
+          </button>
+        </div>
+
+        <div class="_postcard--field">
+          <span class="_postcard--label">Son</span>
+          <input
+            ref="audio_input"
+            class="_postcard--fileInput"
+            type="file"
+            accept="audio/*"
+            @change="onAudioChange"
+          />
+          <sl-button
+            class="_postcard--pick"
+            size="small"
+            type="button"
+            :loading="is_uploading_audio ? true : null"
+            :disabled="!publication || is_uploading_audio ? true : null"
+            :title="audio_file_name || 'Choisir un son'"
+            @click="openAudioPicker"
+          >
+            <sl-icon slot="prefix" name="soundwave"></sl-icon>
+            <span class="_postcard--pickLabel">{{
+              audio_file_name || "Choisir un son"
+            }}</span>
+          </sl-button>
+          <audio
+            v-if="audio_url"
+            class="_postcard--audio"
+            :src="audio_url"
+            controls
+            preload="metadata"
+          />
+          <button
+            type="button"
+            class="_postcard--fromFolder"
+            :disabled="!publication || !accessible_folders.length"
+            @click="openFolderMediaModal('audio')"
+          >
+            {{ $t("from_folder") }}
+          </button>
+        </div>
+
+        <div class="_postcard--field">
+          <span class="_postcard--label">
+            Texte
+            <span class="_postcard--counter"
+              >{{ postcard_text.length }} / {{ text_max_length }}</span
+            >
+          </span>
+          <sl-textarea
+            class="_postcard--textarea"
+            :value="postcard_text"
+            :maxlength="text_max_length"
+            :rows="text_line_count"
+            resize="vertical"
+            placeholder="Depuis la fenêtre de l’atelier, la lumière du soir. Scan le timbre pour écouter l’esquisse de ce jour. — L."
+            @sl-input="onSlTextInput"
+          ></sl-textarea>
+        </div>
+
+        <sl-button
+          class="_postcard--primary"
+          variant="primary"
+          type="submit"
+          :loading="is_saving || is_generating ? true : null"
+          :disabled="can_generate && !is_saving && !is_generating ? null : true"
+        >
+          <sl-icon slot="prefix" name="postcard"></sl-icon>
+          Générer la carte
+        </sl-button>
+
+        <sl-alert v-if="form_error" variant="warning" open>
+          <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+          {{ form_error }}
+        </sl-alert>
+      </form>
+
+      <!-- Step 2 / share view: generated card -->
+      <div v-else class="_postcard--result">
+        <p v-if="!is_share_view" class="_postcard--step">Étape 2 · Ta carte</p>
+
+        <div
+          v-if="is_share_view && can_edit"
+          class="_postcard--shareBar"
+        >
+          <button
+            type="button"
+            class="_postcard--editBtn"
+            @click="goToEditor"
+          >
+            <b-icon icon="pencil" />
+            {{ $t("edit") }}
+          </button>
+        </div>
+
+        <div
+          class="_postcard--card"
+          :style="card_preview_style"
+          aria-label="Carte postale"
+        >
+          <div class="_postcard--imagePane">
+            <img
+              v-if="image_url"
+              class="_postcard--image"
+              :src="image_url"
+              alt=""
+            />
+            <div v-else class="_postcard--imagePlaceholder">Image</div>
+          </div>
+
+          <div class="_postcard--rightPane">
+            <component
+              :is="has_audio ? 'button' : 'div'"
+              type="button"
+              class="_postcard--stamp"
+              :class="{
+                'is--interactive': has_audio,
+                'is--playing': is_audio_playing,
+              }"
+              :aria-label="
+                has_audio
+                  ? is_audio_playing
+                    ? 'Arrêter le son'
+                    : 'Lire le son'
+                  : undefined
+              "
+              @click="onStampClick"
+            >
+              <span
+                v-if="is_audio_playing"
+                class="_postcard--stopBtn"
+                aria-hidden="true"
+              >
+                <span class="_postcard--stopIcon"></span>
+              </span>
+              <img
+                v-else-if="active_qr_url"
+                class="_postcard--qr"
+                :class="{ '_postcard--qr_dimmed': !has_audio }"
+                :src="active_qr_url"
+                alt=""
+              />
+            </component>
+
+            <div class="_postcard--rules">
+              <div
+                v-for="(line, index) in preview_text_lines"
+                :key="'rule-' + index"
+                class="_postcard--rule"
+              >
+                <span class="_postcard--ruleText">{{ line }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p v-if="!is_share_view" class="_postcard--mark">Slash/</p>
+
+        <div v-if="!is_share_view" class="_postcard--actions">
+          <sl-button
+            class="_postcard--primary"
+            variant="primary"
+            :disabled="can_export ? null : true"
+            :loading="is_exporting ? true : null"
+            @click="exportPng"
+          >
+            <sl-icon slot="prefix" name="download"></sl-icon>
+            Exporter en PNG
+          </sl-button>
+          <sl-button
+            class="_postcard--secondary"
+            :disabled="share_url ? null : true"
+            @click="openShareUrl"
+          >
+            <sl-icon slot="prefix" name="box-arrow-up-right"></sl-icon>
+            {{ $t("share_url") }}
+          </sl-button>
+          <sl-button class="_postcard--secondary" @click="goBackToForm">
+            <sl-icon slot="prefix" name="pencil"></sl-icon>
+            Modifier
+          </sl-button>
+        </div>
+
+        <sl-alert v-if="!is_share_view && export_error" variant="danger" open>
+          <sl-icon slot="icon" name="exclamation-octagon"></sl-icon>
+          {{ export_error }}
+        </sl-alert>
+      </div>
+    </div>
+
+    <audio
+      v-if="audio_url"
+      ref="card_audio"
+      class="_postcard--cardAudio"
+      :src="audio_url"
+      preload="auto"
+      @ended="onCardAudioEnded"
+      @pause="onCardAudioPaused"
+    />
+
+    <PickMediaFromFolder
+      v-if="!is_share_view && folder_media_modal_type"
+      :media_type="folder_media_modal_type"
+      :folders="accessible_folders"
+      @pickMedia="onFolderMediaPicked"
+      @close="closeFolderMediaModal"
+    />
+  </div>
+</template>
+
+<script>
+import Vue from "vue";
+import QRCodeStyling from "qr-code-styling";
+import SlashLogo from "@/components/nav/SlashLogo.vue";
+import PickMediaFromFolder from "@/components/slash/PickMediaFromFolder.vue";
+import {
+  getRootPublicationPath,
+  filePathToSourceMedia,
+  sourceMediasToPaths,
+} from "@/utils/folderPublications.js";
+
+const SHOELACE_VERSION = "2.20.1";
+const SHOELACE_CDN = `https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@${SHOELACE_VERSION}/cdn`;
+const SHOELACE_CSS_ID = "shoelace-postcard-css";
+const SHOELACE_JS_ID = "shoelace-postcard-js";
+
+const existing_ignored = Vue.config.ignoredElements || [];
+if (!existing_ignored.some((item) => item.toString() === "/^sl-/")) {
+  Vue.config.ignoredElements = [...existing_ignored, /^sl-/];
+}
+
+const QR_PLACEHOLDER_URL =
+  "https://slash.local/postcard/audio-placeholder";
+
+/** Slash orange play disc as SVG data URL — baked into the QR by qr-code-styling */
+const PLAY_ICON_DATA_URL =
+  "data:image/svg+xml," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="32" fill="#ff5829"/>
+      <path d="M26 18v28l22-14z" fill="#e5ffdb"/>
+    </svg>
+  `.trim());
+
+/** Export resolution: ~12 px per mm → 148×105 mm */
+const EXPORT_WIDTH = 1776;
+const EXPORT_HEIGHT = 1260;
+const COVER_WIDTH = 2000;
+const COVER_HEIGHT = 1420;
+
+const TEXT_LINE_COUNT = 8;
+const CHARS_PER_LINE = 28;
+const TEXT_MAX_LENGTH = TEXT_LINE_COUNT * CHARS_PER_LINE;
+
+function loadShoelaceFromCdn() {
+  if (!document.getElementById(SHOELACE_CSS_ID)) {
+    const link = document.createElement("link");
+    link.id = SHOELACE_CSS_ID;
+    link.rel = "stylesheet";
+    link.href = `${SHOELACE_CDN}/themes/light.css`;
+    document.head.appendChild(link);
+  }
+
+  if (!document.getElementById(SHOELACE_JS_ID)) {
+    const script = document.createElement("script");
+    script.id = SHOELACE_JS_ID;
+    script.type = "module";
+    script.src = `${SHOELACE_CDN}/shoelace-autoloader.js`;
+    document.head.appendChild(script);
+  }
+}
+
+export default {
+  name: "PostcardView",
+  components: {
+    SlashLogo,
+    PickMediaFromFolder,
+  },
+  data() {
+    return {
+      step: "form",
+      publication: null,
+      is_loading: true,
+      load_error: "",
+      is_saving: false,
+      is_uploading_image: false,
+      is_uploading_audio: false,
+      folders: [],
+      image_url: "",
+      image_file_name: "",
+      image_media_path: "",
+      audio_url: "",
+      audio_file_name: "",
+      audio_media_path: "",
+      postcard_text: "",
+      folder_media_modal_type: "",
+      qr_simple_url: "",
+      qr_play_url: "",
+      is_exporting: false,
+      is_generating: false,
+      is_audio_playing: false,
+      form_error: "",
+      export_error: "",
+      text_line_count: TEXT_LINE_COUNT,
+      text_max_length: TEXT_MAX_LENGTH,
+    };
+  },
+  computed: {
+    is_share_view() {
+      return this.$route.name === "PostcardShare";
+    },
+    can_edit() {
+      if (!this.publication) return false;
+      if (
+        typeof this.canLoggedinEditFolder === "function" &&
+        this.connected_as
+      ) {
+        return this.canLoggedinEditFolder({ folder: this.publication });
+      }
+      return this.tokenPathCanEdit(this.publication);
+    },
+    publication_slug() {
+      return this.$route.params.publication_slug || "";
+    },
+    publication_path() {
+      return getRootPublicationPath(this.publication_slug);
+    },
+    publication_title() {
+      return this.publication?.title || "";
+    },
+    share_url() {
+      if (!this.publication_slug) return "";
+      const resolved = this.$router.resolve({
+        name: "PostcardShare",
+        params: { publication_slug: this.publication_slug },
+      });
+      try {
+        return new URL(resolved.href, window.location.origin).href;
+      } catch (err) {
+        return resolved.href;
+      }
+    },
+    accessible_folders() {
+      return (this.folders || []).filter((folder) =>
+        this.canLoggedinSeeFolder({ folder })
+      );
+    },
+    has_audio() {
+      return Boolean(this.audio_url || this.audio_media_path);
+    },
+    active_qr_url() {
+      return this.has_audio ? this.qr_play_url : this.qr_simple_url;
+    },
+    can_generate() {
+      return Boolean(this.image_url) && Boolean(this.publication?.$path);
+    },
+    can_export() {
+      return Boolean(this.image_url);
+    },
+    card_preview_style() {
+      return {
+        aspectRatio: "148 / 105",
+      };
+    },
+    preview_text_lines() {
+      return this.wrapTextToLines(
+        this.postcard_text,
+        CHARS_PER_LINE,
+        TEXT_LINE_COUNT
+      );
+    },
+    current_source_medias() {
+      const medias = [];
+      if (this.image_media_path) {
+        const source = filePathToSourceMedia(this.image_media_path);
+        if (source) medias.push(source);
+      }
+      if (this.audio_media_path) {
+        const source = filePathToSourceMedia(this.audio_media_path);
+        if (source) medias.push(source);
+      }
+      return medias;
+    },
+  },
+  async created() {
+    loadShoelaceFromCdn();
+    if (this.is_share_view) {
+      this.prepareShareSession();
+    }
+    this.buildQrVariants();
+    await this.loadPublication();
+    if (this.is_share_view) {
+      this.step = "card";
+    }
+  },
+  beforeDestroy() {
+    this.stopStampAudio();
+    if (
+      !this.is_share_view &&
+      this.publication_path &&
+      this.isRoomJoined(this.publication_path)
+    ) {
+      this.$api.leave({ room: this.publication_path });
+    }
+    this.revokeObjectUrl(this.image_url);
+    this.revokeObjectUrl(this.audio_url);
+    this.revokeObjectUrl(this.qr_simple_url);
+    this.revokeObjectUrl(this.qr_play_url);
+  },
+  methods: {
+    prepareShareSession() {
+      // Public CP URLs must work without general password / FullUI init.
+      this.$root.is_loading = false;
+      try {
+        const raw = localStorage.getItem("tokenpath");
+        if (!raw) return;
+        const { token, token_path } = JSON.parse(raw);
+        if (!token || !token_path) return;
+        this.$api.tokenpath.token = token;
+        this.$api.tokenpath.token_path = token_path;
+        if (typeof this.$api.setAuthorizationHeader === "function") {
+          this.$api.setAuthorizationHeader();
+        }
+      } catch (err) {
+        console.warn("Postcard share session restore skipped", err);
+      }
+    },
+    tokenPathCanEdit(folder) {
+      if (!folder) return false;
+      try {
+        const raw = localStorage.getItem("tokenpath");
+        if (!raw) return false;
+        const { token_path } = JSON.parse(raw);
+        if (!token_path) return false;
+        if (folder.$admins === "everyone") return true;
+        return (
+          Array.isArray(folder.$admins) && folder.$admins.includes(token_path)
+        );
+      } catch (err) {
+        return false;
+      }
+    },
+    isRoomJoined(room) {
+      if (typeof this.$api?.isRoomSubscribed === "function") {
+        return this.$api.isRoomSubscribed(room);
+      }
+      return Array.isArray(this.$api?.rooms_joined)
+        ? this.$api.rooms_joined.includes(room)
+        : false;
+    },
+    mediaLabel(file) {
+      if (!file) return "";
+      const caption = (file.caption || "").replace(/<[^>]+>/g, "").trim();
+      if (caption) return caption;
+      const filename = file.$path?.split("/").pop() || "Untitled";
+      return filename.replace(/\.meta\.txt$/, "");
+    },
+    mediaPreviewUrl(file) {
+      if (!file?.$path || !file?.$media_filename) return "";
+      if (typeof this.makeMediaFilePath === "function") {
+        return this.makeMediaFilePath({
+          $path: file.$path,
+          $media_filename: file.$media_filename,
+        });
+      }
+      const parent = file.$path.substring(0, file.$path.lastIndexOf("/"));
+      return "/" + parent + "/" + file.$media_filename;
+    },
+    guessMediaKindFromFilename(filename) {
+      const name = String(filename || "").toLowerCase();
+      if (/\.(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(name)) return "image";
+      if (/\.(mp3|wav|ogg|m4a|aac|flac|webm)$/.test(name)) return "audio";
+      return "";
+    },
+    async loadPublication() {
+      this.is_loading = true;
+      this.load_error = "";
+      if (!this.publication_path) {
+        this.load_error = "Publication introuvable.";
+        this.is_loading = false;
+        return;
+      }
+
+      try {
+        if (this.is_share_view) {
+          this.publication = await this.$api.getPublicFolder({
+            path: this.publication_path,
+          });
+          if (!this.publication?.$path) {
+            const err = new Error("folder_not_public");
+            err.code = "folder_not_public";
+            throw err;
+          }
+        } else {
+          this.folders = await this.$api
+            .getFolders({ path: "folders" })
+            .catch(() => []);
+          this.publication = await this.$api.getFolder({
+            path: this.publication_path,
+          });
+          if (!this.isRoomJoined(this.publication_path)) {
+            this.$api.join({ room: this.publication_path });
+          }
+        }
+        this.postcard_text = this.publication.message || "";
+        if (this.is_share_view) {
+          this.hydrateSourceMediasPublic();
+        } else {
+          await this.hydrateSourceMedias();
+        }
+      } catch (err) {
+        console.error(err);
+        const code = err?.code || err?.message;
+        if (code === "folder_not_public") {
+          this.load_error = this.$t("folder_not_public");
+        } else {
+          this.load_error =
+            code || "Impossible de charger la publication.";
+        }
+        this.publication = null;
+      } finally {
+        this.is_loading = false;
+      }
+
+      try {
+        await this.buildQrVariants();
+      } catch (err) {
+        console.error("Postcard QR rebuild failed", err);
+      }
+    },
+    hydrateSourceMediasPublic() {
+      // Prefer files already present on the public publication payload
+      const files = Array.isArray(this.publication?.$files)
+        ? this.publication.$files
+        : [];
+      for (const file of files) {
+        if (file?.$type === "image" && !this.image_media_path) {
+          this.applyLoadedMedia("image", file);
+        } else if (file?.$type === "audio" && !this.audio_media_path) {
+          this.applyLoadedMedia("audio", file);
+        }
+      }
+
+      const paths = sourceMediasToPaths(
+        this.publication?.source_medias,
+        this.publication?.$path || ""
+      );
+      for (const path of paths) {
+        if (!path) continue;
+        const meta_filename = path.split("/").pop() || "";
+        const media_filename = meta_filename.replace(/\.meta\.txt$/, "");
+        const parent = path.substring(0, path.lastIndexOf("/"));
+        if (!media_filename || !parent) continue;
+
+        const from_files = files.find((f) => f?.$path === path);
+        if (from_files) continue;
+
+        const kind = this.guessMediaKindFromFilename(media_filename);
+        if (kind === "image" && !this.image_media_path) {
+          this.image_media_path = path;
+          this.image_file_name = media_filename;
+          this.image_url = "/" + parent + "/" + media_filename;
+        } else if (kind === "audio" && !this.audio_media_path) {
+          this.audio_media_path = path;
+          this.audio_file_name = media_filename;
+          this.audio_url = "/" + parent + "/" + media_filename;
+        }
+      }
+    },
+    async hydrateSourceMedias() {
+      const paths = sourceMediasToPaths(
+        this.publication?.source_medias,
+        this.publication?.$path || ""
+      );
+      for (const path of paths) {
+        try {
+          const file = await this.$api.getFolder({ path });
+          if (file?.$type === "image" && !this.image_media_path) {
+            this.applyLoadedMedia("image", file);
+          } else if (file?.$type === "audio" && !this.audio_media_path) {
+            this.applyLoadedMedia("audio", file);
+          }
+        } catch (err) {
+          console.warn("Missing postcard media", path, err);
+        }
+      }
+    },
+    applyLoadedMedia(kind, file) {
+      if (!file?.$path) return;
+      const preview = this.mediaPreviewUrl(file);
+      const label = this.mediaLabel(file);
+      if (kind === "image") {
+        this.revokeObjectUrl(this.image_url);
+        this.image_media_path = file.$path;
+        this.image_file_name = label;
+        this.image_url = preview;
+      } else if (kind === "audio") {
+        this.revokeObjectUrl(this.audio_url);
+        this.audio_media_path = file.$path;
+        this.audio_file_name = label;
+        this.audio_url = preview;
+      }
+    },
+    openFolderMediaModal(media_type) {
+      if (!this.publication || !this.accessible_folders.length) return;
+      this.folder_media_modal_type = media_type;
+    },
+    closeFolderMediaModal() {
+      this.folder_media_modal_type = "";
+    },
+    onFolderMediaPicked(file) {
+      const kind = this.folder_media_modal_type;
+      if (!kind || !file?.$path) return;
+      this.applyLoadedMedia(kind, file);
+      this.form_error = "";
+      this.export_error = "";
+    },
+    async uploadMediaFile(kind, file) {
+      if (!file || !this.publication?.$path) {
+        this.form_error = "Publication non chargée.";
+        return;
+      }
+
+      const uploading_key =
+        kind === "image" ? "is_uploading_image" : "is_uploading_audio";
+      this[uploading_key] = true;
+      this.form_error = "";
+
+      try {
+        const { uploaded_meta, meta_filename } = await this.$api.uploadFile({
+          path: this.publication.$path,
+          filename: file.name,
+          file,
+        });
+        const meta_path =
+          uploaded_meta?.$path ||
+          (meta_filename
+            ? `${this.publication.$path}/${meta_filename}`
+            : "");
+        if (!meta_path) {
+          throw new Error("Upload sans chemin de média.");
+        }
+        if (kind === "image") {
+          this.image_media_path = meta_path;
+        } else {
+          this.audio_media_path = meta_path;
+        }
+      } catch (err) {
+        console.error(err);
+        this.form_error =
+          err?.message || "L’envoi du fichier a échoué. Réessaie.";
+      } finally {
+        this[uploading_key] = false;
+      }
+    },
+    async persistMeta() {
+      if (!this.publication?.$path) return;
+      this.is_saving = true;
+      try {
+        const source_medias = this.current_source_medias;
+        await this.$api.updateMeta({
+          path: this.publication.$path,
+          new_meta: {
+            message: this.postcard_text,
+            source_medias,
+            $public: true,
+          },
+        });
+        this.$set(this.publication, "message", this.postcard_text);
+        this.$set(this.publication, "source_medias", source_medias);
+        this.$set(this.publication, "$public", true);
+      } catch (err) {
+        console.error(err);
+        throw err;
+      } finally {
+        this.is_saving = false;
+      }
+    },
+    async generateCard() {
+      this.form_error = "";
+      if (!this.can_generate) {
+        this.form_error = "Ajoute une image pour générer la carte.";
+        return;
+      }
+      if (this.is_uploading_image || this.is_uploading_audio) {
+        this.form_error = "Attends la fin de l’envoi des fichiers.";
+        return;
+      }
+      if (this.is_generating) return;
+
+      this.is_generating = true;
+      try {
+        await this.persistMeta();
+        await this.uploadPostcardCover();
+        this.export_error = "";
+        this.step = "card";
+        this.$nextTick(() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      } catch (err) {
+        console.error(err);
+        this.form_error =
+          err?.message || "Impossible d’enregistrer la carte postale.";
+      } finally {
+        this.is_generating = false;
+      }
+    },
+    goBackToForm() {
+      this.stopStampAudio();
+      this.step = "form";
+      this.export_error = "";
+      this.$nextTick(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    },
+    onStampClick() {
+      if (!this.has_audio) return;
+      this.toggleStampAudio();
+    },
+    openShareUrl() {
+      if (!this.share_url) return;
+      window.open(this.share_url, "_blank", "noopener,noreferrer");
+    },
+    goToEditor() {
+      if (!this.publication_slug) return;
+      this.$router.push({
+        name: "Postcard",
+        params: { publication_slug: this.publication_slug },
+      });
+    },
+    getCardAudioEl() {
+      return this.$refs.card_audio || null;
+    },
+    stopStampAudio() {
+      const audio_el = this.getCardAudioEl();
+      if (audio_el) {
+        audio_el.pause();
+        audio_el.currentTime = 0;
+      }
+      this.is_audio_playing = false;
+    },
+    async toggleStampAudio() {
+      if (!this.has_audio || !this.audio_url) return;
+      const audio_el = this.getCardAudioEl();
+      if (!audio_el) return;
+
+      if (this.is_audio_playing) {
+        this.stopStampAudio();
+        return;
+      }
+
+      try {
+        audio_el.currentTime = 0;
+        await audio_el.play();
+        this.is_audio_playing = true;
+      } catch (err) {
+        console.error(err);
+        this.is_audio_playing = false;
+      }
+    },
+    onCardAudioEnded() {
+      this.is_audio_playing = false;
+    },
+    onCardAudioPaused() {
+      const audio_el = this.getCardAudioEl();
+      if (!audio_el || audio_el.ended) return;
+      if (audio_el.paused) {
+        this.is_audio_playing = false;
+      }
+    },
+    async buildQrVariants() {
+      const [simple, with_play] = await Promise.all([
+        this.generateQrBlob({ with_play: false }),
+        this.generateQrBlob({ with_play: true }),
+      ]);
+
+      this.revokeObjectUrl(this.qr_simple_url);
+      this.revokeObjectUrl(this.qr_play_url);
+      this.qr_simple_url = simple ? URL.createObjectURL(simple) : "";
+      this.qr_play_url = with_play ? URL.createObjectURL(with_play) : "";
+    },
+    async generateQrBlob({ with_play }) {
+      try {
+        const options = {
+          width: 512,
+          height: 512,
+          type: "canvas",
+          data: this.share_url || QR_PLACEHOLDER_URL,
+          margin: 8,
+          qrOptions: {
+            errorCorrectionLevel: with_play ? "H" : "M",
+          },
+          dotsOptions: {
+            color: "#1a1a1a",
+            type: "square",
+          },
+          cornersSquareOptions: {
+            type: "square",
+            color: "#1a1a1a",
+          },
+          cornersDotOptions: {
+            type: "square",
+            color: "#1a1a1a",
+          },
+          backgroundOptions: {
+            color: "#ffffff",
+          },
+        };
+
+        if (with_play) {
+          options.image = PLAY_ICON_DATA_URL;
+          options.imageOptions = {
+            hideBackgroundDots: true,
+            imageSize: 0.38,
+            margin: 6,
+            crossOrigin: "anonymous",
+          };
+        }
+
+        const qr = new QRCodeStyling(options);
+        const blob = await qr.getRawData("png");
+        return blob || null;
+      } catch (err) {
+        console.error("Postcard QR generation failed", err);
+        return null;
+      }
+    },
+    revokeObjectUrl(url) {
+      if (url && url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    },
+    openImagePicker() {
+      this.$refs.image_input && this.$refs.image_input.click();
+    },
+    openAudioPicker() {
+      this.$refs.audio_input && this.$refs.audio_input.click();
+    },
+    async onImageChange(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      this.revokeObjectUrl(this.image_url);
+      this.image_file_name = file.name;
+      this.image_url = URL.createObjectURL(file);
+      this.form_error = "";
+      this.export_error = "";
+      await this.uploadMediaFile("image", file);
+    },
+    async onAudioChange(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      this.revokeObjectUrl(this.audio_url);
+      this.audio_file_name = file.name;
+      this.audio_url = URL.createObjectURL(file);
+      await this.uploadMediaFile("audio", file);
+    },
+    onSlTextInput(event) {
+      const value = event.target.value || "";
+      this.postcard_text =
+        value.length > this.text_max_length
+          ? value.slice(0, this.text_max_length)
+          : value;
+    },
+    wrapTextToLines(text, chars_per_line, max_lines) {
+      const lines = [];
+      const raw = (text || "").replace(/\r\n/g, "\n");
+      const paragraphs = raw.split("\n");
+
+      for (let p = 0; p < paragraphs.length; p++) {
+        const paragraph = paragraphs[p];
+        if (paragraph === "" && p < paragraphs.length - 1) {
+          if (lines.length < max_lines) lines.push("");
+          continue;
+        }
+
+        const words = paragraph.split(/\s+/).filter(Boolean);
+        let current = "";
+
+        for (const word of words) {
+          const candidate = current ? current + " " + word : word;
+          if (candidate.length <= chars_per_line) {
+            current = candidate;
+          } else {
+            if (current) {
+              lines.push(current);
+              if (lines.length >= max_lines) {
+                return lines;
+              }
+            }
+            if (word.length > chars_per_line) {
+              let rest = word;
+              while (rest.length > chars_per_line) {
+                lines.push(rest.slice(0, chars_per_line));
+                if (lines.length >= max_lines) return lines;
+                rest = rest.slice(chars_per_line);
+              }
+              current = rest;
+            } else {
+              current = word;
+            }
+          }
+        }
+
+        if (current) {
+          lines.push(current);
+          if (lines.length >= max_lines) return lines;
+        }
+      }
+
+      while (lines.length < max_lines) {
+        lines.push("");
+      }
+      return lines.slice(0, max_lines);
+    },
+    loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        if (src && !src.startsWith("blob:")) {
+          img.crossOrigin = "anonymous";
+        }
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    },
+    drawCoverImage(ctx, img, x, y, w, h) {
+      const scale = Math.max(w / img.width, h / img.height);
+      const sw = w / scale;
+      const sh = h / scale;
+      const sx = (img.width - sw) / 2;
+      const sy = (img.height - sh) / 2;
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    },
+    async renderPostcardCanvas({ width, height }) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#e5ffdb";
+      ctx.fillRect(0, 0, width, height);
+
+      const half = width / 2;
+      const pad = Math.round(height * 0.045);
+
+      const photo = await this.loadImage(this.image_url);
+      this.drawCoverImage(ctx, photo, 0, 0, half, height);
+
+      ctx.fillStyle = "#4980c8";
+      ctx.fillRect(half - 2, 0, 3, height);
+
+      const stamp_size = Math.round(height * 0.28);
+      const stamp_x = width - pad - stamp_size;
+      const stamp_y = pad;
+
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#87221d";
+      ctx.lineWidth = Math.max(2, Math.round(height * 0.004));
+      ctx.fillRect(stamp_x, stamp_y, stamp_size, stamp_size);
+      ctx.strokeRect(
+        stamp_x + 0.5,
+        stamp_y + 0.5,
+        stamp_size - 1,
+        stamp_size - 1
+      );
+
+      if (this.active_qr_url) {
+        const qr_img = await this.loadImage(this.active_qr_url);
+        const qr_inset = Math.round(stamp_size * 0.06);
+        if (!this.has_audio) {
+          ctx.globalAlpha = 0.5;
+        }
+        ctx.drawImage(
+          qr_img,
+          stamp_x + qr_inset,
+          stamp_y + qr_inset,
+          stamp_size - qr_inset * 2,
+          stamp_size - qr_inset * 2
+        );
+        ctx.globalAlpha = 1;
+      }
+
+      const rules_top = stamp_y + stamp_size + pad * 0.9;
+      const rules_bottom = height - pad;
+      const rules_left = half + pad;
+      const rules_right = width - pad;
+      const rules_width = rules_right - rules_left;
+      const line_gap = (rules_bottom - rules_top) / TEXT_LINE_COUNT;
+      const font_size = Math.round(line_gap * 0.55);
+
+      ctx.fillStyle = "#1a1a1a";
+      ctx.font = `${font_size}px "Rubik", "Helvetica Neue", sans-serif`;
+      ctx.textBaseline = "alphabetic";
+
+      const lines = this.preview_text_lines;
+      for (let i = 0; i < TEXT_LINE_COUNT; i++) {
+        const y = rules_top + line_gap * (i + 1);
+        ctx.strokeStyle = "rgba(73, 128, 200, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(rules_left, y);
+        ctx.lineTo(rules_right, y);
+        ctx.stroke();
+
+        const line = lines[i] || "";
+        if (line) {
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillText(line, rules_left, y - line_gap * 0.22, rules_width);
+        }
+      }
+
+      return canvas;
+    },
+    canvasToPngFile(canvas, filename) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error("PNG generation failed"));
+            return;
+          }
+          resolve(new File([blob], filename, { type: "image/png" }));
+        }, "image/png");
+      });
+    },
+    async uploadPostcardCover() {
+      if (!this.publication?.$path || !this.image_url) return;
+      if (!this.active_qr_url) {
+        await this.buildQrVariants();
+      }
+      const canvas = await this.renderPostcardCanvas({
+        width: COVER_WIDTH,
+        height: COVER_HEIGHT,
+      });
+      const slug = this.publication_slug || "carte";
+      const file = await this.canvasToPngFile(
+        canvas,
+        `carte-postale-${slug}-cover.png`
+      );
+      await this.$api.updateCover({
+        path: this.publication.$path,
+        new_cover_data: file,
+      });
+    },
+    async exportPng() {
+      if (!this.can_export || this.is_exporting) return;
+
+      this.is_exporting = true;
+      this.export_error = "";
+
+      try {
+        if (!this.active_qr_url) {
+          await this.buildQrVariants();
+        }
+        const canvas = await this.renderPostcardCanvas({
+          width: EXPORT_WIDTH,
+          height: EXPORT_HEIGHT,
+        });
+        const slug = this.publication_slug || "carte";
+        const data_url = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.download = `carte-postale-${slug}.png`;
+        link.href = data_url;
+        link.click();
+      } catch (err) {
+        console.error(err);
+        this.export_error = "L’export a échoué. Réessaie avec une autre image.";
+      } finally {
+        this.is_exporting = false;
+      }
+    },
+  },
+};
+</script>
+
+<style>
+/* Isolated postcard page — Slash brand, mobile-first steps */
+._postcard {
+  --c-slash-blue: #4980c8;
+  --c-slash-mint: #e5ffdb;
+  --c-slash-burgundy: #87221d;
+  --c-slash-orange: #ff5829;
+  --pc-ink: #262626;
+  --pc-muted: #5a5a5a;
+  --pc-paper: var(--c-slash-mint);
+  --pc-rule: rgba(73, 128, 200, 0.4);
+  --pc-font: "Rubik", "Helvetica Neue", sans-serif;
+
+  --sl-color-primary-600: var(--c-slash-orange);
+  --sl-color-primary-500: #ff6f47;
+  --sl-color-primary-700: #d9441f;
+  --sl-font-sans: var(--pc-font);
+  --sl-border-radius-medium: 0.75rem;
+
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 1.25rem clamp(1rem, 4vw, 2rem) 2rem;
+  background-color: #fff;
+  background-image:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      transparent 46%,
+      color-mix(in srgb, var(--c-slash-mint) 55%, transparent) 46%,
+      color-mix(in srgb, var(--c-slash-mint) 55%, transparent) 54%,
+      transparent 54%
+    ),
+    radial-gradient(
+      ellipse at 0% 0%,
+      color-mix(in srgb, var(--c-slash-blue) 14%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 100% 10%,
+      color-mix(in srgb, var(--c-slash-orange) 12%, transparent),
+      transparent 38%
+    );
+  color: var(--pc-ink);
+  font-family: var(--pc-font);
+}
+
+._postcard *,
+._postcard *::before,
+._postcard *::after {
+  box-sizing: border-box;
+}
+
+._postcard--header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.85rem 1.25rem;
+  max-width: 28rem;
+  margin: 0 auto 1.25rem;
+}
+
+._postcard--brand {
+  display: block;
+  color: var(--c-slash-burgundy);
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+._postcard--brand:hover {
+  color: var(--c-slash-blue);
+}
+
+._postcard--logo {
+  width: clamp(5.5rem, 28vw, 7.5rem);
+}
+
+._postcard--headerText {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+._postcard--title {
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.4rem, 5vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--c-slash-burgundy);
+}
+
+._postcard--lead {
+  margin: 0;
+  color: var(--pc-muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+._postcard--shell {
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+._postcard.is--share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+._postcard--shell.is--share {
+  width: min(100%, 52rem);
+  max-width: min(100%, 52rem);
+}
+
+._postcard--shareBar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.65rem;
+}
+
+._postcard--editBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--c-slash-burgundy) 35%, white);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--c-slash-burgundy);
+  font-family: var(--pc-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+._postcard--editBtn:hover,
+._postcard--editBtn:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: var(--c-slash-burgundy);
+  background: color-mix(in srgb, var(--c-slash-mint) 55%, white);
+}
+
+._postcard--status {
+  padding: 1rem;
+  color: var(--pc-muted);
+  text-align: center;
+}
+
+._postcard--step {
+  margin: 0 0 0.25rem;
+  color: var(--c-slash-blue);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+._postcard--form,
+._postcard--result {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--c-slash-mint) 65%, white);
+  border: 2px solid var(--c-slash-mint);
+  border-radius: 0.75rem;
+}
+
+._postcard--field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+._postcard--label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--c-slash-burgundy);
+}
+
+._postcard--counter {
+  color: var(--c-slash-blue);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+._postcard--fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+._postcard--pick {
+  --sl-color-neutral-0: var(--c-slash-mint);
+  --sl-color-neutral-1000: var(--c-slash-burgundy);
+  width: 100%;
+  max-width: 100%;
+}
+
+._postcard--pick::part(base) {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+._postcard--pick::part(label) {
+  min-width: 0;
+  overflow: hidden;
+}
+
+._postcard--pickLabel {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+._postcard--fromFolder {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-slash-blue);
+  font-family: var(--pc-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+._postcard--fromFolder:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+._postcard--audio {
+  width: 100%;
+  margin-top: 0.25rem;
+  height: 2.25rem;
+}
+
+._postcard--textarea {
+  width: 100%;
+  --sl-input-font-family: var(--pc-font);
+  --sl-input-border-color: color-mix(in srgb, var(--c-slash-blue) 35%, white);
+  --sl-input-border-color-focus: var(--c-slash-blue);
+  --sl-input-focus-ring-color: color-mix(
+    in srgb,
+    var(--c-slash-blue) 25%,
+    transparent
+  );
+}
+
+._postcard--primary,
+._postcard--secondary {
+  width: 100%;
+}
+
+._postcard--actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+._postcard--card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  background: var(--pc-paper);
+  border: 2px solid var(--c-slash-blue);
+  box-shadow: 0 14px 36px
+    color-mix(in srgb, var(--c-slash-blue) 18%, transparent);
+  overflow: hidden;
+}
+
+._postcard--imagePane {
+  position: relative;
+  min-height: 0;
+  background: var(--c-slash-blue);
+}
+
+._postcard--image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+._postcard--imagePlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 10rem;
+  color: var(--c-slash-mint);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+._postcard--rightPane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.65rem 0.7rem 0.8rem;
+  min-width: 0;
+  background: var(--c-slash-mint);
+}
+
+._postcard--stamp {
+  position: relative;
+  align-self: flex-end;
+  width: 28%;
+  min-width: 3rem;
+  aspect-ratio: 1;
+  padding: 0;
+  margin: 0;
+  background: #fff;
+  border: 2px solid var(--c-slash-burgundy);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  color: inherit;
+  font: inherit;
+}
+
+._postcard--stamp.is--interactive {
+  cursor: pointer;
+}
+
+._postcard--stamp.is--interactive:hover,
+._postcard--stamp.is--interactive:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-slash-orange) 45%, transparent);
+}
+
+._postcard--qr {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4%;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+._postcard--qr_dimmed {
+  opacity: 0.5;
+}
+
+._postcard--stopBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+}
+
+._postcard--stopIcon {
+  display: block;
+  width: 34%;
+  height: 34%;
+  background: var(--c-slash-orange);
+  border-radius: 2px;
+}
+
+._postcard--cardAudio {
+  display: none;
+}
+
+._postcard--rules {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+}
+
+._postcard--rule {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--pc-rule);
+  min-height: 0;
+}
+
+._postcard--ruleText {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  font-size: clamp(0.5rem, 2.4vw, 0.72rem);
+  line-height: 1.2;
+  padding-bottom: 0.12em;
+  color: var(--pc-ink);
+}
+
+._postcard--mark {
+  margin: -0.25rem 0 0;
+  text-align: right;
+  color: var(--c-slash-burgundy);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 640px) {
+  ._postcard--shell {
+    max-width: 32rem;
+  }
+
+  ._postcard--header {
+    max-width: 32rem;
+  }
+
+  ._postcard--actions {
+    flex-direction: row;
+  }
+
+  ._postcard--primary,
+  ._postcard--secondary {
+    flex: 1;
+  }
+}
+</style>

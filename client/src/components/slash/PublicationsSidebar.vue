@@ -226,8 +226,8 @@ import { isMediaListFile } from "@/utils/mediaListUtils.js";
 import {
   TEMPLATE_KEYS,
   TEMPLATE_REGISTRY,
-  getFolderPublicationsPath,
-  getPublicationPath,
+  getRootPublicationsPath,
+  getRootPublicationPath,
   getTemplateConfig,
   buildPublicationCreateMeta,
   filePathToSourceMedia,
@@ -318,9 +318,9 @@ export default {
   watch: {
     folder_path: {
       immediate: true,
-      handler(path) {
+      handler() {
         this.resetToList();
-        this.loadPublicationsList(path);
+        this.loadPublicationsList();
       },
     },
     files() {
@@ -360,14 +360,9 @@ export default {
       const filename = file.$path?.split("/").pop() || "Untitled";
       return filename.replace(/\.meta\.txt$/, "");
     },
-    async loadPublicationsList(folder_path) {
+    async loadPublicationsList() {
       this.leavePublicationsListRoom();
-      if (!folder_path) {
-        this.publications = [];
-        this.publications_path = "";
-        return;
-      }
-      this.publications_path = getFolderPublicationsPath(folder_path);
+      this.publications_path = getRootPublicationsPath();
       try {
         this.publications = await this.$api.getFolders({
           path: this.publications_path,
@@ -454,23 +449,33 @@ export default {
         const additional_meta = buildPublicationCreateMeta({
           title,
           template_key: this.selected_template,
+          at_root: true,
+          admin_path: this.connected_as?.$path,
         });
         const new_folder_slug = await this.$api.createFolder({
-          path: getFolderPublicationsPath(this.folder_path),
+          path: getRootPublicationsPath(),
           additional_meta,
         });
-        await this.loadPublicationsList(this.folder_path);
+        const created_template = this.selected_template;
+        await this.loadPublicationsList();
         this.pane = "list";
         this.selected_template = null;
         this.new_publication_title = "";
         const pub = this.publications.find((p) =>
           p.$path?.endsWith(`/${new_folder_slug}`)
         );
-        if (pub) {
-          await this.openPublication(pub);
-        } else {
-          await this.openPublicationBySlug(new_folder_slug);
+        if (created_template === "postcard" || pub?.template === "postcard") {
+          this.$router.push({
+            name: "Postcard",
+            params: { publication_slug: new_folder_slug },
+          });
+          return;
         }
+        this.$router.push({
+          name: "RootPublication",
+          params: { publication_slug: new_folder_slug },
+        });
+        return;
       } catch (err) {
         if (err?.code === "unique_field_taken") {
           this.create_error = this.$t("title_taken");
@@ -486,12 +491,26 @@ export default {
     async openPublication(pub) {
       if (!pub?.$path) return;
       const slug = pub.$path.split("/").pop();
+      if (pub.template === "postcard") {
+        this.$router.push({
+          name: "PostcardShare",
+          params: { publication_slug: slug },
+        });
+        return;
+      }
+      if (pub.template === "a5_booklet" || pub.template === "carousel") {
+        this.$router.push({
+          name: "RootPublication",
+          params: { publication_slug: slug },
+        });
+        return;
+      }
       await this.openPublicationBySlug(slug);
     },
     async openPublicationBySlug(slug) {
       this.leaveOpenedPublicationRoom();
       this.publication_slug = slug;
-      const path = getPublicationPath(this.folder_path, slug);
+      const path = getRootPublicationPath(slug);
       try {
         this.publication = await this.$api.getFolder({ path });
         if (!this.isRoomJoined(path)) {
@@ -508,10 +527,14 @@ export default {
     },
     async pruneOpenedSourceMedias() {
       if (!this.publication?.$path || this.is_saving_medias) return;
+      // Root pubs may reference medias outside this folder — only prune
+      // entries that use legacy meta_filename and are clearly missing here.
       const valid_paths = this.files.map((f) => f.$path);
       const current = Array.isArray(this.publication.source_medias)
         ? this.publication.source_medias
         : [];
+      const has_only_legacy = current.every((sm) => !sm?.path);
+      if (!has_only_legacy) return;
       const pruned = pruneSourceMedias(current, valid_paths);
       if (pruned.length === current.length) return;
       await this.persistSourceMedias(pruned);
@@ -537,8 +560,13 @@ export default {
       const current = Array.isArray(this.publication?.source_medias)
         ? [...this.publication.source_medias]
         : [];
-      const meta_name = file_path.split("/").pop();
-      if (current.some((sm) => sm?.meta_filename_in_project === meta_name)) {
+      if (
+        current.some(
+          (sm) =>
+            sm?.path === file_path ||
+            sm?.meta_filename_in_project === file_path.split("/").pop()
+        )
+      ) {
         return;
       }
       const source = filePathToSourceMedia(file_path);

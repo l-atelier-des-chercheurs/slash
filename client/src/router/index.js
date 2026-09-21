@@ -41,6 +41,28 @@ const routes = [
     component: () => import("@/views/ResetPasswordView.vue"),
   },
   {
+    path: "/postcard/:publication_slug/view",
+    name: "PostcardShare",
+    meta: {
+      static: true,
+    },
+    component: () => import("@/views/PostcardView.vue"),
+  },
+  {
+    path: "/postcard/:publication_slug",
+    name: "Postcard",
+    component: () => import("@/views/PostcardView.vue"),
+  },
+  {
+    path: "/postcard",
+    redirect: { name: "Accueil" },
+  },
+  {
+    path: "/publications/:publication_slug",
+    name: "RootPublication",
+    component: () => import("@/views/RootPublicationView.vue"),
+  },
+  {
     path: "/:folder_slug",
     name: "Folder",
     component: () => import("@/views/SlashHomeView.vue"),
