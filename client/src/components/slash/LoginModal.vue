@@ -1,88 +1,110 @@
 <template>
-  <BaseModal2
-    :title="$t('hello_slashers')"
-    :is_closable="is_logged_in"
-    @close="$emit('close')"
-  >
-    <div>
-      <p class="u-spacingBottom">
-        {{ $t("login_modal_description") }}
-      </p>
+  <portal to="destination">
+    <div
+      class="_gateScreen"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-gate-title"
+    >
+      <button
+        v-if="is_logged_in"
+        type="button"
+        class="u-button u-button_icon _gateScreen--close"
+        :title="$t('close')"
+        @click="$emit('close')"
+      >
+        <b-icon icon="x-lg" :label="$t('close')" />
+      </button>
 
-      <div v-if="!is_logged_in">
-        <label class="u-label">{{ $t("pick_your_name_label") }}</label>
-        <select v-model="selected_author" class="u-input u-spacingBottom">
-          <option disabled value="">
-            {{ $t("identify_yourself_here") }}
-          </option>
-          <optgroup
-            v-for="group in author_select_groups"
-            :key="group.category"
-            :label="group.category"
-          >
-            <option
-              v-for="author in group.authors"
-              :key="author.path"
-              :value="author"
+      <div class="_gateScreen--inner">
+        <header class="_gateScreen--header">
+          <SlashLogo class="_gateScreen--logo" />
+          <h1 id="login-gate-title" class="_gateScreen--title">
+            <template v-if="is_logged_in">{{ connected_as.name }}</template>
+            <template v-else>{{ $t("hello_slashers") }}</template>
+          </h1>
+          <p v-if="!is_logged_in" class="_gateScreen--subtitle">
+            {{ $t("login_modal_description") }}
+          </p>
+          <p v-if="is_logged_in && connected_as_group" class="_gateScreen--subtitle">
+            {{ connected_as_group }}
+          </p>
+        </header>
+
+        <div class="_gateScreen--body">
+          <div v-if="!is_logged_in" class="_gateScreen--field">
+            <label class="u-label" for="login-author-select">{{
+              $t("pick_your_name_label")
+            }}</label>
+            <select
+              id="login-author-select"
+              v-model="selected_author"
+              class="u-input"
             >
-              {{ author.name }}
-            </option>
-          </optgroup>
-        </select>
-      </div>
-      <div v-else class="u-spacingBottom">
-        <p class="u-spacingBottom">
-          {{ $t("logged_in_as") }}
-          <strong :style="{ backgroundColor: connected_as.color }">{{
-            connected_as.name
-          }}</strong
-          ><span v-if="connected_as_group.length">
-            ({{ connected_as_group }})</span
-          >.
-        </p>
+              <option disabled value="">
+                {{ $t("identify_yourself_here") }}
+              </option>
+              <optgroup
+                v-for="group in author_select_groups"
+                :key="group.category"
+                :label="group.category"
+              >
+                <option
+                  v-for="author in group.authors"
+                  :key="author.path"
+                  :value="author"
+                >
+                  {{ author.name }}
+                </option>
+              </optgroup>
+            </select>
+          </div>
+          <div v-else class="_gateScreen--field">
+            <ColorInput
+              :label="$t('color')"
+              :value="connected_as.color"
+              :allow_transparent="false"
+              :can_toggle="false"
+              :default_value="suggested_colors[0]"
+              :default_colors="suggested_colors"
+              @save="updateConnectedAs({ color: $event })"
+            />
+          </div>
+        </div>
 
-        <ColorInput
-          :label="$t('color')"
-          :value="connected_as.color"
-          :allow_transparent="false"
-          :can_toggle="false"
-          :default_value="suggested_colors[0]"
-          :default_colors="suggested_colors"
-          @save="updateConnectedAs({ color: $event })"
-        />
+        <div class="_gateScreen--actions">
+          <button
+            v-if="is_logged_in"
+            type="button"
+            class="u-button u-button_red"
+            @click="logout()"
+          >
+            {{ $t("logout") }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="u-button _gateScreen--cta"
+            :disabled="!can_login"
+            @click="login()"
+          >
+            {{ $t("login") }}
+          </button>
+        </div>
       </div>
     </div>
-
-    <template slot="footer">
-      <div class="_loginModal--footer">
-        <button
-          v-if="is_logged_in"
-          type="button"
-          class="u-button u-button_red"
-          @click="logout()"
-        >
-          {{ $t("logout") }}
-        </button>
-        <button
-          v-else
-          type="button"
-          class="u-button u-button_bleuvert"
-          :disabled="!can_login"
-          @click="login()"
-        >
-          {{ $t("login") }}
-        </button>
-      </div>
-    </template>
-  </BaseModal2>
+  </portal>
 </template>
 <script>
 import randomcolor from "randomcolor";
 import { slash_contributors_list } from "@/config/slash_contributors_list.js";
+import SlashLogo from "@/components/nav/SlashLogo.vue";
 
 export default {
   props: {},
-  components: {},
+  components: {
+    SlashLogo,
+  },
   data() {
     let saved_author = this.connected_as;
     if (typeof saved_author === "string") {
@@ -280,22 +302,147 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-._loginModal--footer {
+._gateScreen {
+  --gate-bg: var(--c-slash-blue, var(--c-bleuvert));
+  --gate-fg: var(--c-slash-mint, #e5ffdb);
+  --gate-accent: var(--c-slash-burgundy, var(--c-rouge));
+
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
   display: flex;
-  width: 100%;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: calc(var(--spacing) * 2);
+  background: var(--gate-bg);
+  color: var(--gate-fg);
+  animation: gateReveal 0.45s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-.u-label {
-  display: block;
-  margin-bottom: calc(var(--spacing) / 4);
-  font-weight: 600;
-  font-size: 0.9em;
+._gateScreen--close {
+  position: absolute;
+  top: calc(var(--spacing) * 1.25);
+  right: calc(var(--spacing) * 1.25);
+  color: var(--gate-fg);
+  z-index: 1;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--gate-fg) 15%, transparent);
+  }
 }
-.u-input {
+
+._gateScreen--inner {
   width: 100%;
-  padding: calc(var(--spacing) / 2);
-  border: 1px solid var(--c-gris);
-  border-radius: 4px;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+}
+
+._gateScreen--header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 1.25);
+}
+
+._gateScreen--logo {
+  width: clamp(7.5rem, 18vw, 9.5rem);
+  height: auto;
+  color: var(--gate-fg);
+}
+
+._gateScreen--title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--gate-fg);
+}
+
+._gateScreen--subtitle {
+  margin: 0;
+  font-size: var(--sl-font-size-normal);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--gate-fg) 85%, transparent);
+}
+
+._gateScreen--body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing));
+}
+
+._gateScreen--field {
+  .u-label {
+    color: color-mix(in srgb, var(--gate-fg) 80%, transparent);
+  }
+
+  .u-input,
+  select {
+    background: color-mix(in srgb, var(--gate-fg) 12%, transparent);
+    color: var(--gate-fg);
+    border-color: transparent;
+
+    &:hover {
+      background: color-mix(in srgb, var(--gate-fg) 18%, transparent);
+    }
+
+    &:focus {
+      background: color-mix(in srgb, var(--gate-fg) 18%, transparent);
+      border-color: var(--gate-fg);
+    }
+
+    option,
+    optgroup {
+      color: var(--c-noir);
+      background: white;
+    }
+  }
+
+  ::v-deep .u-label,
+  ::v-deep label {
+    color: color-mix(in srgb, var(--gate-fg) 80%, transparent);
+  }
+}
+
+._gateScreen--actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: calc(var(--spacing) / 2);
+}
+
+._gateScreen--cta {
+  background: var(--gate-fg);
+  color: var(--gate-accent);
+  font-weight: 600;
+  padding: calc(var(--spacing) / 2) calc(var(--spacing) * 1.25);
+
+  &:hover,
+  &:focus-visible {
+    &:not([disabled]) {
+      background: white;
+      color: var(--gate-accent);
+    }
+  }
+
+  &[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes gateReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>

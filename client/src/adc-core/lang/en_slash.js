@@ -2,8 +2,8 @@ export default {
   // LoginModal
   hello_slashers: "Hello Slashers!",
   login_modal_description:
-    "Before using the app, pick your name in the list below so all your contributions are credited to you.",
-  pick_your_name_label: "Pick your name",
+    "Pick your name so every contribution is credited to you.",
+  pick_your_name_label: "Your name",
   identify_yourself_here: "Identify yourself here",
   other_authors_category: "Other",
   login: "Login",
@@ -39,4 +39,12 @@ export default {
   pick_media_of_type: "Pick a {type}",
   no_media_of_type_in_folder: "No {type} in this folder",
   share_url: "Share URL",
+
+  // MediaGridView
+  grid_group_by: "Group by",
+  grid_group_by_date: "Date",
+  grid_group_by_type: "Type",
+  grid_group_by_author: "Author",
+  grid_group_no_author: "No author",
+  grid_group_unknown_date: "Unknown date",
 };

@@ -14,11 +14,22 @@
       @click.stop="handleContentClick"
     >
       <MediaContent
+        ref="mediaContent"
         :file="file"
         :context="'full'"
         :resolution="resolution"
-        :plyr_options="{ controls: ['play', 'progress'] }"
+        :plyr_options="media_plyr_options"
       />
+
+      <button
+        v-if="has_inline_play && mode !== 'canvas'"
+        type="button"
+        class="_inlinePlayBtn"
+        :aria-label="is_inline_playing ? $t('pause') : $t('play')"
+        @click.stop="toggleInlinePlayback"
+      >
+        <b-icon :icon="is_inline_playing ? 'pause-fill' : 'play-fill'" />
+      </button>
 
       <div class="_canvasItem--caption" v-if="file.$type !== 'text'">
         <span v-if="caption" v-html="caption" />
@@ -59,6 +70,9 @@
 import MediaListDragHandle from "@/components/slash/MediaListDragHandle.vue";
 import { isMediaListFile } from "@/utils/mediaListUtils.js";
 
+const INLINE_PLAY_TYPES = ["video", "pdf"];
+const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf"];
+
 export default {
   props: {
     file: {
@@ -97,7 +111,25 @@ export default {
   components: {
     MediaListDragHandle,
   },
+  data() {
+    return {
+      is_inline_playing: false,
+      _av_el: null,
+    };
+  },
   computed: {
+    has_inline_play() {
+      return INLINE_PLAY_TYPES.includes(this.file.$type);
+    },
+    opens_on_content_click() {
+      return OPENS_ON_CONTENT_CLICK_TYPES.includes(this.file.$type);
+    },
+    is_video() {
+      return this.file.$type === "video";
+    },
+    is_audio() {
+      return this.file.$type === "audio";
+    },
     wrapperClasses() {
       return {
         "is--timeline": this.mode === "timeline",
@@ -109,7 +141,24 @@ export default {
       return this.mode === "grid" || this.mode === "timeline";
     },
     show_open_button() {
-      return this.enable_selection;
+      return this.enable_selection && !this.opens_on_content_click;
+    },
+    media_plyr_options() {
+      if (this.is_video) {
+        return {
+          controls: [],
+          clickToPlay: false,
+          hideControls: true,
+        };
+      }
+      if (this.is_audio) {
+        return {
+          controls: ["play", "progress"],
+          clickToPlay: false,
+          hideControls: false,
+        };
+      }
+      return { controls: ["play", "progress"] };
     },
     itemStyle() {
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
@@ -144,13 +193,86 @@ export default {
       return this.$sanitize(this.file.caption);
     },
     can_show_media_list_handle() {
-      return (
-        this.show_media_list_sidebar && isMediaListFile(this.file)
-      );
+      return this.show_media_list_sidebar && isMediaListFile(this.file);
     },
   },
+  mounted() {
+    this.bindInlinePlaybackEvents();
+  },
+  updated() {
+    this.bindInlinePlaybackEvents();
+    this.syncPdfPlayingState();
+  },
+  beforeDestroy() {
+    this.unbindInlinePlaybackEvents();
+  },
   methods: {
+    getAvElement() {
+      if (!this.is_video) return null;
+      return this.$el?.querySelector?.("video") || null;
+    },
+    bindInlinePlaybackEvents() {
+      if (!this.is_video) return;
+      const el = this.getAvElement();
+      if (!el || el === this._av_el) return;
+      this.unbindInlinePlaybackEvents();
+      this._av_el = el;
+      this.is_inline_playing = !el.paused;
+      el.addEventListener("play", this.onInlinePlay);
+      el.addEventListener("pause", this.onInlinePause);
+      el.addEventListener("ended", this.onInlinePause);
+    },
+    unbindInlinePlaybackEvents() {
+      if (!this._av_el) return;
+      this._av_el.removeEventListener("play", this.onInlinePlay);
+      this._av_el.removeEventListener("pause", this.onInlinePause);
+      this._av_el.removeEventListener("ended", this.onInlinePause);
+      this._av_el = null;
+    },
+    onInlinePlay() {
+      this.is_inline_playing = true;
+    },
+    onInlinePause() {
+      this.is_inline_playing = false;
+    },
+    syncPdfPlayingState() {
+      if (this.file.$type !== "pdf") return;
+      const media = this.$refs.mediaContent;
+      this.is_inline_playing = !!media?.start_iframe;
+    },
+    toggleInlinePlayback() {
+      if (this.file.$type === "pdf") {
+        const media = this.$refs.mediaContent;
+        if (!media) return;
+        if (media.start_iframe) {
+          media.unloadIframe();
+          this.is_inline_playing = false;
+        } else {
+          media.loadIframe();
+          this.is_inline_playing = true;
+        }
+        return;
+      }
+
+      const el = this.getAvElement();
+      if (!el) return;
+      if (el.paused) el.play();
+      else el.pause();
+    },
     handleContentClick(event) {
+      if (event.target.closest("._inlinePlayBtn")) return;
+      // Audio: play button keeps control; progress is non-interactive (opens)
+      if (event.target.closest(".plyr__control")) return;
+
+      if (this.opens_on_content_click) {
+        if (this.enable_selection && (event.metaKey || event.shiftKey)) {
+          this.$emit("select", this.file.$path, "append");
+          return;
+        }
+        this.openItemModal();
+        return;
+      }
+
       if (!this.enable_selection) {
         this.openItemModal();
         return;
@@ -203,6 +325,52 @@ export default {
     }
   }
 
+  &[data-filetype="video"],
+  &[data-filetype="pdf"] {
+    cursor: pointer;
+
+    ::v-deep .plyr__control--overlaid,
+    ::v-deep ._playButton {
+      display: none !important;
+    }
+
+    ::v-deep .plyr__controls {
+      display: none !important;
+    }
+  }
+
+  &[data-filetype="audio"] {
+    cursor: pointer;
+    overflow: hidden;
+
+    ::v-deep .plyr__control--overlaid {
+      display: none !important;
+    }
+
+    ::v-deep .plyr {
+      height: 100%;
+      min-height: 0;
+    }
+
+    ::v-deep .plyr__controls {
+      display: flex !important;
+      opacity: 1 !important;
+      transform: none !important;
+      pointer-events: auto;
+    }
+
+    /* Timeline visible but not seekable — click opens the media */
+    ::v-deep .plyr__progress,
+    ::v-deep .plyr__progress__buffer,
+    ::v-deep input[type="range"] {
+      pointer-events: none !important;
+    }
+
+    ::v-deep .plyr__control {
+      pointer-events: auto !important;
+    }
+  }
+
   .is--canvas & {
     &[data-filetype="text"] {
       background: transparent;
@@ -244,6 +412,36 @@ export default {
       height: 100%;
       overflow: hidden;
     }
+  }
+}
+
+._inlinePlayBtn {
+  position: absolute;
+  left: calc(var(--spacing) / 2);
+  bottom: calc(var(--spacing) / 2);
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: hsl(0, 0%, 22%);
+  color: white;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 0.15s cubic-bezier(0.19, 1, 0.22, 1);
+
+  &:hover,
+  &:focus-visible {
+    background: hsl(0, 0%, 12%);
+  }
+
+  .b-icon {
+    width: 1.1rem;
+    height: 1.1rem;
   }
 }
 

@@ -398,6 +398,11 @@ export default {
         }
       }, 500);
     },
+    unloadIframe() {
+      this.start_iframe = false;
+      this.is_loading_iframe = false;
+      this.failed_to_load_iframe = false;
+    },
   },
 };
 </script>

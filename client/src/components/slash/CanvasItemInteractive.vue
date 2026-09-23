@@ -27,6 +27,7 @@
     </template>
     <CanvasItem
       v-else
+      ref="canvasItem"
       :file="file"
       :resolution="optimalResolution"
       :mode="'canvas'"
@@ -73,18 +74,38 @@
     <div
       class="_canvasItem--open"
       v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
+      :class="{ 'is--inlinePlayHit': opens_on_content_click }"
       :style="'--scale-factor: ' + canvas_zoom"
     >
       <button
+        v-if="opens_on_content_click && mode === 'pan-zoom'"
+        type="button"
+        class="_inlineOpenHit panzoom-exclude"
+        :aria-label="$t('open')"
+        @click="handleOpen"
+      />
+      <button
+        v-else-if="!opens_on_content_click && !shift_or_cmd_pressed"
         type="button"
         class="u-button u-button_icon u-button_glass _openBtn"
         :class="{ 'panzoom-exclude': mode === 'pan-zoom' }"
-        v-if="!shift_or_cmd_pressed"
         @click="handleOpen"
       >
         <b-icon icon="box-arrow-up-right" />
       </button>
     </div>
+
+    <button
+      v-if="has_inline_play"
+      type="button"
+      class="_inlinePlayBtn"
+      :class="{ 'panzoom-exclude': mode === 'pan-zoom' }"
+      :style="'--scale-factor: ' + canvas_zoom"
+      :aria-label="is_inline_playing ? $t('pause') : $t('play')"
+      @click.stop="toggleInlinePlayback"
+    >
+      <b-icon :icon="is_inline_playing ? 'pause-fill' : 'play-fill'" />
+    </button>
   </div>
 </template>
 
@@ -103,6 +124,9 @@ import {
   getTextCanvasMinHeight,
   resolveTextCanvasHeightForWidthChange,
 } from "@/utils/textCanvasUtils.js";
+
+const INLINE_PLAY_TYPES = ["video", "pdf"];
+const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf"];
 
 export default {
   props: {
@@ -183,6 +207,8 @@ export default {
       item_max_width: 1000,
       item_min_height: 40,
       item_max_height: 1000,
+      is_inline_playing: false,
+      _av_el: null,
     };
   },
   mounted() {
@@ -191,6 +217,7 @@ export default {
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
     this.$eventHub.$on("canvas.dragMove", this.onOtherItemDragMove);
+    this.$nextTick(() => this.bindInlinePlaybackEvents());
 
     // Retro compat: backfill height for canvas_shape without it
     if (
@@ -211,11 +238,21 @@ export default {
     document.removeEventListener("keydown", this.handleKeyDown);
     document.removeEventListener("keyup", this.handleKeyUp);
     this.$eventHub.$off("canvas.dragMove", this.onOtherItemDragMove);
+    this.unbindInlinePlaybackEvents();
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
   },
   computed: {
+    has_inline_play() {
+      return INLINE_PLAY_TYPES.includes(this.file.$type);
+    },
+    opens_on_content_click() {
+      return OPENS_ON_CONTENT_CLICK_TYPES.includes(this.file.$type);
+    },
+    is_video() {
+      return this.file.$type === "video";
+    },
     isWidthOnly() {
       return this.file.$type === "text" || !this.file.$infos?.ratio;
     },
@@ -501,6 +538,62 @@ export default {
     handleOpen() {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
+    getAvElement() {
+      if (!this.is_video) return null;
+      return this.$el?.querySelector?.("video") || null;
+    },
+    bindInlinePlaybackEvents() {
+      if (this.is_video) {
+        const el = this.getAvElement();
+        if (!el || el === this._av_el) return;
+        this.unbindInlinePlaybackEvents();
+        this._av_el = el;
+        this.is_inline_playing = !el.paused;
+        el.addEventListener("play", this.onInlinePlay);
+        el.addEventListener("pause", this.onInlinePause);
+        el.addEventListener("ended", this.onInlinePause);
+        return;
+      }
+      if (this.file.$type === "pdf") {
+        this.syncPdfPlayingState();
+      }
+    },
+    unbindInlinePlaybackEvents() {
+      if (!this._av_el) return;
+      this._av_el.removeEventListener("play", this.onInlinePlay);
+      this._av_el.removeEventListener("pause", this.onInlinePause);
+      this._av_el.removeEventListener("ended", this.onInlinePause);
+      this._av_el = null;
+    },
+    onInlinePlay() {
+      this.is_inline_playing = true;
+    },
+    onInlinePause() {
+      this.is_inline_playing = false;
+    },
+    syncPdfPlayingState() {
+      const media = this.$refs.canvasItem?.$refs?.mediaContent;
+      this.is_inline_playing = !!media?.start_iframe;
+    },
+    toggleInlinePlayback() {
+      if (this.file.$type === "pdf") {
+        const media = this.$refs.canvasItem?.$refs?.mediaContent;
+        if (!media) return;
+        if (media.start_iframe) {
+          media.unloadIframe();
+          this.is_inline_playing = false;
+        } else {
+          media.loadIframe();
+          this.is_inline_playing = true;
+        }
+        return;
+      }
+
+      const el = this.getAvElement();
+      if (!el) return;
+      if (el.paused) el.play();
+      else el.pause();
+    },
     onOtherItemDragMove({ source_path, total_dx, total_dy }) {
       if (source_path === this.file.$path) return;
       if (!this.is_selected) return;
@@ -751,6 +844,9 @@ export default {
         this.has_dragged = false;
         this.currentX = null;
         this.currentY = null;
+        if (this.opens_on_content_click && this.mode === "select") {
+          this.handleOpen();
+        }
         return;
       }
 
@@ -885,6 +981,21 @@ export default {
 
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
+    &.is--inlinePlayHit {
+      opacity: 1;
+    }
+
+    ._inlineOpenHit {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
     ._openBtn {
       display: flex;
       align-items: center;
@@ -905,14 +1016,40 @@ export default {
       }
     }
   }
-  &[data-file-type="audio"] ._canvasItem--open button {
-    height: 3rem;
-    width: 6rem;
-    border-radius: 6rem;
-    font-size: 1.5rem;
+
+  ._inlinePlayBtn {
+    --play-btn-size: calc(2.25rem / var(--scale-factor, 1));
+
+    position: absolute;
+    left: calc(0.5rem / var(--scale-factor, 1));
+    bottom: calc(0.5rem / var(--scale-factor, 1));
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--play-btn-size);
+    height: var(--play-btn-size);
+    padding: 0;
+    border: none;
+    border-radius: calc(4px / var(--scale-factor, 1));
+    background: hsl(0, 0%, 22%);
+    color: white;
+    cursor: pointer;
+    pointer-events: auto;
+
+    &:hover,
+    &:focus-visible {
+      background: hsl(0, 0%, 12%);
+    }
+
+    .b-icon {
+      width: calc(1.1rem / var(--scale-factor, 1));
+      height: calc(1.1rem / var(--scale-factor, 1));
+    }
   }
+
   &:hover {
-    ._canvasItem--open {
+    ._canvasItem--open:not(.is--inlinePlayHit) {
       opacity: 1;
     }
   }
@@ -930,6 +1067,12 @@ export default {
   &[data-mode="select"] {
     ._canvasItem--selectedBorder {
       pointer-events: auto;
+      cursor: pointer;
+    }
+    &[data-file-type="video"] ._canvasItem--selectedBorder,
+    &[data-file-type="audio"] ._canvasItem--selectedBorder,
+    &[data-file-type="pdf"] ._canvasItem--selectedBorder {
+      cursor: pointer;
     }
     ._canvasItemContent,
     ._canvasItem--text {
@@ -937,6 +1080,32 @@ export default {
     }
     ._canvasItemContent ::v-deep ._canvasItem--mediaListHandle {
       pointer-events: auto;
+    }
+    ._inlinePlayBtn {
+      pointer-events: auto;
+    }
+    /* Audio player above selection border; only play is interactive */
+    &[data-file-type="audio"] ._canvasItemContent {
+      position: relative;
+      z-index: 15;
+    }
+    &[data-file-type="audio"] ._canvasItem--selectedBorder {
+      z-index: 10;
+    }
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__controls {
+      pointer-events: auto;
+    }
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__progress,
+    &[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      .plyr__progress__buffer,
+    &[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      input[data-plyr="seek"],
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep input[type="range"] {
+      pointer-events: none !important;
     }
     &:not(.is--selected) ._canvasItem--selectedBorder.is--shape {
       pointer-events: none;
@@ -964,8 +1133,35 @@ export default {
       pointer-events: auto;
       cursor: inherit;
     }
-    ._canvasItem--open ._openBtn {
+    ._canvasItem--open ._openBtn,
+    ._canvasItem--open ._inlineOpenHit {
       pointer-events: auto;
+      cursor: pointer;
+    }
+    ._inlinePlayBtn {
+      pointer-events: auto !important;
+    }
+    &[data-file-type="audio"] ._canvasItemContent {
+      position: relative;
+      z-index: 15;
+    }
+    &[data-file-type="audio"] ._canvasItem--open {
+      z-index: 12;
+    }
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__controls {
+      pointer-events: auto !important;
+    }
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__progress,
+    &[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      .plyr__progress__buffer,
+    &[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      input[data-plyr="seek"],
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep input[type="range"] {
+      pointer-events: none !important;
     }
     ._canvasItemContent ::v-deep ._canvasItem--mediaListHandle {
       pointer-events: auto !important;

@@ -38,17 +38,6 @@
         >
           <b-icon :icon="iconForMode(mode)" />
         </button>
-        <div class="_viewModeBar--divider"></div>
-        <button
-          type="button"
-          class="u-button u-button_icon _viewModeBar--mobileOption"
-          :class="{ 'is--active': filter_open }"
-          aria-label="Filter"
-          :aria-pressed="filter_open"
-          @click="toggleFilter"
-        >
-          <b-icon icon="filter" />
-        </button>
       </div>
     </template>
 
@@ -64,19 +53,6 @@
           @click="$emit('input', mode)"
         >
           <b-icon :icon="iconForMode(mode)" />
-        </button>
-
-        <div class="_viewModeBar--divider"></div>
-
-        <button
-          type="button"
-          class="u-button u-button_icon _viewModeBar--btn"
-          :class="{ 'is--active': filter_open }"
-          aria-label="Filter"
-          :aria-pressed="filter_open"
-          @click="$emit('toggle-filter')"
-        >
-          <b-icon icon="filter" />
         </button>
       </div>
 
@@ -112,10 +88,6 @@ export default {
       type: String,
       default: "canvas",
       validator: (v) => ["canvas", "grid", "map", "timeline"].includes(v),
-    },
-    filter_open: {
-      type: Boolean,
-      default: false,
     },
     zoom_range: Array,
     canvas_zoom: {
@@ -168,10 +140,6 @@ export default {
       if (mode !== this.value) {
         this.$emit("input", mode);
       }
-      this.closeMobileMenu();
-    },
-    toggleFilter() {
-      this.$emit("toggle-filter");
       this.closeMobileMenu();
     },
     handleDocumentPointerDown(event) {
@@ -257,28 +225,6 @@ export default {
 
   input {
     width: 100%;
-  }
-}
-
-._viewModeBar--divider {
-  width: 100%;
-  height: 1px;
-  background: color-mix(
-    in srgb,
-    var(--c-slash-burgundy, var(--c-rouge)) 25%,
-    transparent
-  );
-  margin: 2px 0;
-
-  .is--mobileView & {
-    width: 100%;
-    height: 1px;
-    margin: calc(var(--spacing) / 6) 0;
-  }
-}
-
-._viewModeBar--btn {
-  .b-icon {
   }
 }
 </style>

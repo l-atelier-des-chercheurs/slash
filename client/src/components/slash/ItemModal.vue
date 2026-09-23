@@ -194,16 +194,9 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(241, 241, 241, 0.2);
-  backdrop-filter: blur(10px);
+  background: var(--c-slash-blue, var(--c-bleuvert));
   z-index: -1;
   cursor: pointer;
-
-  transition: backdrop-filter 0.3s ease;
-
-  &:hover {
-    backdrop-filter: blur(2px);
-  }
 }
 ._itemModal--contentWrapper {
   display: flex;

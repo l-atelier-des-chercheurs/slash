@@ -1,12 +1,5 @@
 <template>
   <div v-if="folder" class="_folderView">
-    <div v-if="filter_bar_open" class="_filterBar">
-      <FilterBar
-        :author_filter.sync="author_filter"
-        :media_type_filter.sync="media_type_filter"
-      />
-    </div>
-
     <div class="_mainContent">
       <div class="_viewArea">
         <TopLeftMenu
@@ -20,11 +13,9 @@
         />
         <ViewModeBar
           :value="view_mode"
-          :filter_open="filter_bar_open"
           :canvas_zoom="canvas_zoom"
           :zoom_range="zoom_range"
           @input="switchViewMode"
-          @toggle-filter="filter_bar_open = !filter_bar_open"
           @update:canvas_zoom="canvas_zoom = $event"
         />
         <LargeCanvas
@@ -122,7 +113,6 @@
 </template>
 <script>
 import TopLeftMenu from "@/components/slash/TopLeftMenu.vue";
-import FilterBar from "@/components/slash/FilterBar.vue";
 import GeoMapView from "@/components/slash/GeoMapView.vue";
 import LargeCanvas from "@/components/slash/LargeCanvas.vue";
 import MediaGridView from "@/components/slash/MediaGridView.vue";
@@ -142,7 +132,6 @@ export default {
   },
   components: {
     TopLeftMenu,
-    FilterBar,
     GeoMapView,
     LargeCanvas,
     MediaGridView,
@@ -283,24 +272,7 @@ export default {
       });
     },
     filtered_files() {
-      if (!this.folder || !Array.isArray(this.folder.$files)) {
-        return [];
-      }
-      const media_type_filter = this.media_type_filter;
-      const author_filter = this.author_filter;
-
-      return this.sorted_files.filter((file) => {
-        const has_author_filter = !!author_filter;
-        const file_authors = Array.isArray(file.$authors) ? file.$authors : [];
-        const match_author =
-          !has_author_filter || file_authors.includes(author_filter);
-
-        if (!media_type_filter) return match_author;
-        if (media_type_filter === "3d") {
-          return match_author && (file.$type === "stl" || file.$type === "obj");
-        }
-        return match_author && file.$type === media_type_filter;
-      });
+      return this.sorted_files;
     },
     filtered_files_without_canvas_items() {
       return this.filtered_files.filter((f) => !f.$type.startsWith("canvas_"));
@@ -731,15 +703,6 @@ export default {
   min-height: 100%;
 
   transition: all 1s ease-in-out;
-}
-
-._filterBar {
-  flex: 0 0 auto;
-  width: 100%;
-  background: var(--folder-bg);
-  color: var(--folder-fg);
-  border-bottom: 1px solid color-mix(in srgb, var(--folder-fg) 35%, transparent);
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 ._mainContent {

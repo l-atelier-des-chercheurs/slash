@@ -135,6 +135,15 @@ export default {
       });
     },
     async toggleFoldersSidebar(force_open) {
+      // From a folder: folder button goes home (not overlay sidebar)
+      if (this.current_folder_path && typeof force_open !== "boolean") {
+        this.$router.push({
+          path: "/",
+          query: { ...this.$route.query },
+        });
+        return;
+      }
+
       const should_open =
         typeof force_open === "boolean"
           ? force_open
