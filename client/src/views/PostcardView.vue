@@ -18,6 +18,36 @@
       </div>
     </header>
 
+    <header v-else class="_postcard--shareHeader">
+      <a
+        class="_postcard--brand"
+        href="/"
+        aria-label="Slash"
+        @click.prevent="goHome"
+      >
+        <SlashLogo class="_postcard--logo" />
+      </a>
+      <div class="_postcard--shareActions">
+        <button
+          type="button"
+          class="_postcard--editBtn"
+          @click="goHome"
+        >
+          <sl-icon name="arrow-left"></sl-icon>
+          {{ $t("back") }}
+        </button>
+        <button
+          v-if="can_edit"
+          type="button"
+          class="_postcard--editBtn"
+          @click="goToEditor"
+        >
+          <sl-icon name="pencil"></sl-icon>
+          {{ $t("edit") }}
+        </button>
+      </div>
+    </header>
+
     <div class="_postcard--shell" :class="{ 'is--share': is_share_view }">
       <div v-if="is_loading" class="_postcard--status">Loading…</div>
       <sl-alert v-else-if="load_error" variant="danger" open>
@@ -145,14 +175,11 @@
       <div v-else class="_postcard--result">
         <p v-if="!is_share_view" class="_postcard--step">Step 2 · Your card</p>
 
-        <div
-          v-if="!is_share_view || can_edit"
-          class="_postcard--shareBar"
-        >
+        <div v-if="!is_share_view" class="_postcard--shareBar">
           <button
             type="button"
             class="_postcard--editBtn"
-            @click="is_share_view ? goToEditor() : goBackToForm()"
+            @click="goBackToForm"
           >
             <b-icon icon="pencil" />
             {{ $t("edit") }}
@@ -248,7 +275,42 @@
           {{ export_error }}
         </sl-alert>
       </div>
+
+      <div
+        v-if="
+          !is_share_view &&
+          !is_loading &&
+          !load_error &&
+          can_edit &&
+          publication &&
+          publication.$path
+        "
+        class="_postcard--dangerZone"
+      >
+        <button
+          type="button"
+          class="_postcard--deleteBtn"
+          @click="show_remove_menu = true"
+        >
+          <sl-icon name="trash"></sl-icon>
+          {{ $t("remove") }}
+        </button>
+      </div>
     </div>
+
+    <RemoveMenu2
+      v-if="show_remove_menu && publication?.$path"
+      :path="publication.$path"
+      :modal_title="
+        $t('remove_publication', {
+          name: publication_title || $t('template_postcard'),
+        })
+      "
+      :modal_expl="$t('remove_postcard_expl')"
+      :success_notification="$t('publication_was_removed')"
+      @close="show_remove_menu = false"
+      @removedSuccessfully="onPostcardRemoved"
+    />
 
     <audio
       v-if="audio_url"
@@ -365,6 +427,7 @@ export default {
       export_error: "",
       text_line_count: TEXT_LINE_COUNT,
       text_max_length: TEXT_MAX_LENGTH,
+      show_remove_menu: false,
     };
   },
   computed: {
@@ -789,6 +852,13 @@ export default {
         name: "Postcard",
         params: { publication_slug: this.publication_slug },
       });
+    },
+    goHome() {
+      this.$router.push({ name: "Accueil" });
+    },
+    onPostcardRemoved() {
+      this.show_remove_menu = false;
+      this.goHome();
     },
     getCardAudioEl() {
       return this.$refs.card_audio || null;
@@ -1239,14 +1309,37 @@ export default {
 
 ._postcard.is--share {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
   padding: clamp(1rem, 4vw, 2.5rem);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+._postcard--shareHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(100%, 52rem);
+  margin: 0 auto 1rem;
+  flex-shrink: 0;
+}
+
+._postcard--shareActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 ._postcard--shell.is--share {
   width: min(100%, 52rem);
   max-width: min(100%, 52rem);
+  margin: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 ._postcard--shareBar {
@@ -1271,6 +1364,10 @@ export default {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transition: transform 0.15s ease, border-color 0.15s ease,
     background-color 0.15s ease;
+
+  sl-icon {
+    font-size: 1rem;
+  }
 }
 
 ._postcard--editBtn:hover,
@@ -1415,6 +1512,43 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+._postcard--dangerZone {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--c-slash-burgundy) 18%, white);
+  display: flex;
+  justify-content: center;
+}
+
+._postcard--deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--c-slash-burgundy) 40%, white);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-slash-burgundy);
+  font-family: var(--pc-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  sl-icon {
+    font-size: 1rem;
+  }
+}
+
+._postcard--deleteBtn:hover,
+._postcard--deleteBtn:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: var(--c-slash-burgundy);
+  background: color-mix(in srgb, var(--c-slash-burgundy) 8%, white);
 }
 
 ._postcard--card {

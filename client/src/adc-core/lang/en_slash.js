@@ -39,6 +39,8 @@ export default {
   pick_media_of_type: "Pick a {type}",
   no_media_of_type_in_folder: "No {type} in this folder",
   share_url: "Share URL",
+  remove_postcard_expl:
+    "This permanently deletes the postcard and its files. This cannot be undone.",
 
   // MediaGridView
   grid_group_by: "Group by",
