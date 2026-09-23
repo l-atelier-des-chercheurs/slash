@@ -51,7 +51,10 @@ export default {
   postcard_progress_cover: "Building cover…",
   postcard_progress_done: "Done",
   preview: "Preview",
-  print_png: "Print PNG",
+  print_1: "Print 1",
+  print_4: "Print 4",
+  print_1_hint: "Download one postcard (A6)",
+  print_4_hint: "Download four postcards on one A4 sheet",
 
   // MediaGridView
   grid_group_by: "Group by",

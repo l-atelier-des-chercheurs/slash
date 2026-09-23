@@ -48,13 +48,28 @@
           type="button"
           class="_postcard--editBtn"
           :disabled="is_exporting || !can_export"
-          @click="exportPng"
+          :title="$t('print_1_hint')"
+          @click="exportPrint(1)"
         >
           <sl-icon
-            :name="is_exporting ? 'arrow-repeat' : 'printer'"
-            :class="{ '_spinner': is_exporting }"
+            :name="exporting_print === 1 ? 'arrow-repeat' : 'printer'"
+            :class="{ _spinner: exporting_print === 1 }"
           ></sl-icon>
-          {{ $t("print_png") }}
+          {{ $t("print_1") }}
+        </button>
+        <button
+          v-if="can_edit"
+          type="button"
+          class="_postcard--editBtn"
+          :disabled="is_exporting || !can_export"
+          :title="$t('print_4_hint')"
+          @click="exportPrint(4)"
+        >
+          <sl-icon
+            :name="exporting_print === 4 ? 'arrow-repeat' : 'printer'"
+            :class="{ _spinner: exporting_print === 4 }"
+          ></sl-icon>
+          {{ $t("print_4") }}
         </button>
         <button
           v-if="can_edit"
@@ -428,20 +443,21 @@
           <sl-button
             class="_postcard--primary"
             variant="primary"
-            :disabled="can_export ? null : true"
-            :loading="is_exporting ? true : null"
-            @click="exportPng"
+            :disabled="can_export && !is_exporting ? null : true"
+            :loading="exporting_print === 1 ? true : null"
+            @click="exportPrint(1)"
           >
-            <sl-icon slot="prefix" name="download"></sl-icon>
-            Export PNG
+            <sl-icon slot="prefix" name="printer"></sl-icon>
+            {{ $t("print_1") }}
           </sl-button>
           <sl-button
             class="_postcard--secondary"
-            :disabled="share_url ? null : true"
-            @click="openShareUrl"
+            :disabled="can_export && !is_exporting ? null : true"
+            :loading="exporting_print === 4 ? true : null"
+            @click="exportPrint(4)"
           >
-            <sl-icon slot="prefix" name="box-arrow-up-right"></sl-icon>
-            {{ $t("share_url") }}
+            <sl-icon slot="prefix" name="printer"></sl-icon>
+            {{ $t("print_4") }}
           </sl-button>
         </div>
 
@@ -544,9 +560,14 @@ const PLAY_ICON_DATA_URL =
     </svg>
   `.trim());
 
-/** Export resolution: ~12 px per mm → 148×105 mm */
-const EXPORT_WIDTH = 1776;
-const EXPORT_HEIGHT = 1260;
+/** Export resolution: ~12 px per mm */
+const PX_PER_MM = 12;
+/** A6 landscape postcard: 148×105 mm */
+const EXPORT_WIDTH = Math.round(148 * PX_PER_MM);
+const EXPORT_HEIGHT = Math.round(105 * PX_PER_MM);
+/** A4 landscape sheet for 2×2 cards: 297×210 mm */
+const PRINT_A4_WIDTH = Math.round(297 * PX_PER_MM);
+const PRINT_A4_HEIGHT = Math.round(210 * PX_PER_MM);
 const COVER_WIDTH = 2000;
 const COVER_HEIGHT = 1420;
 
@@ -600,6 +621,7 @@ export default {
       qr_simple_url: "",
       qr_play_url: "",
       is_exporting: false,
+      exporting_print: 0,
       is_generating: false,
       is_audio_playing: false,
       form_error: "",
@@ -1586,24 +1608,34 @@ export default {
         new_cover_data: file,
       });
     },
-    async exportPng() {
+    async exportPrint(copies) {
+      const print_copies = copies === 4 ? 4 : 1;
       if (!this.can_export || this.is_exporting) return;
 
       this.is_exporting = true;
+      this.exporting_print = print_copies;
       this.export_error = "";
 
       try {
         if (this.has_audio && !this.active_qr_url) {
           await this.buildQrVariants();
         }
-        const canvas = await this.renderPostcardCanvas({
+        const card_canvas = await this.renderPostcardCanvas({
           width: EXPORT_WIDTH,
           height: EXPORT_HEIGHT,
         });
         const slug = this.publication_slug || "carte";
-        const data_url = canvas.toDataURL("image/png");
+        let download_canvas = card_canvas;
+        let filename = `carte-postale-${slug}-a6.png`;
+
+        if (print_copies === 4) {
+          download_canvas = this.composePrintSheet4(card_canvas);
+          filename = `carte-postale-${slug}-a4x4.png`;
+        }
+
+        const data_url = download_canvas.toDataURL("image/png");
         const link = document.createElement("a");
-        link.download = `carte-postale-${slug}.png`;
+        link.download = filename;
         link.href = data_url;
         link.click();
       } catch (err) {
@@ -1611,7 +1643,44 @@ export default {
         this.export_error = "Export failed. Try again with another image.";
       } finally {
         this.is_exporting = false;
+        this.exporting_print = 0;
       }
+    },
+    composePrintSheet4(card_canvas) {
+      const sheet = document.createElement("canvas");
+      sheet.width = PRINT_A4_WIDTH;
+      sheet.height = PRINT_A4_HEIGHT;
+      const ctx = sheet.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, sheet.width, sheet.height);
+
+      const offset_x = Math.floor((PRINT_A4_WIDTH - EXPORT_WIDTH * 2) / 2);
+      const offset_y = Math.floor((PRINT_A4_HEIGHT - EXPORT_HEIGHT * 2) / 2);
+      const positions = [
+        [offset_x, offset_y],
+        [offset_x + EXPORT_WIDTH, offset_y],
+        [offset_x, offset_y + EXPORT_HEIGHT],
+        [offset_x + EXPORT_WIDTH, offset_y + EXPORT_HEIGHT],
+      ];
+      positions.forEach(([x, y]) => {
+        ctx.drawImage(card_canvas, x, y);
+      });
+
+      // Thin blue cut guides between the 4 cards
+      const mid_x = offset_x + EXPORT_WIDTH;
+      const mid_y = offset_y + EXPORT_HEIGHT;
+      const right = offset_x + EXPORT_WIDTH * 2;
+      const bottom = offset_y + EXPORT_HEIGHT * 2;
+      ctx.strokeStyle = "#4980c8";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(mid_x + 0.5, offset_y);
+      ctx.lineTo(mid_x + 0.5, bottom);
+      ctx.moveTo(offset_x, mid_y + 0.5);
+      ctx.lineTo(right, mid_y + 0.5);
+      ctx.stroke();
+
+      return sheet;
     },
   },
 };
