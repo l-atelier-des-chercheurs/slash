@@ -50,6 +50,8 @@ export default {
   postcard_progress_saving: "Saving…",
   postcard_progress_cover: "Building cover…",
   postcard_progress_done: "Done",
+  preview: "Preview",
+  print_png: "Print PNG",
 
   // MediaGridView
   grid_group_by: "Group by",
