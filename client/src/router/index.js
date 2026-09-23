@@ -41,6 +41,11 @@ const routes = [
     component: () => import("@/views/ResetPasswordView.vue"),
   },
   {
+    path: "/postcard/new",
+    name: "PostcardNew",
+    component: () => import("@/views/PostcardView.vue"),
+  },
+  {
     path: "/postcard/:publication_slug/view",
     name: "PostcardShare",
     meta: {
@@ -55,7 +60,7 @@ const routes = [
   },
   {
     path: "/postcard",
-    redirect: { name: "Accueil" },
+    redirect: { name: "PostcardNew" },
   },
   {
     path: "/publications/:publication_slug",

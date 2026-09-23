@@ -148,37 +148,58 @@
       @openNew="onOpenNewFolder"
     />
 
-    <BaseModal2
-      v-if="create_template"
-      :title="create_modal_title"
-      @close="closeCreateModal"
-    >
-      <form class="_foldersPanel--createForm" @submit.prevent="confirmCreate">
-        <DLabel :str="$t('title')" />
-        <TextInput
-          :content.sync="create_title"
-          :maxlength="60"
-          :required="true"
-          :autofocus="true"
-          ref="createTitleInput"
-          @toggleValidity="($event) => (create_allow_save = $event)"
-          @onEnter="confirmCreate"
-        />
-        <div v-if="create_error" class="u-errorMsg" v-text="create_error" />
-        <div class="_foldersPanel--createActions">
-          <button type="button" class="u-button" @click="closeCreateModal">
-            {{ $t("cancel") }}
-          </button>
-          <button
-            type="submit"
-            class="u-button u-button_bleuvert"
-            :disabled="!create_allow_save || is_creating"
-          >
-            {{ is_creating ? $t("loading") : $t("create") }}
-          </button>
+    <portal v-if="create_template === 'a5_booklet'" to="destination">
+      <div
+        class="_gateScreen"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-publication-title"
+      >
+        <button
+          type="button"
+          class="u-button u-button_icon _gateScreen--close"
+          :title="$t('close')"
+          @click="closeCreateModal"
+        >
+          <b-icon icon="x-lg" :label="$t('close')" />
+        </button>
+
+        <div class="_gateScreen--inner">
+          <header class="_gateScreen--header">
+            <SlashLogo class="_gateScreen--logo" />
+            <h1 id="create-publication-title" class="_gateScreen--title">
+              {{ create_modal_title }}
+            </h1>
+            <p class="_gateScreen--subtitle">
+              {{ create_modal_subtitle }}
+            </p>
+          </header>
+
+          <form class="_gateScreen--form" @submit.prevent="confirmCreate">
+            <TextInput
+              :label_str="'title'"
+              :content.sync="create_title"
+              :maxlength="60"
+              :required="true"
+              :autofocus="true"
+              ref="createTitleInput"
+              @toggleValidity="($event) => (create_allow_save = $event)"
+              @onEnter="confirmCreate"
+            />
+            <p v-if="create_error" class="u-errorMsg" v-text="create_error" />
+            <div class="_gateScreen--actions">
+              <button
+                type="submit"
+                class="u-button _gateScreen--cta"
+                :disabled="!create_allow_save || is_creating"
+              >
+                {{ is_creating ? $t("loading") : $t("create") }}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
-    </BaseModal2>
+      </div>
+    </portal>
   </div>
 </template>
 
@@ -246,6 +267,12 @@ export default {
     create_modal_title() {
       const config = getTemplateConfig(this.create_template);
       return config ? this.$t(config.label_key) : this.$t("create");
+    },
+    create_modal_subtitle() {
+      if (this.create_template === "a5_booklet") {
+        return this.$t("create_booklet_lead");
+      }
+      return this.$t("create_publication_lead");
     },
   },
   watch: {
@@ -328,9 +355,12 @@ export default {
         this.$eventHub.$emit("login.openModal");
         return;
       }
+      if (template_key === "postcard") {
+        this.$router.push({ name: "PostcardNew" });
+        return;
+      }
       this.create_template = template_key;
-      this.create_title =
-        template_key === "postcard" ? "Postcard" : "Booklet";
+      this.create_title = "Booklet";
       this.create_allow_save = true;
       this.create_error = "";
       this.$nextTick(() => {
@@ -363,20 +393,12 @@ export default {
           path: getRootPublicationsPath(),
           additional_meta,
         });
-        const template = additional_meta.template;
         await this.loadPublications();
         this.closeCreateModal();
-        if (template === "postcard") {
-          this.$router.push({
-            name: "Postcard",
-            params: { publication_slug: slug },
-          });
-        } else {
-          this.$router.push({
-            name: "RootPublication",
-            params: { publication_slug: slug },
-          });
-        }
+        this.$router.push({
+          name: "RootPublication",
+          params: { publication_slug: slug },
+        });
       } catch (err) {
         if (err?.code === "unique_field_taken") {
           this.create_error = this.$t("title_taken");
@@ -688,16 +710,140 @@ export default {
   font-weight: 600;
 }
 
-._foldersPanel--createForm {
+._gateScreen {
+  --gate-bg: var(--c-slash-blue, var(--c-bleuvert));
+  --gate-fg: var(--c-slash-mint, #e5ffdb);
+  --gate-accent: var(--c-slash-burgundy, var(--c-rouge));
+
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
   display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) / 2);
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: calc(var(--spacing) * 2);
+  background: var(--gate-bg);
+  color: var(--gate-fg);
+  animation: gateReveal 0.45s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-._foldersPanel--createActions {
+._gateScreen--close {
+  position: absolute;
+  top: calc(var(--spacing) * 1.25);
+  right: calc(var(--spacing) * 1.25);
+  color: var(--gate-fg);
+  z-index: 1;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--gate-fg) 15%, transparent);
+  }
+}
+
+._gateScreen--inner {
+  width: 100%;
+  max-width: 28rem;
   display: flex;
-  justify-content: flex-end;
-  gap: calc(var(--spacing) / 2);
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+}
+
+._gateScreen--header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 1.25);
+}
+
+._gateScreen--logo {
+  width: clamp(7.5rem, 18vw, 9.5rem);
+  height: auto;
+  color: var(--gate-fg);
+}
+
+._gateScreen--title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--gate-fg);
+}
+
+._gateScreen--subtitle {
+  margin: 0;
+  font-size: var(--sl-font-size-normal);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--gate-fg) 85%, transparent);
+}
+
+._gateScreen--form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing));
+
+  ::v-deep .u-label,
+  ::v-deep ._dLabel .u-label,
+  ::v-deep label {
+    color: color-mix(in srgb, var(--gate-fg) 80%, transparent);
+  }
+
+  ::v-deep input {
+    background: color-mix(in srgb, var(--gate-fg) 12%, transparent);
+    color: var(--gate-fg);
+    border-color: transparent;
+
+    &:focus {
+      background: color-mix(in srgb, var(--gate-fg) 18%, transparent);
+      border-color: var(--gate-fg);
+    }
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--gate-fg) 55%, transparent);
+    }
+  }
+
+  ::v-deep .fieldCaption,
+  ::v-deep ._notices {
+    color: color-mix(in srgb, var(--gate-fg) 70%, transparent);
+  }
+}
+
+._gateScreen--actions {
+  display: flex;
+  justify-content: flex-start;
   margin-top: calc(var(--spacing) / 2);
+}
+
+._gateScreen--cta {
+  background: var(--gate-fg);
+  color: var(--gate-accent);
+  font-weight: 600;
+  padding: calc(var(--spacing) / 2) calc(var(--spacing) * 1.25);
+
+  &:hover,
+  &:focus-visible {
+    &:not([disabled]) {
+      background: white;
+      color: var(--gate-accent);
+    }
+  }
+
+  &[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes gateReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>

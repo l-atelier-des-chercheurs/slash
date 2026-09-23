@@ -431,6 +431,14 @@ export default {
       this.$alertify?.delay(4000)?.error(message);
     },
     selectTemplate(template_key) {
+      if (template_key === "postcard") {
+        if (!this.connected_as) {
+          this.$eventHub.$emit("login.openModal");
+          return;
+        }
+        this.$router.push({ name: "PostcardNew" });
+        return;
+      }
       this.selected_template = template_key;
       this.new_publication_title = "";
       this.allow_save = false;

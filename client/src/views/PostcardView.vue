@@ -77,7 +77,11 @@
             size="small"
             type="button"
             :loading="is_uploading_image ? true : null"
-            :disabled="!publication || is_uploading_image ? true : null"
+            :disabled="
+              is_generating || (!is_draft_mode && !publication) || is_uploading_image
+                ? true
+                : null
+            "
             :title="image_file_name || 'Choose an image'"
             @click="openImagePicker"
           >
@@ -89,7 +93,9 @@
           <button
             type="button"
             class="_postcard--fromFolder"
-            :disabled="!publication || !accessible_folders.length"
+            :disabled="
+              is_generating || !accessible_folders.length || is_uploading_image
+            "
             @click="openFolderMediaModal('image')"
           >
             {{ $t("from_folder") }}
@@ -110,7 +116,11 @@
             size="small"
             type="button"
             :loading="is_uploading_audio ? true : null"
-            :disabled="!publication || is_uploading_audio ? true : null"
+            :disabled="
+              is_generating || (!is_draft_mode && !publication) || is_uploading_audio
+                ? true
+                : null
+            "
             :title="audio_file_name || 'Choose an audio file'"
             @click="openAudioPicker"
           >
@@ -129,7 +139,9 @@
           <button
             type="button"
             class="_postcard--fromFolder"
-            :disabled="!publication || !accessible_folders.length"
+            :disabled="
+              is_generating || !accessible_folders.length || is_uploading_audio
+            "
             @click="openFolderMediaModal('audio')"
           >
             {{ $t("from_folder") }}
@@ -149,6 +161,7 @@
             :maxlength="text_max_length"
             :rows="text_line_count"
             resize="vertical"
+            :disabled="is_generating ? true : null"
             placeholder="From the studio window, evening light. Scan the stamp to hear today’s sketch. — L."
             @sl-input="onSlTextInput"
           ></sl-textarea>
@@ -158,12 +171,34 @@
           class="_postcard--primary"
           variant="primary"
           type="submit"
-          :loading="is_saving || is_generating ? true : null"
+          :loading="is_saving && !is_generating ? true : null"
           :disabled="can_generate && !is_saving && !is_generating ? null : true"
         >
-          <sl-icon slot="prefix" name="postcard"></sl-icon>
-          Generate card
+          <sl-icon
+            v-if="!is_generating"
+            slot="prefix"
+            name="postcard"
+          ></sl-icon>
+          {{
+            is_generating
+              ? `${generation_progress}% — ${generation_status}`
+              : "Generate card"
+          }}
         </sl-button>
+
+        <div
+          v-if="is_generating"
+          class="_postcard--progress"
+          role="progressbar"
+          :aria-valuenow="generation_progress"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div
+            class="_postcard--progressBar"
+            :style="{ width: generation_progress + '%' }"
+          />
+        </div>
 
         <sl-alert v-if="form_error" variant="warning" open>
           <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
@@ -267,17 +302,21 @@
       </div>
 
       <div
-        v-if="
-          !is_share_view &&
-          !is_loading &&
-          !load_error &&
-          can_edit &&
-          publication &&
-          publication.$path
-        "
+        v-if="!is_share_view && !is_loading && !load_error && show_cancel_or_remove"
         class="_postcard--dangerZone"
       >
         <button
+          v-if="is_draft_mode"
+          type="button"
+          class="_postcard--deleteBtn"
+          :disabled="is_generating"
+          @click="goHome"
+        >
+          <sl-icon name="x-lg"></sl-icon>
+          {{ $t("cancel") }}
+        </button>
+        <button
+          v-else-if="can_edit && publication && publication.$path"
           type="button"
           class="_postcard--deleteBtn"
           @click="show_remove_menu = true"
@@ -328,9 +367,12 @@ import QRCodeStyling from "qr-code-styling";
 import SlashLogo from "@/components/nav/SlashLogo.vue";
 import PickMediaFromFolder from "@/components/slash/PickMediaFromFolder.vue";
 import {
+  getRootPublicationsPath,
   getRootPublicationPath,
   filePathToSourceMedia,
   sourceMediasToPaths,
+  titleFromPostcardText,
+  buildPublicationCreateMeta,
 } from "@/utils/folderPublications.js";
 
 const SHOELACE_VERSION = "2.20.1";
@@ -418,13 +460,24 @@ export default {
       text_line_count: TEXT_LINE_COUNT,
       text_max_length: TEXT_MAX_LENGTH,
       show_remove_menu: false,
+      pending_image_file: null,
+      pending_audio_file: null,
+      generation_progress: 0,
+      generation_status: "",
     };
   },
   computed: {
     is_share_view() {
       return this.$route.name === "PostcardShare";
     },
+    is_draft_mode() {
+      return this.$route.name === "PostcardNew";
+    },
+    show_cancel_or_remove() {
+      return this.is_draft_mode || this.can_edit;
+    },
     can_edit() {
+      if (this.is_draft_mode) return Boolean(this.connected_as);
       if (!this.publication) return false;
       if (
         typeof this.canLoggedinEditFolder === "function" &&
@@ -435,13 +488,21 @@ export default {
       return this.tokenPathCanEdit(this.publication);
     },
     publication_slug() {
+      if (this.is_draft_mode) {
+        return this.publication?.$path?.split("/").pop() || "";
+      }
       return this.$route.params.publication_slug || "";
     },
     publication_path() {
       return getRootPublicationPath(this.publication_slug);
     },
     publication_title() {
-      return this.publication?.title || "";
+      if (!this.is_share_view) {
+        return titleFromPostcardText(this.postcard_text, {
+          fallback: this.publication?.title || this.$t("template_postcard"),
+        });
+      }
+      return this.publication?.title || this.$t("template_postcard");
     },
     share_url() {
       if (!this.publication_slug) return "";
@@ -467,7 +528,7 @@ export default {
       return this.has_audio ? this.qr_play_url : "";
     },
     can_generate() {
-      return Boolean(this.image_url) && Boolean(this.publication?.$path);
+      return Boolean(this.image_url);
     },
     can_export() {
       return Boolean(this.image_url);
@@ -502,7 +563,11 @@ export default {
     if (this.is_share_view) {
       this.prepareShareSession();
     }
-    await this.loadPublication();
+    if (this.is_draft_mode) {
+      await this.bootstrapDraft();
+    } else {
+      await this.loadPublication();
+    }
     if (this.is_share_view) {
       this.step = "card";
     }
@@ -590,6 +655,24 @@ export default {
       if (/\.(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(name)) return "image";
       if (/\.(mp3|wav|ogg|m4a|aac|flac|webm)$/.test(name)) return "audio";
       return "";
+    },
+    async bootstrapDraft() {
+      this.is_loading = true;
+      this.load_error = "";
+      this.publication = null;
+      try {
+        if (!this.connected_as) {
+          this.$eventHub.$emit("login.openModal");
+        }
+        this.folders = await this.$api
+          .getFolders({ path: "folders" })
+          .catch(() => []);
+      } catch (err) {
+        console.error(err);
+        this.load_error = err?.message || "Could not start postcard draft.";
+      } finally {
+        this.is_loading = false;
+      }
     },
     async loadPublication() {
       this.is_loading = true;
@@ -710,18 +793,20 @@ export default {
       const label = this.mediaLabel(file);
       if (kind === "image") {
         this.revokeObjectUrl(this.image_url);
+        this.pending_image_file = null;
         this.image_media_path = file.$path;
         this.image_file_name = label;
         this.image_url = preview;
       } else if (kind === "audio") {
         this.revokeObjectUrl(this.audio_url);
+        this.pending_audio_file = null;
         this.audio_media_path = file.$path;
         this.audio_file_name = label;
         this.audio_url = preview;
       }
     },
     openFolderMediaModal(media_type) {
-      if (!this.publication || !this.accessible_folders.length) return;
+      if (!this.accessible_folders.length) return;
       this.folder_media_modal_type = media_type;
     },
     closeFolderMediaModal() {
@@ -734,7 +819,7 @@ export default {
       this.form_error = "";
       this.export_error = "";
     },
-    async uploadMediaFile(kind, file) {
+    async uploadMediaFile(kind, file, { onProgress } = {}) {
       if (!file || !this.publication?.$path) {
         this.form_error = "Publication not loaded.";
         return;
@@ -750,6 +835,7 @@ export default {
           path: this.publication.$path,
           filename: file.name,
           file,
+          onProgress,
         });
         const meta_path =
           uploaded_meta?.$path ||
@@ -761,30 +847,72 @@ export default {
         }
         if (kind === "image") {
           this.image_media_path = meta_path;
+          this.pending_image_file = null;
         } else {
           this.audio_media_path = meta_path;
+          this.pending_audio_file = null;
         }
       } catch (err) {
         console.error(err);
         this.form_error =
           err?.message || "Upload failed. Please try again.";
+        throw err;
       } finally {
         this[uploading_key] = false;
       }
+    },
+    setGenerationProgress(percent, status) {
+      this.generation_progress = Math.max(
+        0,
+        Math.min(100, Math.round(percent))
+      );
+      this.generation_status = status || "";
+    },
+    async createPublicationFolder() {
+      if (!this.connected_as?.$path) {
+        const err = new Error("login_required");
+        err.code = "login_required";
+        throw err;
+      }
+      const title = titleFromPostcardText(this.postcard_text, {
+        fallback: this.$t("template_postcard"),
+      });
+      const additional_meta = buildPublicationCreateMeta({
+        title,
+        template_key: "postcard",
+        at_root: true,
+        admin_path: this.connected_as.$path,
+        requested_slug: `postcard-${Date.now()}`,
+      });
+      const slug = await this.$api.createFolder({
+        path: getRootPublicationsPath(),
+        additional_meta,
+      });
+      const path = getRootPublicationPath(slug);
+      this.publication = await this.$api.getFolder({ path });
+      if (!this.isRoomJoined(path)) {
+        this.$api.join({ room: path });
+      }
+      return slug;
     },
     async persistMeta() {
       if (!this.publication?.$path) return;
       this.is_saving = true;
       try {
         const source_medias = this.current_source_medias;
+        const title = titleFromPostcardText(this.postcard_text, {
+          fallback: this.$t("template_postcard"),
+        });
         await this.$api.updateMeta({
           path: this.publication.$path,
           new_meta: {
+            title,
             message: this.postcard_text,
             source_medias,
             $public: true,
           },
         });
+        this.$set(this.publication, "title", title);
         this.$set(this.publication, "message", this.postcard_text);
         this.$set(this.publication, "source_medias", source_medias);
         this.$set(this.publication, "$public", true);
@@ -808,9 +936,17 @@ export default {
       if (this.is_generating) return;
 
       this.is_generating = true;
+      this.setGenerationProgress(0, this.$t("postcard_progress_starting"));
       try {
-        await this.persistMeta();
-        await this.uploadPostcardCover();
+        if (this.is_draft_mode) {
+          await this.generateFromDraft();
+        } else {
+          this.setGenerationProgress(40, this.$t("postcard_progress_saving"));
+          await this.persistMeta();
+          this.setGenerationProgress(70, this.$t("postcard_progress_cover"));
+          await this.uploadPostcardCover();
+          this.setGenerationProgress(100, this.$t("postcard_progress_done"));
+        }
         this.export_error = "";
         this.step = "card";
         this.$nextTick(() => {
@@ -818,11 +954,80 @@ export default {
         });
       } catch (err) {
         console.error(err);
-        this.form_error =
-          err?.message || "Could not save the postcard.";
+        if (
+          this.is_draft_mode &&
+          this.publication?.$path &&
+          this.publication_slug
+        ) {
+          try {
+            await this.$router.replace({
+              name: "Postcard",
+              params: { publication_slug: this.publication_slug },
+            });
+          } catch (nav_err) {
+            console.warn(nav_err);
+          }
+        }
+        if (err?.code === "login_required") {
+          this.$eventHub.$emit("login.openModal");
+          this.form_error = this.$t("login");
+        } else {
+          this.form_error =
+            err?.message || "Could not save the postcard.";
+        }
       } finally {
         this.is_generating = false;
+        this.generation_progress = 0;
+        this.generation_status = "";
       }
+    },
+    async generateFromDraft() {
+      this.setGenerationProgress(8, this.$t("postcard_progress_creating"));
+      const slug = await this.createPublicationFolder();
+
+      if (this.pending_image_file) {
+        this.setGenerationProgress(20, this.$t("postcard_progress_image"));
+        await this.uploadMediaFile("image", this.pending_image_file, {
+          onProgress: (event) => {
+            if (!event?.total) return;
+            const ratio = event.loaded / event.total;
+            this.setGenerationProgress(
+              20 + ratio * 30,
+              this.$t("postcard_progress_image")
+            );
+          },
+        });
+      } else if (!this.image_media_path) {
+        throw new Error("Add an image to generate the card.");
+      }
+
+      if (this.pending_audio_file) {
+        this.setGenerationProgress(55, this.$t("postcard_progress_audio"));
+        await this.uploadMediaFile("audio", this.pending_audio_file, {
+          onProgress: (event) => {
+            if (!event?.total) return;
+            const ratio = event.loaded / event.total;
+            this.setGenerationProgress(
+              55 + ratio * 15,
+              this.$t("postcard_progress_audio")
+            );
+          },
+        });
+      }
+
+      this.setGenerationProgress(75, this.$t("postcard_progress_saving"));
+      await this.persistMeta();
+
+      this.setGenerationProgress(85, this.$t("postcard_progress_cover"));
+      await this.buildQrVariants();
+      await this.uploadPostcardCover();
+
+      this.setGenerationProgress(98, this.$t("postcard_progress_done"));
+      await this.$router.replace({
+        name: "Postcard",
+        params: { publication_slug: slug },
+      });
+      this.setGenerationProgress(100, this.$t("postcard_progress_done"));
     },
     goBackToForm() {
       this.stopStampAudio();
@@ -968,9 +1173,19 @@ export default {
       this.revokeObjectUrl(this.image_url);
       this.image_file_name = file.name;
       this.image_url = URL.createObjectURL(file);
+      this.image_media_path = "";
       this.form_error = "";
       this.export_error = "";
-      await this.uploadMediaFile("image", file);
+      if (this.is_draft_mode) {
+        this.pending_image_file = file;
+        return;
+      }
+      this.pending_image_file = null;
+      try {
+        await this.uploadMediaFile("image", file);
+      } catch (err) {
+        // form_error already set
+      }
     },
     async onAudioChange(event) {
       const file = event.target.files && event.target.files[0];
@@ -978,7 +1193,18 @@ export default {
       this.revokeObjectUrl(this.audio_url);
       this.audio_file_name = file.name;
       this.audio_url = URL.createObjectURL(file);
-      await this.uploadMediaFile("audio", file);
+      this.audio_media_path = "";
+      this.form_error = "";
+      if (this.is_draft_mode) {
+        this.pending_audio_file = file;
+        return;
+      }
+      this.pending_audio_file = null;
+      try {
+        await this.uploadMediaFile("audio", file);
+      } catch (err) {
+        // form_error already set
+      }
     },
     onSlTextInput(event) {
       const value = event.target.value || "";
@@ -1501,6 +1727,21 @@ export default {
 ._postcard--primary,
 ._postcard--secondary {
   width: 100%;
+}
+
+._postcard--progress {
+  width: 100%;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-slash-blue) 18%, white);
+  overflow: hidden;
+}
+
+._postcard--progressBar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-slash-orange);
+  transition: width 0.2s ease;
 }
 
 ._postcard--actions {

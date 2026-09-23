@@ -51,6 +51,16 @@ export function getTemplateConfig(template_key) {
   return TEMPLATE_REGISTRY[template_key] || null;
 }
 
+/** Display title from postcard body text: max 15 chars, ellipsis if longer. */
+export function titleFromPostcardText(text, { fallback = "Postcard" } = {}) {
+  const cleaned = String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return fallback;
+  if (cleaned.length <= 15) return cleaned;
+  return `${cleaned.slice(0, 15)}…`;
+}
+
 /**
  * @param {object} opts
  * @param {string} opts.title
@@ -58,6 +68,7 @@ export function getTemplateConfig(template_key) {
  * @param {boolean} [opts.is_private]
  * @param {boolean} [opts.at_root] — root publications/ (level 0)
  * @param {string} [opts.admin_path] — author $path required when at_root
+ * @param {string} [opts.requested_slug] — optional folder slug override
  */
 export function buildPublicationCreateMeta({
   title,
@@ -65,6 +76,7 @@ export function buildPublicationCreateMeta({
   is_private = false,
   at_root = false,
   admin_path = null,
+  requested_slug = null,
 }) {
   const config = getTemplateConfig(template_key);
   if (!config) {
@@ -75,7 +87,7 @@ export function buildPublicationCreateMeta({
     title,
     template: config.key,
     layout_mode: config.layout_mode,
-    requested_slug: title,
+    requested_slug: requested_slug || title,
     source_medias: [],
     message: "",
     $status: is_private === true ? "private" : "public",

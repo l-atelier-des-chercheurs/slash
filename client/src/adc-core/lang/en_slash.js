@@ -41,6 +41,15 @@ export default {
   share_url: "Share URL",
   remove_postcard_expl:
     "This permanently deletes the postcard and its files. This cannot be undone.",
+  create_booklet_lead: "Give your booklet a title to start composing pages.",
+  create_publication_lead: "Choose a title for your publication.",
+  postcard_progress_starting: "Starting…",
+  postcard_progress_creating: "Creating postcard…",
+  postcard_progress_image: "Uploading image…",
+  postcard_progress_audio: "Uploading audio…",
+  postcard_progress_saving: "Saving…",
+  postcard_progress_cover: "Building cover…",
+  postcard_progress_done: "Done",
 
   // MediaGridView
   grid_group_by: "Group by",
