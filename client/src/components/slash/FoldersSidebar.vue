@@ -162,6 +162,7 @@
           :autofocus="true"
           ref="createTitleInput"
           @toggleValidity="($event) => (create_allow_save = $event)"
+          @onEnter="confirmCreate"
         />
         <div v-if="create_error" class="u-errorMsg" v-text="create_error" />
         <div class="_foldersPanel--createActions">

@@ -202,21 +202,12 @@
           </div>
 
           <div class="_postcard--rightPane">
-            <component
-              :is="has_audio ? 'button' : 'div'"
+            <button
+              v-if="has_audio"
               type="button"
               class="_postcard--stamp"
-              :class="{
-                'is--interactive': has_audio,
-                'is--playing': is_audio_playing,
-              }"
-              :aria-label="
-                has_audio
-                  ? is_audio_playing
-                    ? 'Stop audio'
-                    : 'Play audio'
-                  : undefined
-              "
+              :class="{ 'is--playing': is_audio_playing }"
+              :aria-label="is_audio_playing ? 'Stop audio' : 'Play audio'"
               @click="onStampClick"
             >
               <span
@@ -229,11 +220,10 @@
               <img
                 v-else-if="active_qr_url"
                 class="_postcard--qr"
-                :class="{ '_postcard--qr_dimmed': !has_audio }"
                 :src="active_qr_url"
                 alt=""
               />
-            </component>
+            </button>
 
             <div class="_postcard--rules">
               <div
@@ -474,7 +464,7 @@ export default {
       return Boolean(this.audio_url || this.audio_media_path);
     },
     active_qr_url() {
-      return this.has_audio ? this.qr_play_url : this.qr_simple_url;
+      return this.has_audio ? this.qr_play_url : "";
     },
     can_generate() {
       return Boolean(this.image_url) && Boolean(this.publication?.$path);
@@ -512,11 +502,15 @@ export default {
     if (this.is_share_view) {
       this.prepareShareSession();
     }
-    this.buildQrVariants();
     await this.loadPublication();
     if (this.is_share_view) {
       this.step = "card";
     }
+  },
+  watch: {
+    has_audio() {
+      this.buildQrVariants();
+    },
   },
   beforeDestroy() {
     this.stopStampAudio();
@@ -901,14 +895,14 @@ export default {
       }
     },
     async buildQrVariants() {
-      const [simple, with_play] = await Promise.all([
-        this.generateQrBlob({ with_play: false }),
-        this.generateQrBlob({ with_play: true }),
-      ]);
-
       this.revokeObjectUrl(this.qr_simple_url);
       this.revokeObjectUrl(this.qr_play_url);
-      this.qr_simple_url = simple ? URL.createObjectURL(simple) : "";
+      this.qr_simple_url = "";
+      this.qr_play_url = "";
+
+      if (!this.has_audio) return;
+
+      const with_play = await this.generateQrBlob({ with_play: true });
       this.qr_play_url = with_play ? URL.createObjectURL(with_play) : "";
     },
     async generateQrBlob({ with_play }) {
@@ -1081,38 +1075,39 @@ export default {
       ctx.fillStyle = "#4980c8";
       ctx.fillRect(half - 2, 0, 3, height);
 
-      const stamp_size = Math.round(height * 0.28);
-      const stamp_x = width - pad - stamp_size;
-      const stamp_y = pad;
+      let rules_top = pad;
 
-      ctx.fillStyle = "#fff";
-      ctx.strokeStyle = "#87221d";
-      ctx.lineWidth = Math.max(2, Math.round(height * 0.004));
-      ctx.fillRect(stamp_x, stamp_y, stamp_size, stamp_size);
-      ctx.strokeRect(
-        stamp_x + 0.5,
-        stamp_y + 0.5,
-        stamp_size - 1,
-        stamp_size - 1
-      );
+      if (this.has_audio) {
+        const stamp_size = Math.round(height * 0.28);
+        const stamp_x = width - pad - stamp_size;
+        const stamp_y = pad;
 
-      if (this.active_qr_url) {
-        const qr_img = await this.loadImage(this.active_qr_url);
-        const qr_inset = Math.round(stamp_size * 0.06);
-        if (!this.has_audio) {
-          ctx.globalAlpha = 0.5;
-        }
-        ctx.drawImage(
-          qr_img,
-          stamp_x + qr_inset,
-          stamp_y + qr_inset,
-          stamp_size - qr_inset * 2,
-          stamp_size - qr_inset * 2
+        ctx.fillStyle = "#fff";
+        ctx.strokeStyle = "#87221d";
+        ctx.lineWidth = Math.max(2, Math.round(height * 0.004));
+        ctx.fillRect(stamp_x, stamp_y, stamp_size, stamp_size);
+        ctx.strokeRect(
+          stamp_x + 0.5,
+          stamp_y + 0.5,
+          stamp_size - 1,
+          stamp_size - 1
         );
-        ctx.globalAlpha = 1;
+
+        if (this.active_qr_url) {
+          const qr_img = await this.loadImage(this.active_qr_url);
+          const qr_inset = Math.round(stamp_size * 0.06);
+          ctx.drawImage(
+            qr_img,
+            stamp_x + qr_inset,
+            stamp_y + qr_inset,
+            stamp_size - qr_inset * 2,
+            stamp_size - qr_inset * 2
+          );
+        }
+
+        rules_top = stamp_y + stamp_size + pad * 0.9;
       }
 
-      const rules_top = stamp_y + stamp_size + pad * 0.9;
       const rules_bottom = height - pad;
       const rules_left = half + pad;
       const rules_right = width - pad;
@@ -1156,7 +1151,7 @@ export default {
     },
     async uploadPostcardCover() {
       if (!this.publication?.$path || !this.image_url) return;
-      if (!this.active_qr_url) {
+      if (this.has_audio && !this.active_qr_url) {
         await this.buildQrVariants();
       }
       const canvas = await this.renderPostcardCanvas({
@@ -1180,7 +1175,7 @@ export default {
       this.export_error = "";
 
       try {
-        if (!this.active_qr_url) {
+        if (this.has_audio && !this.active_qr_url) {
           await this.buildQrVariants();
         }
         const canvas = await this.renderPostcardCanvas({
@@ -1609,14 +1604,11 @@ export default {
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
   color: inherit;
   font: inherit;
-}
-
-._postcard--stamp.is--interactive {
   cursor: pointer;
 }
 
-._postcard--stamp.is--interactive:hover,
-._postcard--stamp.is--interactive:focus-visible {
+._postcard--stamp:hover,
+._postcard--stamp:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-slash-orange) 45%, transparent);
 }
@@ -1629,10 +1621,6 @@ export default {
   padding: 4%;
   transition: opacity 0.2s ease;
   pointer-events: none;
-}
-
-._postcard--qr_dimmed {
-  opacity: 0.5;
 }
 
 ._postcard--stopBtn {

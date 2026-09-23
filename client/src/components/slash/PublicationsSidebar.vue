@@ -100,6 +100,7 @@
             :autofocus="true"
             ref="titleInput"
             @toggleValidity="($event) => (allow_save = $event)"
+            @onEnter="createPublication"
           />
           <div class="_publicationsSidebar--formActions">
             <button
