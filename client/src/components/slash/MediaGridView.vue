@@ -247,6 +247,7 @@ export default {
   display: flex;
   flex-flow: row wrap;
   align-items: center;
+  justify-content: center;
   gap: calc(var(--spacing) / 2);
   max-width: 1400px;
   margin: 0 auto calc(var(--spacing) * 1.5);
