@@ -27,12 +27,12 @@
 
     <header v-else class="_postcard--shareHeader">
       <a
-        class="_postcard--brand"
+        class="_postcard--shareBrand"
         href="/"
         aria-label="Slash"
         @click.prevent="goHome"
       >
-        <SlashLogo class="_postcard--logo" />
+        <SlashLogo class="_postcard--shareLogo" />
       </a>
       <div class="_postcard--shareActions">
         <button
@@ -1939,24 +1939,43 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: clamp(1rem, 4vw, 2.5rem);
+  padding: calc(var(--spacing) * 2);
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 ._postcard--shareHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
-  width: min(100%, 52rem);
-  margin: 0 auto 1rem;
+  gap: calc(var(--spacing));
+  width: 100%;
+  margin: 0 0 calc(var(--spacing) * 1.5);
   flex-shrink: 0;
+}
+
+._postcard--shareBrand {
+  display: block;
+  color: var(--c-slash-burgundy);
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+._postcard--shareBrand:hover {
+  color: var(--c-slash-blue);
+}
+
+._postcard--shareLogo {
+  display: block;
+  width: clamp(7.5rem, 18vw, 9.5rem);
+  height: auto;
 }
 
 ._postcard--shareActions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
