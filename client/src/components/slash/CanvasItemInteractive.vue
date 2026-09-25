@@ -6,6 +6,7 @@
       'is--dragging': has_dragged,
       'is--resizing': isResizing,
       'is--selected': is_selected,
+      'is--inlinePlaying': is_inline_playing,
     }"
     :data-mode="mode"
     :style="[itemDimensions, itemDisplay]"
@@ -78,7 +79,7 @@
       :style="'--scale-factor: ' + canvas_zoom"
     >
       <button
-        v-if="opens_on_content_click && mode === 'pan-zoom'"
+        v-if="opens_on_content_click && mode === 'pan-zoom' && !is_inline_playing"
         type="button"
         class="_inlineOpenHit panzoom-exclude"
         :aria-label="$t('open')"
@@ -99,12 +100,20 @@
       v-if="has_inline_play"
       type="button"
       class="_inlinePlayBtn"
-      :class="{ 'panzoom-exclude': mode === 'pan-zoom' }"
+      :class="{
+        'panzoom-exclude': mode === 'pan-zoom',
+        'is--audioBar': is_audio,
+      }"
       :style="'--scale-factor: ' + canvas_zoom"
-      :aria-label="is_inline_playing ? $t('pause') : $t('play')"
+      :aria-label="is_inline_playing ? $t('stop') : $t('play')"
       @click.stop="toggleInlinePlayback"
     >
-      <b-icon :icon="is_inline_playing ? 'pause-fill' : 'play-fill'" />
+      <span
+        v-if="is_inline_playing"
+        class="_inlinePlayBtn__stop"
+        aria-hidden="true"
+      />
+      <b-icon v-else icon="play-fill" />
     </button>
   </div>
 </template>
@@ -125,7 +134,7 @@ import {
   resolveTextCanvasHeightForWidthChange,
 } from "@/utils/textCanvasUtils.js";
 
-const INLINE_PLAY_TYPES = ["video", "pdf"];
+const INLINE_PLAY_TYPES = ["video", "audio", "pdf"];
 const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf"];
 
 export default {
@@ -229,6 +238,12 @@ export default {
       this.$nextTick(() => this.backfillShapeHeight());
     }
   },
+  updated() {
+    this.bindInlinePlaybackEvents();
+    if (this.file.$type === "pdf") {
+      this.syncPdfPlayingState();
+    }
+  },
   beforeDestroy() {
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
@@ -252,6 +267,9 @@ export default {
     },
     is_video() {
       return this.file.$type === "video";
+    },
+    is_audio() {
+      return this.file.$type === "audio";
     },
     isWidthOnly() {
       return this.file.$type === "text" || !this.file.$infos?.ratio;
@@ -539,11 +557,12 @@ export default {
       this.$eventHub.$emit("canvasItem.openWithTransition", this.file.$path);
     },
     getAvElement() {
-      if (!this.is_video) return null;
-      return this.$el?.querySelector?.("video") || null;
+      if (!this.is_video && !this.is_audio) return null;
+      const tag = this.is_audio ? "audio" : "video";
+      return this.$el?.querySelector?.(tag) || null;
     },
     bindInlinePlaybackEvents() {
-      if (this.is_video) {
+      if (this.is_video || this.is_audio) {
         const el = this.getAvElement();
         if (!el || el === this._av_el) return;
         this.unbindInlinePlaybackEvents();
@@ -551,7 +570,7 @@ export default {
         this.is_inline_playing = !el.paused;
         el.addEventListener("play", this.onInlinePlay);
         el.addEventListener("pause", this.onInlinePause);
-        el.addEventListener("ended", this.onInlinePause);
+        el.addEventListener("ended", this.onInlineEnded);
         return;
       }
       if (this.file.$type === "pdf") {
@@ -562,7 +581,7 @@ export default {
       if (!this._av_el) return;
       this._av_el.removeEventListener("play", this.onInlinePlay);
       this._av_el.removeEventListener("pause", this.onInlinePause);
-      this._av_el.removeEventListener("ended", this.onInlinePause);
+      this._av_el.removeEventListener("ended", this.onInlineEnded);
       this._av_el = null;
     },
     onInlinePlay() {
@@ -571,17 +590,35 @@ export default {
     onInlinePause() {
       this.is_inline_playing = false;
     },
+    onInlineEnded() {
+      const el = this._av_el;
+      if (el) el.currentTime = 0;
+      this.is_inline_playing = false;
+    },
     syncPdfPlayingState() {
       const media = this.$refs.canvasItem?.$refs?.mediaContent;
       this.is_inline_playing = !!media?.start_iframe;
+    },
+    stopInlinePlayback() {
+      if (this.file.$type === "pdf") {
+        const media = this.$refs.canvasItem?.$refs?.mediaContent;
+        if (!media) return;
+        media.unloadIframe();
+        this.is_inline_playing = false;
+        return;
+      }
+      const el = this.getAvElement();
+      if (!el) return;
+      el.pause();
+      el.currentTime = 0;
+      this.is_inline_playing = false;
     },
     toggleInlinePlayback() {
       if (this.file.$type === "pdf") {
         const media = this.$refs.canvasItem?.$refs?.mediaContent;
         if (!media) return;
         if (media.start_iframe) {
-          media.unloadIframe();
-          this.is_inline_playing = false;
+          this.stopInlinePlayback();
         } else {
           media.loadIframe();
           this.is_inline_playing = true;
@@ -591,8 +628,17 @@ export default {
 
       const el = this.getAvElement();
       if (!el) return;
-      if (el.paused) el.play();
-      else el.pause();
+      if (el.paused) {
+        const play_promise = el.play();
+        this.is_inline_playing = true;
+        if (play_promise?.catch) {
+          play_promise.catch(() => {
+            this.is_inline_playing = false;
+          });
+        }
+      } else {
+        this.stopInlinePlayback();
+      }
     },
     onOtherItemDragMove({ source_path, total_dx, total_dy }) {
       if (source_path === this.file.$path) return;
@@ -605,6 +651,8 @@ export default {
       event.stopPropagation();
 
       if (this.mode === "pan-zoom") return;
+      // No drag while inline playing (video / audio / pdf)
+      if (this.is_inline_playing) return;
 
       this.isDragging = true;
       this.has_dragged = false;
@@ -1018,11 +1066,11 @@ export default {
   }
 
   ._inlinePlayBtn {
-    --play-btn-size: calc(2.25rem / var(--scale-factor, 1));
+    --play-btn-size: 2.25rem;
 
     position: absolute;
-    left: calc(0.5rem / var(--scale-factor, 1));
-    bottom: calc(0.5rem / var(--scale-factor, 1));
+    left: 0.5rem;
+    bottom: 0.5rem;
     z-index: 20;
     display: flex;
     align-items: center;
@@ -1031,7 +1079,7 @@ export default {
     height: var(--play-btn-size);
     padding: 0;
     border: none;
-    border-radius: calc(4px / var(--scale-factor, 1));
+    border-radius: 4px;
     background: hsl(0, 0%, 22%);
     color: white;
     cursor: pointer;
@@ -1043,9 +1091,44 @@ export default {
     }
 
     .b-icon {
-      width: calc(1.1rem / var(--scale-factor, 1));
-      height: calc(1.1rem / var(--scale-factor, 1));
+      width: 1.5rem;
+      height: 1.5rem;
     }
+
+    &.is--audioBar {
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2.75rem;
+      height: 100%;
+      border-radius: 999px 0 0 999px;
+      background: transparent;
+      color: #fff;
+
+      &:hover,
+      &:focus-visible {
+        background: transparent;
+        color: #fff;
+      }
+
+      .b-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      ._inlinePlayBtn__stop {
+        width: 0.85rem;
+        height: 0.85rem;
+      }
+    }
+  }
+
+  ._inlinePlayBtn__stop {
+    display: block;
+    width: 0.85rem;
+    height: 0.85rem;
+    background: currentColor;
+    border-radius: 1px;
   }
 
   &:hover {
@@ -1083,17 +1166,12 @@ export default {
     }
     ._inlinePlayBtn {
       pointer-events: auto;
+      z-index: 20;
     }
-    /* Audio player above selection border; only play is interactive */
-    &[data-file-type="audio"] ._canvasItemContent {
-      position: relative;
-      z-index: 15;
-    }
-    &[data-file-type="audio"] ._canvasItem--selectedBorder {
-      z-index: 10;
-    }
+    /* Audio idle: timeline non-interactive so drag/open reach the border.
+       Only scrub while playing (see is--inlinePlaying). */
     &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__controls {
-      pointer-events: auto;
+      pointer-events: none;
     }
     &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__progress,
     &[data-file-type="audio"]
@@ -1106,6 +1184,36 @@ export default {
       input[data-plyr="seek"],
     &[data-file-type="audio"] ._canvasItemContent ::v-deep input[type="range"] {
       pointer-events: none !important;
+    }
+    /* Playing: no drag; allow scrub (audio) or iframe scroll (pdf) */
+    &.is--inlinePlaying {
+      ._canvasItem--selectedBorder {
+        pointer-events: none;
+      }
+      &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__progress,
+      &[data-file-type="audio"]
+        ._canvasItemContent
+        ::v-deep
+        .plyr__progress__buffer,
+      &[data-file-type="audio"]
+        ._canvasItemContent
+        ::v-deep
+        input[data-plyr="seek"],
+      &[data-file-type="audio"]
+        ._canvasItemContent
+        ::v-deep
+        input[type="range"] {
+        pointer-events: auto !important;
+      }
+      &[data-file-type="pdf"] ._canvasItemContent {
+        pointer-events: auto;
+      }
+      &[data-file-type="pdf"]
+        ._canvasItemContent
+        ::v-deep
+        ._mediaContent--iframe--content {
+        overflow: auto;
+      }
     }
     &:not(.is--selected) ._canvasItem--selectedBorder.is--shape {
       pointer-events: none;
@@ -1141,15 +1249,8 @@ export default {
     ._inlinePlayBtn {
       pointer-events: auto !important;
     }
-    &[data-file-type="audio"] ._canvasItemContent {
-      position: relative;
-      z-index: 15;
-    }
-    &[data-file-type="audio"] ._canvasItem--open {
-      z-index: 12;
-    }
     &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__controls {
-      pointer-events: auto !important;
+      pointer-events: none !important;
     }
     &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__progress,
     &[data-file-type="audio"]
@@ -1162,6 +1263,27 @@ export default {
       input[data-plyr="seek"],
     &[data-file-type="audio"] ._canvasItemContent ::v-deep input[type="range"] {
       pointer-events: none !important;
+    }
+    &.is--inlinePlaying[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      .plyr__progress,
+    &.is--inlinePlaying[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      .plyr__progress__buffer,
+    &.is--inlinePlaying[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      input[data-plyr="seek"],
+    &.is--inlinePlaying[data-file-type="audio"]
+      ._canvasItemContent
+      ::v-deep
+      input[type="range"] {
+      pointer-events: auto !important;
+    }
+    &.is--inlinePlaying[data-file-type="pdf"] ._canvasItemContent {
+      pointer-events: auto !important;
     }
     ._canvasItemContent ::v-deep ._canvasItem--mediaListHandle {
       pointer-events: auto !important;

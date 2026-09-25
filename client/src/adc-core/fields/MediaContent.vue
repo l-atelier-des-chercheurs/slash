@@ -507,7 +507,7 @@ export default {
     width: 100%;
     height: 100%;
     border-radius: 4px;
-    overflow: hidden;
+    overflow: auto;
     border: 2px solid var(--c-gris_clair);
     background-color: white;
     background-color: var(--set-backgroundColor, var(--c-gris_clair));

@@ -15,7 +15,7 @@
       <div class="_geoMapView--popupContent" v-if="selectedFile">
         <button class="_geoMapView--closePopup" @click="closePopup">×</button>
         <div class="_geoMapView--media">
-          <CanvasItem :file="selectedFile" :resolution="320" />
+          <CanvasItem :file="selectedFile" :resolution="320" mode="grid" />
         </div>
         <div class="_geoMapView--info">
           {{ selectedFile.name }}

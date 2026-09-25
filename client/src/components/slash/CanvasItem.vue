@@ -3,7 +3,10 @@
     class="_canvasItemContentWrapper"
     :class="[
       wrapperClasses,
-      { 'is--selected': is_selected && enable_selection },
+      {
+        'is--selected': is_selected && enable_selection,
+        'is--inlinePlaying': is_inline_playing,
+      },
     ]"
     :style="itemStyle"
   >
@@ -25,10 +28,16 @@
         v-if="has_inline_play && mode !== 'canvas'"
         type="button"
         class="_inlinePlayBtn"
-        :aria-label="is_inline_playing ? $t('pause') : $t('play')"
+        :class="{ 'is--audioBar': is_audio }"
+        :aria-label="is_inline_playing ? $t('stop') : $t('play')"
         @click.stop="toggleInlinePlayback"
       >
-        <b-icon :icon="is_inline_playing ? 'pause-fill' : 'play-fill'" />
+        <span
+          v-if="is_inline_playing"
+          class="_inlinePlayBtn__stop"
+          aria-hidden="true"
+        />
+        <b-icon v-else icon="play-fill" />
       </button>
 
       <div class="_canvasItem--caption" v-if="file.$type !== 'text'">
@@ -70,7 +79,7 @@
 import MediaListDragHandle from "@/components/slash/MediaListDragHandle.vue";
 import { isMediaListFile } from "@/utils/mediaListUtils.js";
 
-const INLINE_PLAY_TYPES = ["video", "pdf"];
+const INLINE_PLAY_TYPES = ["video", "audio", "pdf"];
 const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf"];
 
 export default {
@@ -152,13 +161,14 @@ export default {
         };
       }
       if (this.is_audio) {
+        // Custom play/stop button; Plyr only shows the timeline
         return {
-          controls: ["play", "progress"],
+          controls: ["progress"],
           clickToPlay: false,
           hideControls: false,
         };
       }
-      return { controls: ["play", "progress"] };
+      return { controls: ["progress"] };
     },
     itemStyle() {
       const author_color = this.$getFirstAuthorColor(this.file.$authors);
@@ -208,25 +218,31 @@ export default {
   },
   methods: {
     getAvElement() {
-      if (!this.is_video) return null;
-      return this.$el?.querySelector?.("video") || null;
+      if (!this.is_video && !this.is_audio) return null;
+      const tag = this.is_audio ? "audio" : "video";
+      return this.$el?.querySelector?.(tag) || null;
     },
     bindInlinePlaybackEvents() {
-      if (!this.is_video) return;
-      const el = this.getAvElement();
-      if (!el || el === this._av_el) return;
-      this.unbindInlinePlaybackEvents();
-      this._av_el = el;
-      this.is_inline_playing = !el.paused;
-      el.addEventListener("play", this.onInlinePlay);
-      el.addEventListener("pause", this.onInlinePause);
-      el.addEventListener("ended", this.onInlinePause);
+      if (this.is_video || this.is_audio) {
+        const el = this.getAvElement();
+        if (!el || el === this._av_el) return;
+        this.unbindInlinePlaybackEvents();
+        this._av_el = el;
+        this.is_inline_playing = !el.paused;
+        el.addEventListener("play", this.onInlinePlay);
+        el.addEventListener("pause", this.onInlinePause);
+        el.addEventListener("ended", this.onInlineEnded);
+        return;
+      }
+      if (this.file.$type === "pdf") {
+        this.syncPdfPlayingState();
+      }
     },
     unbindInlinePlaybackEvents() {
       if (!this._av_el) return;
       this._av_el.removeEventListener("play", this.onInlinePlay);
       this._av_el.removeEventListener("pause", this.onInlinePause);
-      this._av_el.removeEventListener("ended", this.onInlinePause);
+      this._av_el.removeEventListener("ended", this.onInlineEnded);
       this._av_el = null;
     },
     onInlinePlay() {
@@ -235,18 +251,36 @@ export default {
     onInlinePause() {
       this.is_inline_playing = false;
     },
+    onInlineEnded() {
+      const el = this._av_el;
+      if (el) el.currentTime = 0;
+      this.is_inline_playing = false;
+    },
     syncPdfPlayingState() {
       if (this.file.$type !== "pdf") return;
       const media = this.$refs.mediaContent;
       this.is_inline_playing = !!media?.start_iframe;
+    },
+    stopInlinePlayback() {
+      if (this.file.$type === "pdf") {
+        const media = this.$refs.mediaContent;
+        if (!media) return;
+        media.unloadIframe();
+        this.is_inline_playing = false;
+        return;
+      }
+      const el = this.getAvElement();
+      if (!el) return;
+      el.pause();
+      el.currentTime = 0;
+      this.is_inline_playing = false;
     },
     toggleInlinePlayback() {
       if (this.file.$type === "pdf") {
         const media = this.$refs.mediaContent;
         if (!media) return;
         if (media.start_iframe) {
-          media.unloadIframe();
-          this.is_inline_playing = false;
+          this.stopInlinePlayback();
         } else {
           media.loadIframe();
           this.is_inline_playing = true;
@@ -256,13 +290,27 @@ export default {
 
       const el = this.getAvElement();
       if (!el) return;
-      if (el.paused) el.play();
-      else el.pause();
+      if (el.paused) {
+        const play_promise = el.play();
+        this.is_inline_playing = true;
+        if (play_promise?.catch) {
+          play_promise.catch(() => {
+            this.is_inline_playing = false;
+          });
+        }
+      } else {
+        this.stopInlinePlayback();
+      }
     },
     handleContentClick(event) {
       if (event.target.closest("._inlinePlayBtn")) return;
-      // Audio: play button keeps control; progress is non-interactive (opens)
-      if (event.target.closest(".plyr__control")) return;
+      // Audio scrub while playing — don't open
+      if (
+        this.is_inline_playing &&
+        event.target.closest(".plyr__progress, input[type='range']")
+      ) {
+        return;
+      }
 
       if (this.opens_on_content_click) {
         if (this.enable_selection && (event.metaKey || event.shiftKey)) {
@@ -342,35 +390,89 @@ export default {
   &[data-filetype="audio"] {
     cursor: pointer;
     overflow: hidden;
+    background: #1e1e1e;
+    border-radius: 999px;
 
-    ::v-deep .plyr__control--overlaid {
+    ::v-deep .plyr__control--overlaid,
+    ::v-deep .plyr__control {
       display: none !important;
     }
 
     ::v-deep .plyr {
       height: 100%;
       min-height: 0;
+      background: transparent;
+    }
+
+    ::v-deep .plyr__video-wrapper,
+    ::v-deep .plyr__poster {
+      display: none !important;
     }
 
     ::v-deep .plyr__controls {
       display: flex !important;
+      align-items: center;
+      gap: 0;
       opacity: 1 !important;
       transform: none !important;
-      pointer-events: auto;
+      position: absolute;
+      inset: 0;
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      /* Room for integrated play/stop on the left */
+      padding: 0 0.85rem 0 2.75rem;
+      background: transparent !important;
+      border-radius: 999px;
+      pointer-events: none;
+      box-shadow: none;
     }
 
-    /* Timeline visible but not seekable — click opens the media */
+    ::v-deep .plyr__progress__container,
+    ::v-deep .plyr__progress {
+      flex: 1;
+      left: 0;
+      margin: 0;
+      min-width: 0;
+    }
+
+    ::v-deep .plyr__progress input[type="range"],
+    ::v-deep input[data-plyr="seek"] {
+      color: #fff;
+    }
+
+    ::v-deep .plyr__progress__buffer {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Timeline visible but not seekable when idle — click opens the media */
     ::v-deep .plyr__progress,
     ::v-deep .plyr__progress__buffer,
     ::v-deep input[type="range"] {
       pointer-events: none !important;
     }
+  }
+}
 
-    ::v-deep .plyr__control {
+._canvasItemContentWrapper.is--inlinePlaying {
+  ._canvasItem--content[data-filetype="audio"] {
+    ::v-deep .plyr__progress,
+    ::v-deep .plyr__progress__buffer,
+    ::v-deep input[type="range"] {
       pointer-events: auto !important;
     }
   }
 
+  ._canvasItem--content[data-filetype="pdf"] {
+    overflow: auto;
+
+    ::v-deep ._mediaContent--iframe--content {
+      overflow: auto;
+    }
+  }
+}
+
+._canvasItem--content {
   .is--canvas & {
     &[data-filetype="text"] {
       background: transparent;
@@ -440,9 +542,45 @@ export default {
   }
 
   .b-icon {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.5rem;
+    height: 1.5rem;
   }
+
+  /* Integrated into the dark audio pill — size matches bar height */
+  &.is--audioBar {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2.75rem;
+    height: 100%;
+    border-radius: 999px 0 0 999px;
+    background: transparent;
+    color: #fff;
+
+    &:hover,
+    &:focus-visible {
+      background: transparent;
+      color: #fff;
+    }
+
+    .b-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    ._inlinePlayBtn__stop {
+      width: 0.85rem;
+      height: 0.85rem;
+    }
+  }
+}
+
+._inlinePlayBtn__stop {
+  display: block;
+  width: 0.85rem;
+  height: 0.85rem;
+  background: currentColor;
+  border-radius: 1px;
 }
 
 ._canvasItem--selectedBorder {
