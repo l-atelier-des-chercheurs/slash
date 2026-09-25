@@ -945,41 +945,58 @@ export default {
       }
     },
     hydrateSourceMediasPublic() {
-      // Prefer files already present on the public publication payload
       const files = Array.isArray(this.publication?.$files)
         ? this.publication.$files
         : [];
+      const files_by_path = {};
       for (const file of files) {
-        if (file?.$type === "image" && !this.image_media_path) {
-          this.applyLoadedMedia("image", file);
-        } else if (file?.$type === "audio" && !this.audio_media_path) {
-          this.applyLoadedMedia("audio", file);
-        }
+        if (file?.$path) files_by_path[file.$path] = file;
       }
 
       const paths = sourceMediasToPaths(
         this.publication?.source_medias,
         this.publication?.$path || ""
       );
-      for (const path of paths) {
-        if (!path) continue;
-        const meta_filename = path.split("/").pop() || "";
-        const media_filename = meta_filename.replace(/\.meta\.txt$/, "");
-        const parent = path.substring(0, path.lastIndexOf("/"));
-        if (!media_filename || !parent) continue;
 
-        const from_files = files.find((f) => f?.$path === path);
-        if (from_files) continue;
+      // Prefer explicit source_medias (correct after audio/image replacements).
+      if (paths.length) {
+        for (const path of paths) {
+          if (!path) continue;
+          const from_files = files_by_path[path];
+          if (from_files) {
+            if (from_files.$type === "image" && !this.image_media_path) {
+              this.applyLoadedMedia("image", from_files);
+            } else if (from_files.$type === "audio" && !this.audio_media_path) {
+              this.applyLoadedMedia("audio", from_files);
+            }
+            continue;
+          }
 
-        const kind = this.guessMediaKindFromFilename(media_filename);
-        if (kind === "image" && !this.image_media_path) {
-          this.image_media_path = path;
-          this.image_file_name = media_filename;
-          this.image_url = "/" + parent + "/" + media_filename;
-        } else if (kind === "audio" && !this.audio_media_path) {
-          this.audio_media_path = path;
-          this.audio_file_name = media_filename;
-          this.audio_url = "/" + parent + "/" + media_filename;
+          const meta_filename = path.split("/").pop() || "";
+          const media_filename = meta_filename.replace(/\.meta\.txt$/, "");
+          const parent = path.substring(0, path.lastIndexOf("/"));
+          if (!media_filename || !parent) continue;
+
+          const kind = this.guessMediaKindFromFilename(media_filename);
+          if (kind === "image" && !this.image_media_path) {
+            this.image_media_path = path;
+            this.image_file_name = media_filename;
+            this.image_url = "/" + parent + "/" + media_filename;
+          } else if (kind === "audio" && !this.audio_media_path) {
+            this.audio_media_path = path;
+            this.audio_file_name = media_filename;
+            this.audio_url = "/" + parent + "/" + media_filename;
+          }
+        }
+        return;
+      }
+
+      // Legacy fallback: no source_medias — first image/audio in folder.
+      for (const file of files) {
+        if (file?.$type === "image" && !this.image_media_path) {
+          this.applyLoadedMedia("image", file);
+        } else if (file?.$type === "audio" && !this.audio_media_path) {
+          this.applyLoadedMedia("audio", file);
         }
       }
     },
@@ -1026,12 +1043,22 @@ export default {
     closeFolderMediaModal() {
       this.folder_media_modal_type = "";
     },
-    onFolderMediaPicked(file) {
+    async onFolderMediaPicked(file) {
       const kind = this.folder_media_modal_type;
       if (!kind || !file?.$path) return;
       this.applyLoadedMedia(kind, file);
       this.form_error = "";
       this.export_error = "";
+      this.closeFolderMediaModal();
+      if (!this.is_draft_mode) {
+        try {
+          await this.persistMeta();
+        } catch (err) {
+          console.error(err);
+          this.form_error =
+            err?.message || "Could not save the media selection.";
+        }
+      }
     },
     async uploadMediaFile(kind, file, { onProgress } = {}) {
       if (!file || !this.publication?.$path) {
@@ -1074,6 +1101,10 @@ export default {
       } finally {
         this[uploading_key] = false;
       }
+    },
+    async persistMediaSelection() {
+      if (this.is_draft_mode || !this.publication?.$path) return;
+      await this.persistMeta();
     },
     setGenerationProgress(percent, status) {
       this.generation_progress = Math.max(
@@ -1397,6 +1428,7 @@ export default {
       this.pending_image_file = null;
       try {
         await this.uploadMediaFile("image", file);
+        await this.persistMediaSelection();
       } catch (err) {
         // form_error already set
       }
@@ -1416,6 +1448,7 @@ export default {
       this.pending_audio_file = null;
       try {
         await this.uploadMediaFile("audio", file);
+        await this.persistMediaSelection();
       } catch (err) {
         // form_error already set
       }
