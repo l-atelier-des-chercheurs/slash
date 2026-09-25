@@ -34,16 +34,12 @@ export default {
   watch: {},
   computed: {
     preview_url() {
-      if (!this.file.$path) return false;
-      // const full_path = this.makeMediaFilePath({
-      //   $path: this.file.$path,
-      //   $media_filename: this.file.$media_filename,
-      // });
-      return (
-        window.location.origin +
-        "/_previewmedia?path_to_meta=" +
-        this.file.$path
-      );
+      if (!this.file?.$path || !this.file?.$media_filename) return false;
+      // Direct static media URL — public without general password / core changes
+      return this.makeMediaFileURL({
+        $path: this.file.$path,
+        $media_filename: this.file.$media_filename,
+      });
     },
   },
   methods: {},

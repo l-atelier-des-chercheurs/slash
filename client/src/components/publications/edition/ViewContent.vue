@@ -775,8 +775,10 @@ export default {
       });
     },
     makeQREmbedForQR({ alt, width, height, media }) {
-      const url =
-        window.location.origin + "/_previewmedia?path_to_meta=" + media.$path;
+      const url = this.makeMediaFileURL({
+        $path: media.$path,
+        $media_filename: media.$media_filename,
+      });
 
       const code = generate(url);
       const dataUrl = code.toDataURL({ scale: 10 });

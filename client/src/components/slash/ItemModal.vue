@@ -139,12 +139,11 @@ export default {
   },
   computed: {
     media_preview_url() {
-      if (!this.file.$path) return "";
-      return (
-        window.location.origin +
-        "/_previewmedia?path_to_meta=" +
-        this.file.$path
-      );
+      if (!this.file?.$path || !this.file?.$media_filename) return "";
+      return this.makeMediaFileURL({
+        $path: this.file.$path,
+        $media_filename: this.file.$media_filename,
+      });
     },
     has_geolocation() {
       return (
