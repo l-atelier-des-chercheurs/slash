@@ -10,15 +10,17 @@
             aria-label="All folders"
             @click="$emit('toggleFoldersSidebar')"
           >
-            <b-icon icon="folder2" />
+            <SlashLogo class="_dropMenu--slashLogo" />
           </button>
           <button
             type="button"
             class="u-button u-button_transparent _dropMenu--folderLabel"
             @click="$emit('openCurrentFolderSettings')"
           >
-            {{ current_folder_title || "Untitled folder" }}
-            &nbsp; <b-icon icon="three-dots" />
+            <span class="_dropMenu--folderLabel__title">{{
+              current_folder_title || "Untitled folder"
+            }}</span>
+            <b-icon icon="three-dots" class="_dropMenu--folderLabel__dots" />
           </button>
         </div>
 
@@ -51,11 +53,13 @@
 <script>
 import DropMenuPanel from "@/components/slash/DropMenuPanel.vue";
 import FolderContributorsList from "@/components/slash/FolderContributorsList.vue";
+import SlashLogo from "@/components/nav/SlashLogo.vue";
 
 export default {
   components: {
     DropMenuPanel,
     FolderContributorsList,
+    SlashLogo,
   },
   props: {
     folder: Object,
@@ -170,23 +174,48 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
-  // justify-content: space-between;
   gap: calc(var(--spacing) / 4);
 }
 
 ._dropMenu--foldersButton {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: calc(var(--spacing) / 2);
+  color: var(--c-slash-burgundy, var(--c-rouge));
+}
+
+._dropMenu--slashLogo {
+  display: block;
+  width: 3.25rem;
+  height: auto;
 }
 
 ._dropMenu--folderLabel {
-  // max-width: 220px;
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(var(--spacing) / 3);
+  max-width: 220px;
   font-size: var(--sl-font-size-medium);
   font-weight: 700;
+  line-height: 1;
+  padding: calc(var(--spacing) / 2);
   margin-right: calc(var(--spacing) * 2);
   white-space: nowrap;
+}
+
+._dropMenu--folderLabel__title {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+._dropMenu--folderLabel__dots {
+  flex-shrink: 0;
+  line-height: 0;
 }
 
 ._dropMenu--userLabel__color {

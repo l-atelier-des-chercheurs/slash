@@ -72,6 +72,9 @@ export default {
     async "$route.params.folder_slug"(new_folder_slug) {
       if (!new_folder_slug) {
         this.current_folder_path = "";
+        if (Object.keys(this.$route.query || {}).length) {
+          await this.$router.replace({ name: "Accueil", query: {} });
+        }
         await this.toggleFoldersSidebar(true);
         return;
       }
@@ -135,12 +138,11 @@ export default {
       });
     },
     async toggleFoldersSidebar(force_open) {
-      // From a folder: folder button goes home (not overlay sidebar)
+      // From a folder: slash/folder button goes home (clean URL, no leftover queries)
       if (this.current_folder_path && typeof force_open !== "boolean") {
-        this.$router.push({
-          path: "/",
-          query: { ...this.$route.query },
-        });
+        this.current_folder_path = "";
+        await this.$router.push({ name: "Accueil", query: {} });
+        await this.toggleFoldersSidebar(true);
         return;
       }
 
@@ -164,6 +166,27 @@ export default {
     getFolderSlug(folder_path) {
       return folder_path.split("/").pop();
     },
+    getSavedFolderViewMode(folder_path) {
+      if (!folder_path || typeof localStorage === "undefined") return "";
+      try {
+        const stored = localStorage.getItem(`slash_view_mode:${folder_path}`);
+        if (
+          stored &&
+          ["canvas", "grid", "map", "timeline"].includes(stored)
+        ) {
+          return stored;
+        }
+      } catch (err) {
+        // ignore storage errors
+      }
+      return "";
+    },
+    buildFolderRouteQuery(folder_path) {
+      const query = {};
+      const saved_view = this.getSavedFolderViewMode(folder_path);
+      if (saved_view) query.view = saved_view;
+      return query;
+    },
     async selectFolder(folder_path, { replace = false } = {}) {
       if (!folder_path || folder_path === this.current_folder_path) {
         return;
@@ -174,8 +197,9 @@ export default {
       const folder_slug = this.getFolderSlug(folder_path);
       const router_method = replace ? "replace" : "push";
       this.$router[router_method]({
-        path: `/${folder_slug}`,
-        query: { ...this.$route.query },
+        name: "Folder",
+        params: { folder_slug },
+        query: this.buildFolderRouteQuery(folder_path),
       });
 
       this.closeFoldersSidebar();
@@ -187,10 +211,7 @@ export default {
     },
     async onCurrentFolderRemoved() {
       this.current_folder_path = "";
-      await this.$router.replace({
-        path: "/",
-        query: { ...this.$route.query },
-      });
+      await this.$router.replace({ name: "Accueil", query: {} });
       await this.$api.updateStore(this.folders_path);
       await this.ensureFoldersSidebarData();
       await this.toggleFoldersSidebar(true);

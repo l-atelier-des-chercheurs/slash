@@ -224,8 +224,8 @@ export default {
           this.folder = null;
           if (this.$route.path !== "/") {
             this.$router.replace({
-              path: "/",
-              query: { ...this.$route.query },
+              name: "Accueil",
+              query: {},
             });
           }
           this.$emit("toggleFoldersSidebar", true);
@@ -353,23 +353,54 @@ export default {
       const url_view = this.$route.query.view;
       if (url_view && valid_modes.includes(url_view)) {
         this.view_mode = url_view;
+        this.persistFolderViewMode(url_view);
         return;
       }
 
-      // 2. Fallback to localStorage
+      // 2. Per-folder last view
+      const folder_view = this.getStoredFolderViewMode();
+      if (folder_view && valid_modes.includes(folder_view)) {
+        this.view_mode = folder_view;
+        this.updateUrlViewMode(folder_view);
+        return;
+      }
+
+      // 3. Global fallback (legacy)
       const stored_view =
         localStorage.getItem("slash_view_mode") ||
         localStorage.getItem("slash_viewMode");
       if (stored_view && valid_modes.includes(stored_view)) {
         this.view_mode = stored_view;
-        // Update URL to match localStorage
+        this.persistFolderViewMode(stored_view);
         this.updateUrlViewMode(stored_view);
         return;
       }
 
-      // 3. Default to "canvas"
+      // 4. Default to "canvas"
       this.view_mode = "canvas";
+      this.persistFolderViewMode("canvas");
       this.updateUrlViewMode("canvas");
+    },
+    getStoredFolderViewMode() {
+      if (!this.folder_path || typeof localStorage === "undefined") return "";
+      try {
+        return (
+          localStorage.getItem(`slash_view_mode:${this.folder_path}`) || ""
+        );
+      } catch (err) {
+        return "";
+      }
+    },
+    persistFolderViewMode(mode) {
+      if (!mode || typeof localStorage === "undefined") return;
+      try {
+        if (this.folder_path) {
+          localStorage.setItem(`slash_view_mode:${this.folder_path}`, mode);
+        }
+        localStorage.setItem("slash_view_mode", mode);
+      } catch (err) {
+        // ignore storage errors
+      }
     },
     isValidViewMode(mode) {
       return ["canvas", "map", "grid", "timeline"].includes(mode);
@@ -396,9 +427,9 @@ export default {
       // 2. Change view mode
       this.view_mode = newMode;
 
-      // 3. Update URL and localStorage
+      // 3. Update URL and per-folder localStorage
       this.updateUrlViewMode(newMode);
-      localStorage.setItem("slash_view_mode", newMode);
+      this.persistFolderViewMode(newMode);
 
       // 4. Wait for DOM update
       await this.$nextTick();
