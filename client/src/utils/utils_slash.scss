@@ -381,18 +381,19 @@ input[type="file"] {
 
 .u-overlayPanel {
   backdrop-filter: none;
-  background: var(--c-slash-mint, #e5ffdb);
+  background: color-mix(in srgb, var(--c-slash-blue, #4980c8) 8%, white);
   color: var(--c-slash-burgundy, var(--c-rouge));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: calc(var(--spacing) / 4);
   border-radius: 0;
-  border: 2px solid var(--c-slash-mint, #e5ffdb);
+  border: 2px solid
+    color-mix(in srgb, var(--c-slash-blue, #4980c8) 8%, white);
 
   transition: background-color 0.3s cubic-bezier(0.19, 1, 0.22, 1),
     border-color 0.3s cubic-bezier(0.19, 1, 0.22, 1);
 
   &:hover {
-    background: var(--c-slash-mint, #e5ffdb);
+    background: color-mix(in srgb, var(--c-slash-blue, #4980c8) 8%, white);
     border-color: var(--c-slash-burgundy, var(--c-rouge));
   }
 }

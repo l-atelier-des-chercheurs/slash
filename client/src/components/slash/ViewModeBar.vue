@@ -174,7 +174,7 @@ export default {
     min-width: 2.75rem;
 
     &.is--open {
-      background: var(--c-slash-mint, #e5ffdb);
+      background: color-mix(in srgb, var(--c-slash-blue, #4980c8) 8%, white);
       border-color: var(--c-slash-burgundy, var(--c-rouge));
       backdrop-filter: none;
       transition: background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
@@ -225,6 +225,7 @@ export default {
 
   input {
     width: 100%;
+    min-width: 0;
   }
 }
 </style>
