@@ -46,25 +46,21 @@
       @touchstart.stop.prevent="handleItemTouchStart"
     ></div>
     <div
-      v-if="file.$type === 'text' && is_selected"
+      v-if="show_text_resize_handles"
       class="_canvasItem--resizeHandle is--widthOnly"
       :style="'--scale-factor: ' + canvas_zoom"
       @mousedown.stop="handleResizeStart($event, 'width')"
       @touchstart.stop.prevent="handleResizeTouchStart($event, 'width')"
     />
     <div
-      v-if="file.$type === 'text' && is_selected"
+      v-if="show_text_resize_handles"
       class="_canvasItem--resizeHandle is--heightOnly"
       :style="'--scale-factor: ' + canvas_zoom"
       @mousedown.stop="handleResizeStart($event, 'height')"
       @touchstart.stop.prevent="handleResizeTouchStart($event, 'height')"
     />
     <div
-      v-if="
-        is_selected &&
-        file.$type !== 'text' &&
-        !['canvas_shape', 'canvas_text'].includes(file.$type)
-      "
+      v-if="show_media_resize_handle"
       class="_canvasItem--resizeHandle"
       :class="{ 'is--widthOnly': isWidthOnly }"
       :style="'--scale-factor: ' + canvas_zoom"
@@ -75,18 +71,10 @@
     <div
       class="_canvasItem--open"
       v-if="!['canvas_shape', 'canvas_text'].includes(file.$type)"
-      :class="{ 'is--inlinePlayHit': opens_on_content_click }"
       :style="'--scale-factor: ' + canvas_zoom"
     >
       <button
-        v-if="opens_on_content_click && mode === 'pan-zoom' && !is_inline_playing"
-        type="button"
-        class="_inlineOpenHit panzoom-exclude"
-        :aria-label="$t('open')"
-        @click="handleOpen"
-      />
-      <button
-        v-else-if="!opens_on_content_click && !shift_or_cmd_pressed"
+        v-if="!opens_on_content_click && !shift_or_cmd_pressed"
         type="button"
         class="u-button u-button_icon u-button_glass _openBtn"
         :class="{ 'panzoom-exclude': mode === 'pan-zoom' }"
@@ -135,7 +123,7 @@ import {
 } from "@/utils/textCanvasUtils.js";
 
 const INLINE_PLAY_TYPES = ["video", "audio", "pdf"];
-const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf"];
+const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf", "image"];
 
 export default {
   props: {
@@ -270,6 +258,16 @@ export default {
     },
     is_audio() {
       return this.file.$type === "audio";
+    },
+    show_text_resize_handles() {
+      return this.mode === "select" && this.file.$type === "text";
+    },
+    show_media_resize_handle() {
+      return (
+        this.mode === "select" &&
+        this.file.$type !== "text" &&
+        !["canvas_shape", "canvas_text"].includes(this.file.$type)
+      );
     },
     isWidthOnly() {
       return this.file.$type === "text" || !this.file.$infos?.ratio;
@@ -522,6 +520,10 @@ export default {
     handleResizeStart(event, resize_mode = "width") {
       event.preventDefault();
       event.stopPropagation();
+
+      if (!this.is_selected) {
+        this.$emit("select", this.file.$path, "replace");
+      }
 
       this.isResizing = true;
       this.resize_mode = resize_mode;
@@ -1001,7 +1003,7 @@ export default {
     overflow: hidden;
     height: 100%;
     background-color: var(--author-color);
-    border-radius: var(--border-radius);
+    border-radius: 0;
     padding: 0 calc(var(--spacing) / 1);
   }
 
@@ -1029,21 +1031,6 @@ export default {
 
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
-    &.is--inlinePlayHit {
-      opacity: 1;
-    }
-
-    ._inlineOpenHit {
-      position: absolute;
-      inset: 0;
-      margin: 0;
-      padding: 0;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
     ._openBtn {
       display: flex;
       align-items: center;
@@ -1051,7 +1038,7 @@ export default {
       width: 6rem;
       height: 3rem;
       text-align: center;
-      border-radius: 8rem;
+      border-radius: 0;
       pointer-events: auto;
       font-size: 1.5rem;
 
@@ -1079,7 +1066,7 @@ export default {
     height: var(--play-btn-size);
     padding: 0;
     border: none;
-    border-radius: 4px;
+    border-radius: 0;
     background: hsl(0, 0%, 22%);
     color: white;
     cursor: pointer;
@@ -1132,7 +1119,7 @@ export default {
   }
 
   &:hover {
-    ._canvasItem--open:not(.is--inlinePlayHit) {
+    ._canvasItem--open {
       opacity: 1;
     }
   }
@@ -1154,7 +1141,8 @@ export default {
     }
     &[data-file-type="video"] ._canvasItem--selectedBorder,
     &[data-file-type="audio"] ._canvasItem--selectedBorder,
-    &[data-file-type="pdf"] ._canvasItem--selectedBorder {
+    &[data-file-type="pdf"] ._canvasItem--selectedBorder,
+    &[data-file-type="image"] ._canvasItem--selectedBorder {
       cursor: pointer;
     }
     ._canvasItemContent,
@@ -1237,21 +1225,20 @@ export default {
       pointer-events: none !important;
     }
     cursor: inherit;
+    /* Open hit removed for video/audio/pdf: drag pans the canvas.
+       Only play/stop (and image open btn) stay interactive. */
     ._canvasItem--open {
-      pointer-events: auto;
+      pointer-events: none;
       cursor: inherit;
     }
-    ._canvasItem--open ._openBtn,
-    ._canvasItem--open ._inlineOpenHit {
+    ._canvasItem--open ._openBtn {
       pointer-events: auto;
       cursor: pointer;
     }
     ._inlinePlayBtn {
       pointer-events: auto !important;
     }
-    &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__controls {
-      pointer-events: none !important;
-    }
+    &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__controls,
     &[data-file-type="audio"] ._canvasItemContent ::v-deep .plyr__progress,
     &[data-file-type="audio"]
       ._canvasItemContent
@@ -1264,27 +1251,6 @@ export default {
     &[data-file-type="audio"] ._canvasItemContent ::v-deep input[type="range"] {
       pointer-events: none !important;
     }
-    &.is--inlinePlaying[data-file-type="audio"]
-      ._canvasItemContent
-      ::v-deep
-      .plyr__progress,
-    &.is--inlinePlaying[data-file-type="audio"]
-      ._canvasItemContent
-      ::v-deep
-      .plyr__progress__buffer,
-    &.is--inlinePlaying[data-file-type="audio"]
-      ._canvasItemContent
-      ::v-deep
-      input[data-plyr="seek"],
-    &.is--inlinePlaying[data-file-type="audio"]
-      ._canvasItemContent
-      ::v-deep
-      input[type="range"] {
-      pointer-events: auto !important;
-    }
-    &.is--inlinePlaying[data-file-type="pdf"] ._canvasItemContent {
-      pointer-events: auto !important;
-    }
     ._canvasItemContent ::v-deep ._canvasItem--mediaListHandle {
       pointer-events: auto !important;
     }
@@ -1296,7 +1262,7 @@ export default {
     opacity: 0;
     outline: var(--selected-border-width) solid var(--selected-border-color);
     // outline-offset: 0.25rem;
-    border-radius: var(--border-radius);
+    border-radius: 0;
     pointer-events: none;
     transition: opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1);
   }
@@ -1316,24 +1282,23 @@ export default {
     width: calc(var(--button-size) * 3);
     height: calc(var(--button-size) * 3);
 
-    // background-color: red;
-
     display: flex;
     align-items: center;
     justify-content: center;
 
     cursor: nwse-resize;
     z-index: 10;
-    pointer-events: auto;
+    opacity: 0;
+    pointer-events: none;
 
-    transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+    transition: opacity 0.15s cubic-bezier(0.19, 1, 0.22, 1),
+      transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
 
     &::before {
       content: "";
       display: block;
       width: var(--button-size);
       height: var(--button-size);
-      // transform: rotate(90deg);
       background-color: white;
       outline: var(--selected-border-width) solid var(--selected-border-color);
       transition: all 0.2s;
@@ -1343,9 +1308,6 @@ export default {
       cursor: ew-resize;
       top: 50%;
       transform: translateY(-50%);
-
-      &::before {
-      }
     }
     &.is--heightOnly {
       cursor: ns-resize;
@@ -1357,14 +1319,28 @@ export default {
 
     &:hover::before {
       background-color: var(--active-color);
-      // box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
+    }
+  }
+
+  &.is--selected,
+  &.is--resizing {
+    ._canvasItem--resizeHandle {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  /* Mouse with hover: show resize handle without selecting first */
+  @media (hover: hover) and (pointer: fine) {
+    &:hover ._canvasItem--resizeHandle {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 
   &.is--resizing {
     ._canvasItem--resizeHandle::before {
       background-color: var(--active-color);
-      // box-shadow: 0 0 0px calc(var(--button-size) / 10) black;
     }
   }
 }

@@ -227,6 +227,8 @@ export default {
   min-height: 0;
   width: 100%;
   height: 100%;
+  /* Slash charter: sharp corners, not soft pills */
+  --border-radius: 0;
 }
 
 ._homeLayout {

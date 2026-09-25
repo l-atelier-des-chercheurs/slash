@@ -174,10 +174,11 @@ export default {
     min-width: 2.75rem;
 
     &.is--open {
-      background: color-mix(in srgb, var(--c-slash-blue, #4980c8) 8%, white);
-      border-color: var(--c-slash-burgundy, var(--c-rouge));
+      background: color-mix(in srgb, var(--c-slash-blue, #4980c8) 12%, white);
+      border-color: color-mix(in srgb, var(--c-slash-blue, #4980c8) 28%, white);
       backdrop-filter: none;
-      transition: background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+      transition: background-color 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+        border-color 0.2s cubic-bezier(0.19, 1, 0.22, 1);
     }
   }
 }

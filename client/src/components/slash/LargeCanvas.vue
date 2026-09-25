@@ -914,7 +914,7 @@ export default {
   background-size: var(--bg-size) var(--bg-size);
   background-position: -24px -24px;
 
-  border-radius: 40px;
+  border-radius: 0;
   outline: 10px solid var(--c-gris_clair);
 
   transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1),

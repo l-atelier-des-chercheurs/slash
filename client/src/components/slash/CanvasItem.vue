@@ -80,7 +80,7 @@ import MediaListDragHandle from "@/components/slash/MediaListDragHandle.vue";
 import { isMediaListFile } from "@/utils/mediaListUtils.js";
 
 const INLINE_PLAY_TYPES = ["video", "audio", "pdf"];
-const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf"];
+const OPENS_ON_CONTENT_CLICK_TYPES = ["video", "audio", "pdf", "image"];
 
 export default {
   props: {
@@ -353,7 +353,7 @@ export default {
 
 ._canvasItem--content {
   position: relative;
-  border-radius: var(--border-radius);
+  border-radius: 0;
   transition: transform 0.12s cubic-bezier(0.19, 1, 0.22, 1);
   height: 100%;
   width: 100%;
@@ -491,7 +491,7 @@ export default {
   }
 
   ::v-deep .plyr__controls {
-    border-radius: var(--border-radius, 4px);
+    border-radius: 0;
     padding-right: calc(var(--spacing) * 3);
     width: 100%;
   }
@@ -529,7 +529,7 @@ export default {
   height: 2.25rem;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 0;
   background: hsl(0, 0%, 22%);
   color: white;
   cursor: pointer;
@@ -586,7 +586,7 @@ export default {
 ._canvasItem--selectedBorder {
   position: absolute;
   inset: 0;
-  border-radius: var(--border-radius);
+  border-radius: 0;
   outline: 2px solid var(--c-bleuvert, #2a9d8f);
   outline-offset: -2px;
   opacity: 0;
@@ -615,7 +615,7 @@ export default {
     justify-content: center;
     width: 3.5rem;
     height: 2.5rem;
-    border-radius: 8rem;
+    border-radius: 0;
     pointer-events: auto;
     font-size: 1.25rem;
 
@@ -637,7 +637,7 @@ export default {
   margin-top: 0;
   overflow: hidden;
   background: white;
-  border-radius: var(--border-radius);
+  border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
 
@@ -661,7 +661,7 @@ export default {
   max-width: calc(100% - var(--spacing) * 1);
   background: var(--author-color);
   padding: calc(var(--spacing) / 8) calc(var(--spacing) / 2);
-  border-radius: var(--border-radius);
+  border-radius: 0;
   transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.15s;
 
   &:empty {

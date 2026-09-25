@@ -37,8 +37,8 @@ La lecture inline vidéo / audio / PDF s’applique aussi aux vues **grille**, *
 
 - **Ouvrir** = `ItemModal` (événement `canvasItem.openWithTransition`).
 - Curseur **pointer** sur les zones cliquables qui ouvrent.
-- Pas de picto d’ouverture au centre pour **vidéo / audio / PDF** (voir ci-dessous).
-- Autres médias (image, texte, etc.) : bouton d’ouverture central (icône « ouvrir ») au survol / en pan-zoom.
+- Pas de picto d’ouverture au centre pour **vidéo / audio / PDF / image** (voir ci-dessous).
+- Autres médias (texte, URL, 3D, etc.) : bouton d’ouverture central (icône « ouvrir ») au survol / en pan-zoom.
 
 ### Vidéo / audio / PDF (lecture inline)
 
@@ -66,7 +66,8 @@ Pas de picto d’ouverture au centre pour ces types.
 
 ### Image / URL / 3D / texte
 
-- Clic contenu (selon mode) ou bouton central → ouvrir.
+- **Image** : pas de bouton ouvrir ; clic (sans drag en `select`) → ouvrir.
+- URL / 3D / texte : bouton central → ouvrir.
 - En `select` : drag / resize si sélectionné (texte : handles largeur / hauteur).
 
 ### Formes & notes canvas (`canvas_shape`, `canvas_text`)
@@ -81,7 +82,7 @@ Pas de picto d’ouverture au centre pour ces types.
 
 | Mode | Contenu média | Bordure sélection | Bouton play / stop | Timeline audio |
 | --- | --- | --- | --- | --- |
-| **pan-zoom** | `none` (sauf exclusions) | — | `auto` + `panzoom-exclude` | idle : `none` (ouvrir) ; playing : `auto` (scrub) |
+| **pan-zoom** | `none` — le drag pane le canvas même sur vidéo/pdf/audio | — | `auto` + `panzoom-exclude` (seul interactif) | toujours `none` en mode main (scrub en `select` seulement) |
 | **select** (idle) | `none` | `auto` (drag / select / ouvrir sans drag) | `auto` | `none` (clic remonte → ouvrir / drag) |
 | **select** (playing) | partiel (`auto` sur scrub / iframe) | `none` (pas de drag) | `auto` | `auto` (scrub) |
 | **draw** | overlay dessin actif | — | — | — |
@@ -93,4 +94,4 @@ Pas de picto d’ouverture au centre pour ces types.
 ## Non-goals / à clarifier plus tard
 
 - Feedback visuel dédié « zone ouvrir » (au-delà du cursor pointer).
-- En mode main : clic sans drag → ouvrir, drag → pan (sans ouvrir).
+- En mode main : clic sans drag → ouvrir (aujourd’hui : drag pane ; ouvrir en `select`).

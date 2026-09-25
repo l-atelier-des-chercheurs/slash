@@ -725,6 +725,7 @@ export default {
   --folder-bg: var(--c-slash-blue, var(--c-bleuvert));
   --folder-fg: var(--c-slash-mint, #e5ffdb);
   --folder-accent: var(--c-slash-burgundy, var(--c-rouge));
+  --border-radius: 0;
 
   position: relative;
   display: flex;

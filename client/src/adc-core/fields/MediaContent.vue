@@ -506,7 +506,7 @@ export default {
   ._iframeStylePreview {
     width: 100%;
     height: 100%;
-    border-radius: 4px;
+    border-radius: 0;
     overflow: auto;
     border: 2px solid var(--c-gris_clair);
     background-color: white;
